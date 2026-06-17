@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeKiwi 듀얼 카메라 트래커</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0F172A; color: #E2E8F0; min-height: 100vh; }
+
+  /* 헤더 */
+  .header { background: linear-gradient(135deg, #1E3A8A, #3B82F6); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+  .header h1 { font-size: 1.3rem; font-weight: 700; }
+  .header-status { font-size: 0.85rem; opacity: 0.85; }
+
+  /* 컨트롤 바 */
+  .controls { background: #1E293B; padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; border-bottom: 1px solid #334155; }
+  .btn { padding: 0.5rem 1.1rem; border: 1px solid #475569; border-radius: 8px; background: #334155; color: #E2E8F0; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn:hover { background: #475569; }
+  .btn.active { background: #2563EB; border-color: #3B82F6; }
+  .btn-tracker { border-color: #7C3AED; }
+  .btn-tracker.active { background: #7C3AED; border-color: #8B5CF6; }
+  .label { font-size: 0.75rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem; }
+  .divider { width: 1px; height: 1.5rem; background: #475569; }
+
+  /* 영상 */
+  .video-wrap { padding: 1rem; display: flex; justify-content: center; }
+  .video-wrap img { max-width: 100%; border-radius: 12px; border: 2px solid #334155; }
+
+  /* GDINO 패널 */
+  .gdino-panel { background: #1E293B; margin: 0 1rem 1rem; border-radius: 12px; padding: 1.25rem; border: 1px solid #334155; }
+  .gdino-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: #C084FC; }
+  .gdino-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .gdino-input { flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #475569; background: #0F172A; color: #E2E8F0; font-size: 0.95rem; }
+  .gdino-input:focus { outline: none; border-color: #7C3AED; }
+  .btn-detect { background: #7C3AED; border-color: #7C3AED; }
+  .btn-detect:hover { background: #6D28D9; }
+
+  /* GDINO 결과 */
+  .gdino-result { margin-top: 0.75rem; display: none; }
+  .gdino-result.show { display: block; }
+  .gdino-result img { max-width: 100%; border-radius: 8px; margin-top: 0.5rem; }
+  .gdino-info { font-size: 0.85rem; color: #94A3B8; margin-top: 0.5rem; }
+  .detection-item { background: #334155; border-radius: 8px; padding: 0.5rem 0.75rem; margin-top: 0.4rem; font-size: 0.85rem; display: flex; justify-content: space-between; }
+
+  /* 상태 바 */
+  .status-bar { background: #1E293B; padding: 0.5rem 1.5rem; font-size: 0.8rem; color: #64748B; border-top: 1px solid #334155; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.3rem; vertical-align: middle; }
+  .dot-on { background: #4ADE80; }
+  .dot-off { background: #EF4444; }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <h1>🎯 LeKiwi 듀얼 카메라 트래커</h1>
+  <span class="header-status" id="headerStatus">연결 중...</span>
+</div>
+
+<!-- 컨트롤 바 -->
+<div class="controls">
+  <span class="label">카메라</span>
+  <button class="btn active" id="btnFront" onclick="switchCamera('front')">📷 FRONT</button>
+  <button class="btn" id="btnTop" onclick="switchCamera('top')">📷 TOP</button>
+  <button class="btn" id="btnDual" onclick="switchCamera('dual')">📷 DUAL</button>
+
+  <div class="divider"></div>
+
+  <span class="label">트래커</span>
+  <button class="btn btn-tracker active" id="btnBotsort" onclick="switchTracker('botsort')">🎯 BoT-SORT</button>
+  <button class="btn btn-tracker" id="btnBytetrack" onclick="switchTracker('bytetrack')">⚡ ByteTrack</button>
+</div>
+
+<!-- 영상 스트림 -->
+<div class="video-wrap">
+  <img id="videoStream" src="/video_feed" alt="실시간 트래킹 영상">
+</div>
+
+<!-- Grounding DINO 패널 -->
+<div class="gdino-panel">
+  <div class="gdino-title">🗣️ Grounding DINO — 텍스트로 물체 찾기</div>
+  <div class="gdino-row">
+    <input class="gdino-input" id="gdinoText" type="text" placeholder="찾을 물체를 영어로 입력 (예: red bottle, person)" onkeypress="if(event.key==='Enter') detectGdino()">
+    <button class="btn btn-detect" onclick="detectGdino()">🔍 탐지</button>
+  </div>
+  <div class="gdino-result" id="gdinoResult">
+    <div class="gdino-info" id="gdinoInfo"></div>
+    <div id="gdinoDetections"></div>
+    <img id="gdinoImage" src="" alt="탐지 결과">
+  </div>
+</div>
+
+<!-- 상태 바 -->
+<div class="status-bar" id="statusBar">
+  <span><span class="status-dot dot-off" id="dotFront"></span>FRONT</span>
+  <span><span class="status-dot dot-off" id="dotTop"></span>TOP</span>
+  <span id="statusTracker">트래커: -</span>
+  <span id="statusCamera">카메라: -</span>
+</div>
+
+<script>
+// ── 카메라 전환 ──
+function switchCamera(cam) {
+  fetch('/switch_camera', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({camera: cam})
+  }).then(r => r.json()).then(data => {
+    updateCameraButtons(data.camera);
+    refreshStream();
+  });
+}
+
+// ── 트래커 전환 ──
+function switchTracker(tracker) {
+  fetch('/switch_tracker', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({tracker: tracker})
+  }).then(r => r.json()).then(data => {
+    updateTrackerButtons(data.tracker);
+    refreshStream();
+  });
+}
+
+// ── MJPEG 스트림 새로고침 (캐시 방지) ──
+function refreshStream() {
+  document.getElementById('videoStream').src = '/video_feed?t=' + Date.now();
+}
+
+// ── 카메라 버튼 UI 업데이트 ──
+function updateCameraButtons(cam) {
+  ['Front','Top','Dual'].forEach(n => {
+    document.getElementById('btn'+n).classList.remove('active');
+  });
+  var id = 'btn' + cam.charAt(0).toUpperCase() + cam.slice(1);
+  var el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+// ── 트래커 버튼 UI 업데이트 ──
+function updateTrackerButtons(tracker) {
+  document.getElementById('btnBotsort').classList.remove('active');
+  document.getElementById('btnBytetrack').classList.remove('active');
+  if (tracker === 'botsort') document.getElementById('btnBotsort').classList.add('active');
+  else document.getElementById('btnBytetrack').classList.add('active');
+}
+
+// ── Grounding DINO 탐지 ──
+function detectGdino() {
+  var text = document.getElementById('gdinoText').value.trim();
+  if (!text) return;
+
+  document.getElementById('gdinoInfo').textContent = '탐지 중...';
+  document.getElementById('gdinoResult').classList.add('show');
+  document.getElementById('gdinoDetections').innerHTML = '';
+
+  fetch('/detect', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: text})
+  }).then(r => r.json()).then(data => {
+    if (data.error) {
+      document.getElementById('gdinoInfo').textContent = '❌ ' + data.error;
+      return;
+    }
+    document.getElementById('gdinoInfo').textContent =
+      '✅ "' + data.text_prompt + '" → ' + data.count + '개 탐지 | ' +
+      data.inference_ms + 'ms | 행동: ' + data.action;
+
+    var html = '';
+    data.detections.forEach(function(d) {
+      html += '<div class="detection-item"><span>' + d.label + '</span><span>' +
+              (d.score * 100).toFixed(1) + '% | 중심(' + d.center.x + ',' + d.center.y + ')</span></div>';
+    });
+    document.getElementById('gdinoDetections').innerHTML = html;
+    document.getElementById('gdinoImage').src = 'data:image/jpeg;base64,' + data.image;
+  }).catch(function(err) {
+    document.getElementById('gdinoInfo').textContent = '❌ 요청 실패: ' + err;
+  });
+}
+
+// ── 상태 폴링 (3초마다) ──
+function pollStatus() {
+  fetch('/status').then(r => r.json()).then(data => {
+    document.getElementById('dotFront').className = 'status-dot ' + (data.camera_front ? 'dot-on' : 'dot-off');
+    document.getElementById('dotTop').className = 'status-dot ' + (data.camera_top ? 'dot-on' : 'dot-off');
+    document.getElementById('statusTracker').textContent = '트래커: ' + data.current_tracker;
+    document.getElementById('statusCamera').textContent = '카메라: ' + data.current_camera.toUpperCase();
+    document.getElementById('headerStatus').textContent =
+      (data.camera_front || data.camera_top) ? '✅ 연결됨' : '⏳ 카메라 대기 중';
+    updateCameraButtons(data.current_camera);
+    updateTrackerButtons(data.current_tracker.toLowerCase().includes('bot') ? 'botsort' : 'bytetrack');
+  }).catch(function() {
+    document.getElementById('headerStatus').textContent = '❌ 서버 연결 끊김';
+  });
+}
+setInterval(pollStatus, 3000);
+pollStatus();
+</script>
+</body>
+</html>
