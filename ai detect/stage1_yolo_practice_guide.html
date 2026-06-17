@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실습 가이드 Stage1 YOLO — 싱글 + 멀티카메라 원격 탐지</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --color-primary: #2563EB;
+  --color-primary-light: #DBEAFE;
+  --color-secondary: #7C3AED;
+  --color-secondary-light: #EDE9FE;
+  --color-success: #059669;
+  --color-success-light: #D1FAE5;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-danger: #DC2626;
+  --color-danger-light: #FEE2E2;
+  --color-surface: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-text: #1E293B;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+}
+body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.75; }
+code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+section { padding: 3rem 0; }
+
+.hero { background: linear-gradient(135deg, #4C1D95, #8B5CF6); color: white; padding: 3.5rem 0 3rem; }
+.hero-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.pill { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; }
+.hero h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.2; }
+.hero-subtitle { font-size: 1.1rem; margin-top: 0.85rem; opacity: 0.95; }
+
+.section-title { font-size: 1.85rem; font-weight: 700; margin-bottom: 0.5rem; }
+.section-lead { color: var(--color-muted); margin-bottom: 2rem; }
+
+/* Flow Diagram */
+.flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 2rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+.flow-node { background: var(--color-card); border: 2px solid var(--node-color, var(--color-primary)); border-radius: 12px; padding: 1rem; text-align: center; min-width: 100px; transition: transform 0.2s; }
+.flow-node:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+.flow-node-icon { font-size: 1.6rem; margin-bottom: 0.3rem; }
+.flow-node-title { font-weight: 700; font-size: 0.82rem; }
+.flow-node-desc { font-size: 0.7rem; color: var(--color-muted); margin-top: 0.15rem; }
+.flow-arrow { flex-shrink: 0; }
+@media (max-width: 768px) { .flow-diagram { flex-direction: column; } .flow-arrow svg { transform: rotate(90deg); } .hero h1 { font-size: 2rem; } }
+
+/* Cmd Card */
+.cmd-card { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08); }
+.cmd-head { display: flex; align-items: center; gap: 0.85rem; padding: 1.1rem 1.5rem; color: white; background: var(--accent, var(--color-primary)); }
+.cmd-badge { flex-shrink: 0; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.05rem; }
+.cmd-emoji { font-size: 1.7rem; }
+.cmd-name { font-weight: 700; font-size: 1.1rem; }
+.cmd-name small { display:block; font-weight:400; font-size:0.78rem; opacity:0.85; margin-top:0.1rem; }
+.cmd-terminal { background: #0F172A; color: #E2E8F0; padding: 1rem 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.6rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; }
+.cmd-terminal .prompt { color: #4ADE80; user-select: none; flex-shrink: 0; }
+.cmd-terminal code { white-space: nowrap; flex: 1; }
+.copy-btn { flex-shrink: 0; margin-left: auto; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #E2E8F0; border-radius: 8px; padding: 0.35rem 0.75rem; font-size: 0.78rem; font-family: 'Noto Sans KR', sans-serif; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; transition: background 0.15s; }
+.copy-btn:hover { background: rgba(255,255,255,0.22); }
+.copy-btn.copied { background: var(--color-success); border-color: var(--color-success); color: white; }
+.cmd-terminal-multi { background: #0F172A; color: #E2E8F0; padding: 1rem 1.5rem; font-size: 0.85rem; overflow-x: auto; font-family: 'JetBrains Mono', monospace; line-height: 1.7; position: relative; }
+.cmd-terminal-multi .copy-btn { position: absolute; top: 0.7rem; right: 0.7rem; }
+.cmd-terminal-multi pre { white-space: pre; }
+.cm { color: #8b949e; }
+.cmd-body { padding: 1.5rem; }
+.cmd-result-label { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent, var(--color-primary)); margin-bottom: 0.5rem; }
+.big-easy { font-size: 1.02rem; font-weight: 500; }
+.mini-steps { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+.mini-step { display: flex; gap: 0.75rem; align-items: flex-start; background: var(--color-surface); border-radius: 10px; padding: 0.7rem 1rem; }
+.mini-step-num { flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: var(--accent, var(--color-primary)); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+.mini-step-text { font-size: 0.9rem; }
+
+/* Callout */
+.callout { display: flex; gap: 0.75rem; padding: 1rem 1.2rem; border-radius: 10px; align-items: flex-start; margin-top: 1.2rem; }
+.callout-icon { font-size: 1.2rem; flex-shrink: 0; }
+.callout-content { font-size: 0.92rem; line-height: 1.6; }
+.callout-tip { background: var(--color-success-light); border-left: 3px solid var(--color-success); }
+.callout-warning { background: var(--color-warning-light); border-left: 3px solid var(--color-warning); }
+.callout-danger { background: var(--color-danger-light); border-left: 3px solid var(--color-danger); }
+.callout-info { background: var(--color-primary-light); border-left: 3px solid var(--color-primary); }
+
+/* Analogy */
+.analogy-box { display: flex; gap: 1rem; padding: 1.2rem; background: var(--color-secondary-light); border-radius: 12px; border-left: 4px solid var(--color-secondary); margin-top: 1rem; }
+.analogy-icon { font-size: 1.8rem; flex-shrink: 0; }
+.analogy-content { flex: 1; }
+.analogy-title { font-weight: 700; font-size: 0.78rem; color: var(--color-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+.analogy-text { line-height: 1.65; font-size: 0.92rem; }
+
+/* Table */
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; margin: 1.2rem 0; font-size: 0.85rem; }
+.data-table th { background: #1E293B; color: white; padding: 0.7rem 1rem; text-align: left; font-weight: 600; }
+.data-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--color-border); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:nth-child(even) td { background: #F1F5F9; }
+.fast { color: var(--color-success); font-weight: 700; }
+.slow { color: var(--color-danger); font-weight: 700; }
+
+/* Part Divider */
+.part-divider { text-align: center; padding: 2.5rem 0 1rem; }
+.part-label { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.6rem 2rem; border-radius: 999px; font-weight: 800; font-size: 1.15rem; }
+.part-a { background: #D1FAE5; color: #065F46; }
+.part-b { background: #DBEAFE; color: #1E3A8A; }
+
+/* File Table */
+.file-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; margin: 1rem 0; font-size: 0.85rem; }
+.file-table th { background: var(--color-secondary); color: white; padding: 0.7rem 1rem; text-align: left; }
+.file-table td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--color-border); background: white; }
+.file-table tr:last-child td { border-bottom: none; }
+.file-table code { background: #F1F5F9; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.82rem; }
+
+@media print { .copy-btn { display: none; } .hero { background: white !important; color: black !important; } }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="pill">📷 싱글카메라</span>
+      <span class="pill">📷📷 멀티카메라</span>
+      <span class="pill">🎯 YOLO26</span>
+      <span class="pill">⚡ OpenVINO</span>
+      <span class="pill">📡 ZeroMQ</span>
+    </div>
+    <h1>실습 가이드<br>Stage 1 YOLO 원격 탐지</h1>
+    <p class="hero-subtitle">1대 카메라로 기초를 배우고, 2대 카메라로 확장하는 단계별 실습<br>Pi 5 → NUC PC — 설치부터 OpenVINO 최적화까지</p>
+  </div>
+</header>
+
+<!-- 파일 구성 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">📁 실습 파일 구성</h2>
+    <p class="section-lead">이 실습에서 사용하는 파일들입니다. Pi용과 NUC용이 나뉘어 있어요.</p>
+    <table class="file-table">
+      <thead><tr><th>파일</th><th>위치</th><th>용도</th><th>모드</th></tr></thead>
+      <tbody>
+        <tr><td><code>send_camera.py</code></td><td>🍓 Pi</td><td>카메라 1대 전송 (포트 5556)</td><td>싱글</td></tr>
+        <tr><td><code>send_camera_front.py</code></td><td>🍓 Pi</td><td>FRONT 카메라 전송 (포트 5556)</td><td>멀티</td></tr>
+        <tr><td><code>send_camera_top.py</code></td><td>🍓 Pi</td><td>TOP 카메라 전송 (포트 5557)</td><td>멀티</td></tr>
+        <tr><td><code>multi_send_camera.py</code></td><td>🍓 Pi</td><td>2대 통합 전송 (스레딩, 간편 실행용)</td><td>멀티</td></tr>
+        <tr><td><code>test_receive.py</code></td><td>🧠 NUC</td><td>수신 테스트 (YOLO 없이)</td><td>둘 다</td></tr>
+        <tr><td><code>basic_detect.py</code></td><td>🧠 NUC</td><td>기본 PyTorch YOLO 탐지</td><td>둘 다</td></tr>
+        <tr><td><code>receive_and_detect.py</code></td><td>🧠 NUC</td><td>OpenVINO 가속 YOLO 탐지</td><td>둘 다</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-info"><span class="callout-icon">💡</span><span class="callout-content">NUC 스크립트는 <code>--multi</code> 플래그로 싱글/멀티를 전환해요. 싱글로 먼저 익히고 멀티로 확장!</span></div>
+  </div>
+</section>
+
+<!-- ============ PART A: 싱글카메라 ============ -->
+<div class="part-divider"><span class="part-label part-a">📷 Part A — 싱글카메라 (1대)</span></div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🗺️ Part A 흐름</h2>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">🔌</div><div class="flow-node-title">1. 네트워크</div><div class="flow-node-desc">IP 확인</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">📷</div><div class="flow-node-title">2. 카메라</div><div class="flow-node-desc">Pi 테스트</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">📡</div><div class="flow-node-title">3. 전송</div><div class="flow-node-desc">Pi 시작</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">📥</div><div class="flow-node-title">4. 수신</div><div class="flow-node-desc">NUC 테스트</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">🎯</div><div class="flow-node-title">5. YOLO</div><div class="flow-node-desc">기본 탐지</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#0891B2"><div class="flow-node-icon">⚡</div><div class="flow-node-title">6. OpenVINO</div><div class="flow-node-desc">가속!</div></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="cmd-card" style="--accent:#64748B">
+      <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">🔌</span><div class="cmd-name">네트워크 + IP 확인<small>Pi와 NUC가 같은 공유기에 연결되어 있는지 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">Pi$</span><code>hostname -I</code><button class="copy-btn" data-cmd="hostname -I">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">Pi의 IP 주소가 나와요. (예: <code>192.168.50.111</code>) NUC에서도 동일 명령으로 확인!</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">전용 공유기(ASUS AX1800) 전원 ON</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">NUC → LAN 케이블로 공유기 연결 / Pi → Wi-Fi 5GHz 연결</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">양쪽에서 <code>hostname -I</code>로 IP 확인 → 메모!</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">✅</span><span class="callout-content"><strong>5GHz 확인:</strong> Pi에서 <code>iwconfig wlan0 | grep Frequency</code> → <code>5.xxx GHz</code>이면 OK!</span></div>
+      </div>
+    </div>
+
+    <!-- Step 2: 전체 카메라 장치 확인 -->
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">2</span><span class="cmd-emoji">📷</span><div class="cmd-name">전체 카메라 장치 확인<small>Pi에 연결된 모든 카메라와 장치 경로를 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">Pi$</span><code>v4l2-ctl --list-devices</code><button class="copy-btn" data-cmd="v4l2-ctl --list-devices">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">Pi에 연결된 <strong>모든 카메라</strong>의 이름과 <code>/dev/video</code> 번호가 나와요!</p>
+        <div class="cmd-terminal-multi" style="margin-top:1rem;">
+<pre><span class="cm"># 출력 예시 — 카메라 2대가 연결된 경우</span>
+KINGSEN CAM (usb-xhci-hcd.1-1):       <span class="cm">← FRONT 카메라 이름</span>
+        /dev/video0                    <span class="cm">← 이 번호를 스크립트에 사용!</span>
+        /dev/video1
+
+USB Camera (usb-xhci-hcd.0-2):        <span class="cm">← TOP 카메라 이름</span>
+        /dev/video2                    <span class="cm">← 이 번호를 스크립트에 사용!</span>
+        /dev/video3</pre>
+        </div>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">카메라마다 <code>/dev/video</code> 번호가 <strong>2개씩</strong> 나와요. <strong>첫 번째 번호</strong>를 사용!</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">카메라를 꽂는 USB 포트를 바꾸면 번호가 달라질 수 있어요</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">확인한 번호를 스크립트의 <code>--device</code> 인자에 넣으면 돼요</span></div>
+        </div>
+        <div class="analogy-box"><div class="analogy-icon">🏠</div><div class="analogy-content"><div class="analogy-title">쉽게 말하면</div><p class="analogy-text"><code>/dev/video0</code>은 카메라의 "주소"예요. 우편물을 보내려면 정확한 주소가 필요하듯, 스크립트도 정확한 video 번호를 알아야 카메라를 열 수 있어요!</p></div></div>
+      </div>
+    </div>
+
+    <!-- Step 2b: 카메라 동작 테스트 -->
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">2b</span><span class="cmd-emoji">✅</span><div class="cmd-name">카메라 동작 테스트<small>확인한 장치 번호로 실제 프레임이 읽히는지 테스트</small></div></div>
+      <div class="cmd-terminal-multi">
+        <button class="copy-btn" data-cmd="python3 -c &quot;
+import cv2
+for i in range(5):
+    cap = cv2.VideoCapture(f'/dev/video{i}', cv2.CAP_V4L2)
+    ret, frame = cap.read()
+    if ret:
+        print(f'/dev/video{i}: ✅ OK  크기={frame.shape}')
+    else:
+        print(f'/dev/video{i}: ❌ 안됨')
+    cap.release()
+&quot;">📋 복사</button>
+<pre><span class="cm"># 모든 video 장치를 하나씩 열어서 테스트</span>
+Pi$ python3 -c "
+import cv2
+for i in range(5):
+    cap = cv2.VideoCapture(f'/dev/video{i}', cv2.CAP_V4L2)
+    ret, frame = cap.read()
+    if ret:
+        print(f'/dev/video{i}: ✅ OK  크기={frame.shape}')
+    else:
+        print(f'/dev/video{i}: ❌ 안됨')
+    cap.release()
+"</pre>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy"><code>/dev/video0</code>부터 <code>video4</code>까지 전부 테스트해서 <strong>어느 번호가 실제로 작동하는지</strong> 알 수 있어요!</p>
+        <div class="cmd-terminal-multi" style="margin-top:1rem;">
+<pre><span class="cm"># 출력 예시</span>
+/dev/video0: ❌ 안됨               <span class="cm">← 메타데이터 전용 (무시)</span>
+/dev/video1: ✅ OK  크기=(480, 640, 3)  <span class="cm">← FRONT로 사용!</span>
+/dev/video2: ✅ OK  크기=(480, 640, 3)  <span class="cm">← TOP으로 사용!</span>
+/dev/video3: ❌ 안됨               <span class="cm">← 메타데이터 전용 (무시)</span>
+/dev/video4: ❌ 안됨</pre>
+        </div>
+
+        <div class="callout callout-tip"><span class="callout-icon">📝</span><span class="callout-content"><strong>스크립트 수정 방법:</strong> 위에서 ✅ OK인 번호를 스크립트에 넣으세요!<br><br>
+          <strong>싱글카메라:</strong><br>
+          <code>send_camera.py</code> 안의 <code>cv2.VideoCapture(0)</code> → <code>cv2.VideoCapture(1)</code>로 변경<br><br>
+          <strong>멀티카메라:</strong><br>
+          <code>python3 send_camera_front.py --device /dev/video1</code><br>
+          <code>python3 send_camera_top.py --device /dev/video2</code>
+        </span></div>
+
+        <div class="callout callout-danger"><span class="callout-icon">🚨</span><span class="callout-content"><strong>전부 ❌ 안됨이면?</strong> 다른 프로그램이 카메라를 잡고 있어요!<br><br>
+          ① 점유 확인: <code>sudo fuser /dev/video*</code><br>
+          ② 점유 해제: <code>sudo kill 나온PID번호</code><br>
+          ③ 다시 테스트!
+        </span></div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="cmd-card" style="--accent:#2563EB">
+      <div class="cmd-head"><span class="cmd-badge">3</span><span class="cmd-emoji">📡</span><div class="cmd-name">Pi 전송 시작 — send_camera.py<small>카메라 영상을 15fps로 ZeroMQ 전송</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">Pi$</span><code>conda activate lerobot && python3 send_camera.py</code><button class="copy-btn" data-cmd="conda activate lerobot && python3 send_camera.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy"><code>📷 카메라 영상 전송 시작! (목표 15fps)</code> → 실제 15.0fps로 정확히 전송!</p>
+        <div class="analogy-box"><div class="analogy-icon">📰</div><div class="analogy-content"><div class="analogy-title">쉽게 말하면</div><p class="analogy-text">Pi가 신문사(PUB)처럼 카메라 사진을 1초에 15장씩 발행해요. NUC가 구독하면 받아볼 수 있어요!</p></div></div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>종료:</strong> 반드시 <code>Ctrl+C</code>로! 터미널을 그냥 닫으면 카메라를 계속 잡고 있어요.</span></div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="cmd-card" style="--accent:#7C3AED">
+      <div class="cmd-head"><span class="cmd-badge">4</span><span class="cmd-emoji">📥</span><div class="cmd-name">NUC 수신 테스트 — test_receive.py<small>YOLO 없이 영상이 오는지만 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>conda activate lerobot && python3 test_receive.py --pi-ip 192.168.50.111</code><button class="copy-btn" data-cmd="conda activate lerobot && python3 test_receive.py --pi-ip 192.168.50.111">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">20프레임을 받아서 <code>✅ 수신 성공!</code>이 나오면 네트워크 정상!</p>
+        <div class="callout callout-danger"><span class="callout-icon">❌</span><span class="callout-content"><strong>타임아웃이면?</strong> ① Pi IP가 맞는지 확인 ② Pi에서 send_camera.py가 실행 중인지 확인</span></div>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="cmd-card" style="--accent:#D97706">
+      <div class="cmd-head"><span class="cmd-badge">5</span><span class="cmd-emoji">🎯</span><div class="cmd-name">기본 YOLO 탐지 — basic_detect.py<small>PyTorch 기본 모델로 속도 측정 (~5fps)</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>python3 basic_detect.py --pi-ip 192.168.50.111</code><button class="copy-btn" data-cmd="python3 basic_detect.py --pi-ip 192.168.50.111">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">YOLO 탐지 창이 뜨지만 <strong class="slow">~200ms, ~5fps</strong>로 느려요. 다음 단계에서 빠르게 만들 거예요!</p>
+        <div class="analogy-box"><div class="analogy-icon">🚗</div><div class="analogy-content"><div class="analogy-title">왜 느린가요?</div><p class="analogy-text">NUC에 GPU가 없어서 CPU로 돌려요. 일반 도로에서 일반차를 타는 것과 같아요. 다음 단계에서 스포츠카(OpenVINO)로 갈아타요!</p></div></div>
+      </div>
+    </div>
+
+    <!-- Step 6a -->
+    <div class="cmd-card" style="--accent:#0891B2">
+      <div class="cmd-head"><span class="cmd-badge">6</span><span class="cmd-emoji">⚡</span><div class="cmd-name">OpenVINO 설치 + 모델 변환<small>Intel CPU 소프트웨어 가속 — 최초 1회!</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>pip install openvino</code><button class="copy-btn" data-cmd="pip install openvino">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 설치 후 모델 변환</div>
+      </div>
+    </div>
+    <div class="cmd-card" style="--accent:#0891B2">
+      <div class="cmd-head"><span class="cmd-badge">6b</span><span class="cmd-emoji">🔄</span><div class="cmd-name">YOLO → OpenVINO 변환<small>같은 모델을 2~5배 빠르게! (최초 1회)</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>cd ~/lerobot && python3 -c "from ultralytics import YOLO; YOLO('yolo26n.pt').export(format='openvino'); print('완료!')"</code><button class="copy-btn" data-cmd="cd ~/lerobot && python3 -c &quot;from ultralytics import YOLO; YOLO('yolo26n.pt').export(format='openvino'); print('완료!')&quot;">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy"><code>yolo26n_openvino_model/</code> 폴더가 생겨요. <code>ls yolo26n_openvino_model/</code>로 확인!</p>
+        <div class="callout callout-danger"><span class="callout-icon">🚨</span><span class="callout-content"><strong>함정!</strong> 640px로 변환한 모델에 <code>imgsz=320</code>을 넣으면 shape 오류! 변환 크기 = 추론 크기 일치 필수!</span></div>
+      </div>
+    </div>
+
+    <!-- Step 6c: OpenVINO 탐지 -->
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">6c</span><span class="cmd-emoji">🚀</span><div class="cmd-name">OpenVINO YOLO 탐지! — receive_and_detect.py<small>5fps → 25fps 극적 향상!</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>python3 receive_and_detect.py --pi-ip 192.168.50.111 --model /home/zeta/lerobot/yolo26n_openvino_model/</code><button class="copy-btn" data-cmd="python3 receive_and_detect.py --pi-ip 192.168.50.111 --model /home/zeta/lerobot/yolo26n_openvino_model/">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">YOLO 탐지 + 실시간 진단 로그! <strong class="fast">~35ms, ~25fps</strong> — 실시간!</p>
+        <table class="data-table">
+          <thead><tr><th>구성</th><th>YOLO 시간</th><th>FPS</th></tr></thead>
+          <tbody>
+            <tr><td>PyTorch 640px (5단계)</td><td class="slow">~200ms</td><td class="slow">~5</td></tr>
+            <tr><td>OpenVINO 320px</td><td class="fast">12~20ms</td><td class="fast">~26</td></tr>
+            <tr style="background:#DBEAFE"><td><strong>OpenVINO 640px ⭐</strong></td><td class="fast">33~38ms</td><td class="fast">~25</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART B: 멀티카메라 ============ -->
+<div class="part-divider"><span class="part-label part-b">📷📷 Part B — 멀티카메라 (2대)</span></div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🗺️ Part B 흐름</h2>
+    <p class="section-lead">Part A를 마친 후, 카메라 2대로 확장합니다. Pi에서 터미널 2개를 사용해요.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">🔍</div><div class="flow-node-title">7. USB 확인</div><div class="flow-node-desc">버스 구조</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">📷📷</div><div class="flow-node-title">8. Pi 전송</div><div class="flow-node-desc">터미널 2개</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">📥📥</div><div class="flow-node-title">9. 수신</div><div class="flow-node-desc">--multi</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">🎯🎯</div><div class="flow-node-title">10. YOLO</div><div class="flow-node-desc">나란히 탐지</div></div>
+      <div class="flow-arrow"><svg width="30" height="20" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#DC2626"><div class="flow-node-icon">🔧</div><div class="flow-node-title">11. 트러블슈팅</div><div class="flow-node-desc">USB 대역폭</div></div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">7</span><span class="cmd-emoji">🔍</span><div class="cmd-name">USB 버스 구조 확인<small>2대 카메라가 같은 USB 버스인지 확인 — 속도에 영향!</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">Pi$</span><code>lsusb -t</code><button class="copy-btn" data-cmd="lsusb -t">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">USB 버스 트리가 나와요. 두 카메라가 <strong>같은 Bus에 있으면 대역폭을 나눠</strong> 써서 느려져요!</p>
+      </div>
+    </div>
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">7b</span><span class="cmd-emoji">📷</span><div class="cmd-name">카메라 장치 경로 확인<small>FRONT와 TOP이 어떤 /dev/video에 있는지</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">Pi$</span><code>v4l2-ctl --list-devices</code><button class="copy-btn" data-cmd="v4l2-ctl --list-devices">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">카메라 이름과 장치 경로가 나와요. 예: KINGSEN → <code>/dev/video1</code>, USB Camera → <code>/dev/video2</code></p>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>USB 포트 분리 팁:</strong> Pi5는 USB 2.0 포트 2개 + USB 3.0 포트 2개가 있어요. 두 카메라를 <strong>다른 종류 포트</strong>에 꽂으면 대역폭 경합이 줄어요!</span></div>
+      </div>
+    </div>
+
+    <!-- Step 8 -->
+    <div class="cmd-card" style="--accent:#2563EB">
+      <div class="cmd-head"><span class="cmd-badge">8</span><span class="cmd-emoji">📷📷</span><div class="cmd-name">Pi 2대 카메라 전송 — 터미널 2개!<small>send_camera_front.py + send_camera_top.py 각각 실행</small></div></div>
+      <div class="cmd-terminal-multi">
+        <button class="copy-btn" data-cmd="python3 send_camera_front.py --device /dev/video1">📋 복사</button>
+<pre><span class="cm"># 터미널 1 (FRONT — 포트 5556)</span>
+Pi$ python3 send_camera_front.py --device /dev/video1
+
+<span class="cm"># 터미널 2 (TOP — 포트 5557)</span>
+Pi$ python3 send_camera_top.py --device /dev/video2</pre>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">FRONT(:5556)과 TOP(:5557) 각각 독립 프로세스로 전송! 스레딩보다 안정적이에요.</p>
+        <div class="analogy-box"><div class="analogy-icon">🏢</div><div class="analogy-content"><div class="analogy-title">왜 2개로 분리하나요?</div><p class="analogy-text">한 사무실(프로세스)에서 2명이 동시에 전화(카메라)하면 서로 방해돼요. 각자 다른 사무실에서 전화하면 문제없어요! Python의 GIL 잠금 + USB 경합을 피하는 방법이에요.</p></div></div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>장치 경로 확인!</strong> <code>--device</code> 뒤에 7번에서 확인한 실제 경로를 넣으세요. 잘못된 경로면 카메라 열기 실패!</span></div>
+
+        <div class="callout callout-info"><span class="callout-icon">🔄</span><span class="callout-content"><strong>간편 실행 대안: multi_send_camera.py</strong><br>
+          터미널 2개 열기 귀찮으면 통합 스크립트로 한 번에 실행할 수도 있어요:<br>
+          <code>python3 multi_send_camera.py --front /dev/video1 --top /dev/video2</code><br>
+          단, 스레딩 방식이라 USB 경합 시 fps가 더 떨어질 수 있어요. <strong>분리 실행(터미널 2개)이 더 안정적!</strong></span></div>
+      </div>
+    </div>
+
+    <!-- Step 9 -->
+    <div class="cmd-card" style="--accent:#7C3AED">
+      <div class="cmd-head"><span class="cmd-badge">9</span><span class="cmd-emoji">📥📥</span><div class="cmd-name">NUC 멀티 수신 테스트<small>--multi로 FRONT+TOP 동시 수신 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>python3 test_receive.py --pi-ip 192.168.50.111 --multi</code><button class="copy-btn" data-cmd="python3 test_receive.py --pi-ip 192.168.50.111 --multi">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">FRONT와 TOP 각각 <code>✅ 수신 성공!</code>이 나오면 2대 모두 정상!</p>
+      </div>
+    </div>
+
+    <!-- Step 10 -->
+    <div class="cmd-card" style="--accent:#D97706">
+      <div class="cmd-head"><span class="cmd-badge">10</span><span class="cmd-emoji">🎯🎯</span><div class="cmd-name">NUC 멀티 YOLO 탐지<small>FRONT+TOP 나란히 표시 + 각각 탐지</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">NUC$</span><code>python3 receive_and_detect.py --pi-ip 192.168.50.111 --model /home/zeta/lerobot/yolo26n_openvino_model/ --multi</code><button class="copy-btn" data-cmd="python3 receive_and_detect.py --pi-ip 192.168.50.111 --model /home/zeta/lerobot/yolo26n_openvino_model/ --multi">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">FRONT + TOP 영상이 <strong>나란히(1280×480)</strong> 표시되고, 각각 YOLO 탐지 + 시간이 표시돼요!</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">왼쪽: FRONT 카메라 탐지 결과 (초록색 시간 표시)</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">오른쪽: TOP 카메라 탐지 결과 (노란색 시간 표시)</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">터미널에 FRONT/TOP 각각의 YOLO ms + FPS 진단 로그</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 11: Troubleshooting -->
+    <div class="cmd-card" style="--accent:#DC2626">
+      <div class="cmd-head"><span class="cmd-badge">11</span><span class="cmd-emoji">🔧</span><div class="cmd-name">멀티카메라 트러블슈팅<small>FPS가 안 나올 때 확인할 것들</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 2대 동시 사용 시 FPS가 낮은 이유</div>
+        <p class="big-easy">Pi5의 <strong>USB 대역폭 경합</strong> 때문이에요. 두 카메라가 같은 USB 버스를 나눠 써요.</p>
+
+        <table class="data-table">
+          <thead><tr><th>증상</th><th>원인</th><th>해결법</th></tr></thead>
+          <tbody>
+            <tr><td>FRONT 10fps, TOP 5fps</td><td>USB 대역폭 경합</td><td>다른 USB 포트 종류에 연결</td></tr>
+            <tr><td>한쪽만 0fps</td><td>장치 경로가 틀림</td><td><code>v4l2-ctl --list-devices</code> 재확인</td></tr>
+            <tr><td>양쪽 다 느림</td><td>같은 USB 2.0 버스</td><td>해상도 320×240으로 낮추기</td></tr>
+            <tr><td>간헐적 프레임 드롭</td><td>Wi-Fi 지터</td><td>NUC 유선 + Pi 5GHz 전용</td></tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>현실적 목표:</strong> 2대 동시 사용 시 각 카메라 <strong>10fps</strong>면 교육 현장에서 충분해요. FRONT(YOLO용)를 우선하고 TOP은 5~7fps도 OK!</span></div>
+
+        <div class="callout callout-info"><span class="callout-icon">🔌</span><span class="callout-content"><strong>USB 포트 분리 배치:</strong><br>• 카메라 A → Pi5 <strong>USB 3.0</strong> 포트 (파란색)<br>• 카메라 B → Pi5 <strong>USB 2.0</strong> 포트 (검은색)<br>→ 서로 다른 USB 버스를 사용하여 경합 감소!</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 추천 실행 순서 -->
+<section style="background:#F1F5F9; border-top:1px solid var(--color-border);">
+  <div class="container">
+    <h2 class="section-title">📊 진단 로그 5개 필드 읽는 법</h2>
+    <p class="section-lead">멀티카메라 모드에서 NUC 터미널에 출력되는 진단 로그를 읽는 방법</p>
+
+    <div class="cmd-terminal-multi" style="border-radius:12px; margin-bottom:1.5rem;">
+<pre><span class="cm">   ①        ②         ③          ④        ⑤</span>
+  525 |   29.3ms |   72.9ms |  175.7ms |   7.5
+  540 |   43.0ms |   31.6ms |  113.9ms |   7.6</pre>
+    </div>
+
+    <table class="data-table">
+      <thead><tr><th>번호</th><th>이름</th><th>의미</th><th>정상 범위</th></tr></thead>
+      <tbody>
+        <tr><td><strong>①</strong></td><td>프레임</td><td>지금까지 처리한 총 프레임 수</td><td>계속 증가</td></tr>
+        <tr><td><strong>②</strong></td><td>FRONT</td><td>FRONT 카메라 YOLO 추론 시간</td><td class="fast">30~50ms</td></tr>
+        <tr><td><strong>③</strong></td><td>TOP</td><td>TOP 카메라 YOLO 추론 시간</td><td class="fast">30~50ms</td></tr>
+        <tr><td><strong>④</strong></td><td>합계</td><td>②+③ + 수신/디코딩/표시 전부 합산</td><td>80~150ms</td></tr>
+        <tr><td><strong>⑤</strong></td><td>FPS</td><td>1초에 처리하는 프레임 수</td><td class="fast">7+ (멀티)</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-info"><span class="callout-icon">💡</span><span class="callout-content"><strong>멀티 FPS가 7~8인 이유:</strong> 2대를 <strong>순차적으로</strong> YOLO 처리하기 때문이에요. FRONT 40ms + TOP 50ms = 90ms + 오버헤드 ≈ 130ms → 초당 약 7~8프레임. 싱글(25fps)의 1/3이지만 <strong>2대를 동시에 돌리니까 정상!</strong></span></div>
+  </div>
+</section>
+
+<!-- 카메라 품질 비교 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">📷 카메라 품질 비교 — FPS ≠ 감지 품질!</h2>
+    <p class="section-lead">실습에서 발견한 중요한 인사이트: 프레임 수가 높다고 탐지가 잘 되는 게 아니에요!</p>
+
+    <table class="data-table">
+      <thead><tr><th></th><th>FRONT (USB Camera)</th><th>TOP (Logitech)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pi 전송 fps</strong></td><td>10fps (빠름)</td><td>5~7fps (느림)</td></tr>
+        <tr><td><strong>움직일 때 사진</strong></td><td class="slow">흐림 (모션 블러)</td><td class="fast">선명</td></tr>
+        <tr><td><strong>YOLO 감지</strong></td><td class="slow">못 찾거나 느림</td><td class="fast">즉시 찾음</td></tr>
+        <tr><td><strong>내부 처리</strong></td><td>촬영 → 바로 전송</td><td>촬영 → 자동초점 → 노이즈제거 → 색보정 → 전송</td></tr>
+      </tbody>
+    </table>
+
+    <div class="analogy-box" style="margin-top:1.5rem;"><div class="analogy-icon">📸</div><div class="analogy-content"><div class="analogy-title">쉽게 말하면</div><p class="analogy-text">동네 즉석사진(FRONT)은 1초에 10장 찍지만 흐릿하고, 전문 사진관(Logitech)은 1초에 7장이지만 한 장 한 장이 선명해요. YOLO 입장에서는 <strong>선명한 사진 7장이 흐린 사진 10장보다 훨씬 분석하기 쉬워요!</strong></p></div></div>
+
+    <div class="callout callout-tip"><span class="callout-icon">🎯</span><span class="callout-content"><strong>교육 현장 팁:</strong> YOLO 탐지용 메인 카메라에는 <strong>Logitech 같은 고품질 카메라</strong>를 쓰세요. fps가 낮아도 탐지 정확도가 높으니까요!</span></div>
+  </div>
+</section>
+
+<!-- 전체 옵션 정리 -->
+<section style="background:#F1F5F9; border-top:1px solid var(--color-border);">
+  <div class="container">
+    <h2 class="section-title">⚙️ 전체 옵션 정리</h2>
+    <p class="section-lead">모든 스크립트의 주요 옵션을 한눈에 정리</p>
+
+    <table class="data-table">
+      <thead><tr><th>옵션</th><th>설명</th><th>기본값</th><th>사용 예시</th></tr></thead>
+      <tbody>
+        <tr><td><code>--pi-ip</code></td><td>Pi IP 주소</td><td>192.168.50.111</td><td><code>--pi-ip 192.168.50.200</code></td></tr>
+        <tr><td><code>--model</code></td><td>YOLO 모델 경로</td><td>yolo26n_openvino_model/</td><td><code>--model /home/zeta/lerobot/yolo26n_openvino_model/</code></td></tr>
+        <tr><td><code>--multi</code></td><td>멀티카메라 모드</td><td>off (싱글)</td><td><code>--multi</code></td></tr>
+        <tr><td><code>--device</code></td><td>카메라 장치 경로</td><td>/dev/video0</td><td><code>--device /dev/video3</code></td></tr>
+        <tr><td><code>--fps</code></td><td>목표 FPS</td><td>15</td><td><code>--fps 10</code></td></tr>
+        <tr><td><code>--front-port</code></td><td>FRONT 포트</td><td>5556</td><td><code>--front-port 5556</code></td></tr>
+        <tr><td><code>--top-port</code></td><td>TOP 포트</td><td>5557</td><td><code>--top-port 5557</code></td></tr>
+        <tr><td><code>--imgsz</code></td><td>YOLO 추론 해상도</td><td>640</td><td><code>--imgsz 320</code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-danger"><span class="callout-icon">🚨</span><span class="callout-content"><strong>--model 경로 찾기:</strong> 모델이 어디 있는지 모르면 NUC에서 <code>find ~ -name "yolo26n_openvino_model" -type d</code> 실행!</span></div>
+  </div>
+</section>
+
+<!-- 추천 실행 순서 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">📋 추천 실행 순서 정리</h2>
+
+    <table class="data-table">
+      <thead><tr><th>단계</th><th>싱글 (1대)</th><th>멀티 (2대)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Pi 전송</strong></td><td><code>python3 send_camera.py</code></td><td>터미널1: <code>send_camera_front.py --device /dev/video0</code><br>터미널2: <code>send_camera_top.py --device /dev/video3</code></td></tr>
+        <tr><td><strong>NUC 수신</strong></td><td><code>test_receive.py --pi-ip PI_IP</code></td><td><code>test_receive.py --pi-ip PI_IP --multi</code></td></tr>
+        <tr><td><strong>NUC YOLO</strong></td><td><code>basic_detect.py --pi-ip PI_IP</code></td><td><code>basic_detect.py --pi-ip PI_IP --multi</code></td></tr>
+        <tr><td><strong>NUC OpenVINO</strong></td><td><code>receive_and_detect.py --pi-ip PI_IP<br>--model 모델경로</code></td><td><code>receive_and_detect.py --pi-ip PI_IP<br>--model 모델경로 --multi</code></td></tr>
+        <tr><td><strong>종료</strong></td><td>NUC: q키 → Pi: Ctrl+C</td><td>NUC: q키 → Pi: Ctrl+C ×2</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer style="text-align:center; padding:3rem 1rem; color:var(--color-muted); font-size:0.82rem;">
+  <p>Stage 1 YOLO 원격 탐지 실습 가이드 • 싱글 + 멀티카메라 • 2026년 2월</p>
+  <p style="font-size:0.72rem; margin-top:0.3rem;">LeKiwi 로봇 교육 과정 — Pi 5 → NUC PC</p>
+</footer>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var cmd=btn.getAttribute('data-cmd');
+    var done=function(){var o=btn.innerHTML;btn.innerHTML='✅ 복사됨';btn.classList.add('copied');setTimeout(function(){btn.innerHTML=o;btn.classList.remove('copied');},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cmd).then(done).catch(function(){fallbackCopy(cmd,done);});}else{fallbackCopy(cmd,done);}
+  });
+});
+function fallbackCopy(t,done){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);done();}
+</script>
+</body>
+</html>
