@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실습 가이드 SAM3 정밀분할 시스템</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --color-primary: #2563EB;
+  --color-primary-light: #DBEAFE;
+  --color-secondary: #7C3AED;
+  --color-secondary-light: #EDE9FE;
+  --color-success: #059669;
+  --color-success-light: #D1FAE5;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-danger: #DC2626;
+  --color-danger-light: #FEE2E2;
+  --color-surface: #F8FAFC;
+  --color-card: #FFFFFF;
+  --color-text: #1E293B;
+  --color-muted: #64748B;
+  --color-border: #E2E8F0;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text);
+  background: var(--color-surface); line-height: 1.75; }
+code, pre { font-family: 'JetBrains Mono', monospace; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+section { padding: 3rem 0; }
+.section-title { font-size: 1.85rem; font-weight: 700; margin-bottom: 0.5rem; }
+.section-lead { color: var(--color-muted); margin-bottom: 2rem; }
+
+/* 히어로 — AI/모델 그래디언트 */
+.hero { background: linear-gradient(135deg, #4C1D95, #8B5CF6); color: white; padding: 3.5rem 0 3rem; }
+.hero h1 { font-size: 2.6rem; font-weight: 900; line-height: 1.2; }
+.hero-subtitle { font-size: 1.1rem; margin-top: 0.85rem; opacity: 0.95; }
+.hero-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.pill { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+  padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; }
+
+/* 구조 설명 박스 */
+.arch-box { background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: 16px; padding: 1.75rem; margin-top: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.arch-row { display: flex; align-items: center; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+.arch-card { border-radius: 12px; padding: 1rem 1.25rem; text-align: center; min-width: 150px;
+  border: 2px solid var(--c); background: var(--bg); }
+.arch-card .role { font-size: 0.72rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.arch-card .name { font-weight: 700; font-size: 1rem; margin-top: 0.2rem; }
+.arch-card .task { font-size: 0.82rem; color: var(--color-muted); margin-top: 0.35rem; line-height: 1.5; }
+.arch-arrow { color: #94A3B8; font-size: 1.2rem; }
+@media (max-width:768px){ .arch-row{flex-direction:column;} }
+
+/* 플로우 다이어그램 */
+.flow-diagram { display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 2rem; background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: 16px; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.flow-node { background: var(--color-card); border: 2px solid var(--node-color, var(--color-primary));
+  border-radius: 12px; padding: 1.1rem; text-align: center; min-width: 110px;
+  transition: transform 0.2s, box-shadow 0.2s; }
+.flow-node:hover { transform: translateY(-4px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+.flow-node-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+.flow-node-title { font-weight: 700; font-size: 0.88rem; }
+.flow-node-desc { font-size: 0.74rem; color: var(--color-muted); margin-top: 0.2rem; }
+.flow-arrow { flex-shrink: 0; }
+@media (max-width: 768px) { .flow-diagram { flex-direction: column; } .flow-arrow svg { transform: rotate(90deg); } }
+
+/* 명령어 카드 */
+.cmd-card { background: var(--color-card); border: 1px solid var(--color-border);
+  border-radius: 16px; overflow: hidden; margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08); }
+.cmd-head { display: flex; align-items: center; gap: 0.85rem;
+  padding: 1.1rem 1.5rem; color: white; background: var(--accent, var(--color-primary)); }
+.cmd-badge { flex-shrink: 0; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+  background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.6);
+  display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.05rem; }
+.cmd-emoji { font-size: 1.7rem; }
+.cmd-name { font-weight: 700; font-size: 1.15rem; }
+.cmd-name small { display:block; font-weight:400; font-size:0.8rem; opacity:0.85; margin-top:0.1rem; }
+.cmd-terminal { background: #0F172A; color: #E2E8F0; padding: 1.1rem 1.5rem;
+  font-size: 0.95rem; display: flex; align-items: center; gap: 0.6rem; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace; }
+.cmd-terminal .prompt { color: #4ADE80; user-select: none; }
+.cmd-terminal code { white-space: nowrap; flex: 1; }
+.copy-btn { flex-shrink: 0; margin-left: auto; background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25); color: #E2E8F0; border-radius: 8px;
+  padding: 0.35rem 0.75rem; font-size: 0.8rem; font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;
+  transition: background 0.15s; }
+.copy-btn:hover { background: rgba(255,255,255,0.22); }
+.copy-btn.copied { background: var(--color-success); border-color: var(--color-success); color: white; }
+.cmd-body { padding: 1.5rem; }
+.cmd-result-label { display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--accent, var(--color-primary)); margin-bottom: 0.6rem; }
+.big-easy { font-size: 1.05rem; font-weight: 500; }
+.mini-steps { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+.mini-step { display: flex; gap: 0.75rem; align-items: flex-start;
+  background: var(--color-surface); border-radius: 10px; padding: 0.75rem 1rem; }
+.mini-step-num { flex-shrink: 0; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  background: var(--accent, var(--color-primary)); color: white; display: flex;
+  align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; }
+.mini-step-text { font-size: 0.92rem; }
+
+/* 코드 블록 (출력 예시) */
+.code-out { background: #0F172A; color: #94A3B8; border-radius: 10px; padding: 1rem 1.25rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; line-height: 1.7; margin-top: 1rem;
+  overflow-x: auto; white-space: pre; }
+.code-out .ok { color: #4ADE80; }
+.code-out .err { color: #F87171; }
+.code-out .dim { color: #64748B; }
+
+/* 비유 박스 */
+.analogy-box { display: flex; gap: 1.1rem; padding: 1.25rem; background: var(--color-secondary-light);
+  border-radius: 12px; border-left: 4px solid var(--color-secondary); margin-top: 1rem; }
+.analogy-icon { font-size: 2rem; flex-shrink: 0; }
+.analogy-title { font-weight: 700; font-size: 0.8rem; color: var(--color-secondary);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.35rem; }
+.analogy-text { line-height: 1.65; font-size: 0.95rem; }
+
+/* 콜아웃 */
+.callout { display: flex; gap: 0.75rem; padding: 1rem 1.25rem; border-radius: 10px;
+  align-items: flex-start; margin-top: 1.5rem; }
+.callout-icon { font-size: 1.25rem; flex-shrink: 0; }
+.callout-content { font-size: 0.95rem; line-height: 1.6; }
+.callout-tip { background: var(--color-success-light); border-left: 3px solid var(--color-success); }
+.callout-warning { background: var(--color-warning-light); border-left: 3px solid var(--color-warning); }
+.callout-danger { background: var(--color-danger-light); border-left: 3px solid var(--color-danger); }
+
+/* 트러블슈팅 표 */
+.trouble { width: 100%; border-collapse: collapse; margin-top: 1.5rem; background: var(--color-card);
+  border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 0.9rem; }
+.trouble th { background: #1E293B; color: white; text-align: left; padding: 0.85rem 1rem; font-size: 0.82rem; }
+.trouble td { padding: 0.85rem 1rem; border-top: 1px solid var(--color-border); vertical-align: top; }
+.trouble tr:nth-child(even) { background: var(--color-surface); }
+.trouble code { background: var(--color-primary-light); padding: 0.1rem 0.4rem; border-radius: 5px; font-size: 0.82rem; }
+
+@media (max-width: 768px) { .hero h1 { font-size: 2rem; } .section-title { font-size: 1.5rem; } }
+@media print {
+  .hero { background: white !important; color: black !important; }
+  .cmd-head { color: black !important; -webkit-print-color-adjust: exact; }
+  .copy-btn { display: none; }
+  .flow-node:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- 히어로 -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="pill">SAM3</span>
+      <span class="pill">정밀분할</span>
+      <span class="pill">NUC + RTX 4090</span>
+      <span class="pill">Grounding DINO</span>
+    </div>
+    <h1>실습 가이드 SAM3 정밀분할 시스템</h1>
+    <p class="hero-subtitle">NUC가 박스를 찾고, 4090이 픽셀 마스크를 만든다 — 두 컴퓨터를 연결해 정밀분할을 완성하는 단계별 실습</p>
+  </div>
+</div>
+
+<!-- 전체 구조 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">먼저, 전체 그림부터</h2>
+    <p class="section-lead">컴퓨터 두 대가 일을 나눠 합니다. 한 대는 "어디에 있는지", 다른 한 대는 "정확한 경계"를 담당해요.</p>
+
+    <div class="arch-box">
+      <div class="arch-row">
+        <div class="arch-card" style="--c:#2563EB; --bg:#DBEAFE33;">
+          <div class="role">카메라</div>
+          <div class="name">Pi 5</div>
+          <div class="task">영상을 찍어 보냄</div>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-card" style="--c:#7C3AED; --bg:#EDE9FE55;">
+          <div class="role">CPU · 박스 찾기</div>
+          <div class="name">NUC</div>
+          <div class="task">YOLO 추적<br>GDINO로 박스 탐지<br>"어디에 있는지"</div>
+        </div>
+        <span class="arch-arrow">→</span>
+        <div class="arch-card" style="--c:#D97706; --bg:#FEF3C755;">
+          <div class="role">GPU · 정밀분할</div>
+          <div class="name">RTX 4090</div>
+          <div class="task">SAM3로 픽셀 마스크<br>"정확한 경계"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analogy-box">
+      <div class="analogy-icon">✂️</div>
+      <div class="analogy-content">
+        <div class="analogy-title">쉽게 말하면</div>
+        <p class="analogy-text">박스(NUC)는 "이 네모 안에 물건이 있어요"라고 알려주는 <strong>대충 표시</strong>예요. 마스크(4090)는 가위로 물건 모양 그대로 <strong>정확히 오려내는</strong> 거예요. 비스듬히 놓인 기판을 네모로 감싸면 모서리에 배경이 잔뜩 들어가지만, 가위로 오리면 기판만 깔끔하게 남아요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 한눈에 보기 -->
+<section style="background:var(--color-card); border-top:1px solid var(--color-border); border-bottom:1px solid var(--color-border);">
+  <div class="container">
+    <h2 class="section-title">한눈에 보기 — 실습 순서</h2>
+    <p class="section-lead">아래 5단계를 차례로 따라 하면 SAM3 정밀분할이 동작합니다. 막히는 곳은 트러블슈팅 표를 보세요.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#64748B">
+        <div class="flow-node-icon">🔌</div>
+        <div class="flow-node-title">1. 연결 확인</div>
+        <div class="flow-node-desc">NUC↔4090 ping</div>
+      </div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB">
+        <div class="flow-node-icon">🧪</div>
+        <div class="flow-node-title">2. SAM3 단독 테스트</div>
+        <div class="flow-node-desc">test_sam3.py</div>
+      </div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED">
+        <div class="flow-node-icon">🎯</div>
+        <div class="flow-node-title">3. 4090 서버 켜기</div>
+        <div class="flow-node-desc">sam3_server.py</div>
+      </div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#0891B2">
+        <div class="flow-node-icon">🖥️</div>
+        <div class="flow-node-title">4. NUC 서버 켜기</div>
+        <div class="flow-node-desc">app.py</div>
+      </div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669">
+        <div class="flow-node-icon">🔍</div>
+        <div class="flow-node-title">5. 정밀분할 실행</div>
+        <div class="flow-node-desc">브라우저</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 명령어 카드들 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">단계별 따라 하기</h2>
+    <p class="section-lead">각 카드의 명령어를 복사해서 그대로 실행하세요. 어디서(4090/NUC) 실행하는지 카드마다 적어두었어요.</p>
+
+    <!-- 1: 연결 확인 -->
+    <div class="cmd-card" style="--accent:#64748B;">
+      <div class="cmd-head">
+        <span class="cmd-badge">1</span>
+        <span class="cmd-emoji">🔌</span>
+        <div class="cmd-name">NUC → 4090 연결 확인<small>NUC에서 실행 · 두 컴퓨터가 서로 통하는지</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">$</span><code>curl -m 3 http://192.168.0.75:5001/ping</code>
+        <button class="copy-btn" data-cmd="curl -m 3 http://192.168.0.75:5001/ping">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">NUC가 4090에게 <strong>"거기 있니?"</strong> 하고 신호를 보내요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><code>{"status":"ok"}</code> 가 나오면 두 컴퓨터가 잘 연결된 거예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">아무 응답이 없거나 멈추면 IP·포트·방화벽을 확인해요. (192.168.0.75는 4090의 실제 IP로 바꾸세요)</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> 4090 IP는 4090에서 <code>hostname -I</code> 로 확인해요. NUC와 같은 <code>192.168.0.x</code> 대역이어야 통해요.</span></div>
+      </div>
+    </div>
+
+    <!-- 2: SAM3 단독 테스트 -->
+    <div class="cmd-card" style="--accent:#2563EB;">
+      <div class="cmd-head">
+        <span class="cmd-badge">2</span>
+        <span class="cmd-emoji">🧪</span>
+        <div class="cmd-name">SAM3 단독 테스트<small>4090에서 실행 · 서버 켜기 전에 모델만 먼저 확인</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">$</span><code>conda activate sam3 &amp;&amp; python test_sam3.py</code>
+        <button class="copy-btn" data-cmd="conda activate sam3 && python test_sam3.py">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">SAM3 모델이 <strong>혼자서도 잘 도는지</strong> 먼저 확인해요. (Flask 서버 없이)</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">로컬에 있는 <code>sam3.pt</code> 파일을 불러와요. (인터넷 다운로드 안 함)</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">가짜 이미지에 "object"라고 물어보고 마스크가 나오는지 봐요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">아래처럼 "마스크 생성 성공"이 뜨면 3번으로 넘어가요.</span></div>
+        </div>
+        <div class="code-out"><span class="dim">[1]</span> sam3 import 성공
+<span class="dim">[2]</span> 로컬 모델 로드 중 (load_from_HF=False)...
+<span class="dim">[3]</span> 모델 로드 성공 (다운로드 없이!)
+<span class="dim">[4]</span> set_image 성공
+<span class="dim">[5]</span> set_text_prompt 성공
+
+<span class="ok">&gt;&gt;&gt; 마스크 생성 성공! 개수=1, shape=(1, 480, 640)</span></div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>왜 먼저 테스트하나요?</strong> 모델이 문제인지, 서버 코드가 문제인지 <strong>나눠서 확인</strong>하려고요. 여기서 성공하면 모델은 정상이에요.</span></div>
+      </div>
+    </div>
+
+    <!-- 3: 4090 서버 -->
+    <div class="cmd-card" style="--accent:#7C3AED;">
+      <div class="cmd-head">
+        <span class="cmd-badge">3</span>
+        <span class="cmd-emoji">🎯</span>
+        <div class="cmd-name">4090 SAM3 서버 켜기<small>4090에서 실행 · 정밀분할을 담당하는 서버</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">$</span><code>conda activate sam3 &amp;&amp; python sam3_server.py</code>
+        <button class="copy-btn" data-cmd="conda activate sam3 && python sam3_server.py">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">4090이 <strong>"마스크 만들어 줄게"</strong> 하고 5001번 문을 열고 기다려요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">SAM3 모델을 GPU에 올려요. (2번 테스트가 됐으면 여기도 잘 돼요)</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><code>http://0.0.0.0:5001</code> 에서 NUC의 요청을 기다려요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>주의:</strong> 이 창은 <strong>끄지 말고 계속 켜두세요.</strong> 끄면 NUC가 "SAM3 오프라인"이라고 표시해요.</span></div>
+      </div>
+    </div>
+
+    <!-- 4: NUC 서버 -->
+    <div class="cmd-card" style="--accent:#0891B2;">
+      <div class="cmd-head">
+        <span class="cmd-badge">4</span>
+        <span class="cmd-emoji">🖥️</span>
+        <div class="cmd-name">NUC 메인 서버 켜기<small>NUC에서 실행 · 카메라·YOLO·GDINO·화면 담당</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">$</span><code>conda activate lerobot &amp;&amp; python app.py</code>
+        <button class="copy-btn" data-cmd="conda activate lerobot && python app.py">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">NUC가 <strong>화면을 띄우고</strong> 4090과 연결돼요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">YOLO·GDINO 모델을 불러오고 카메라 영상을 받아요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><code>http://0.0.0.0:5000</code> 웹 화면이 열려요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">시작 메시지에 4090 주소(SAM3_SERVER_URL)가 맞는지 확인해요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> <code>app.py</code> 위쪽 <code>SAM3_SERVER_URL</code> 값이 4090 실제 IP(<code>http://192.168.0.75:5001</code>)인지 먼저 확인하세요.</span></div>
+      </div>
+    </div>
+
+    <!-- 5: 정밀분할 실행 -->
+    <div class="cmd-card" style="--accent:#059669;">
+      <div class="cmd-head">
+        <span class="cmd-badge">5</span>
+        <span class="cmd-emoji">🔍</span>
+        <div class="cmd-name">브라우저에서 정밀분할<small>아무 PC의 브라우저 · 박스 vs 마스크 비교</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">›</span><code>http://&lt;NUC_IP&gt;:5000</code>
+        <button class="copy-btn" data-cmd="http://NUC_IP:5000">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">물체를 올리고, 영어로 찾고, <strong>정밀분할 버튼</strong>을 누르면 비교 결과가 나와요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">카메라 앞에 기판 같은 물체를 <strong>비스듬히</strong> 올려요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">입력창에 <code>circuit board</code> 같은 영어 단어를 넣고 "박스로 위치 찾기"를 눌러요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">"정밀분할 실행"을 누르면 왼쪽 빨강 박스 / 오른쪽 초록 마스크가 나란히 나와요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">4</span><span class="mini-step-text">"박스의 N%가 배경이었습니다" 숫자로 정밀분할 효과를 확인해요.</span></div>
+        </div>
+        <div class="analogy-box">
+          <div class="analogy-icon">📊</div>
+          <div class="analogy-content">
+            <div class="analogy-title">무엇을 배우나요</div>
+            <p class="analogy-text">비스듬한 기판일수록 박스에 배경이 많이 들어가서 "배경 %"가 커져요. 마스크는 그걸 깔끔하게 걷어내죠. 로봇이 물체를 집을 때 이 차이가 정확도를 좌우해요.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 트러블슈팅 -->
+<section style="background:var(--color-card); border-top:1px solid var(--color-border);">
+  <div class="container">
+    <h2 class="section-title">🩺 막혔을 때 — 우리가 실제로 겪은 문제들</h2>
+    <p class="section-lead">이 시스템을 만들며 실제로 만난 오류와 해결책이에요. 같은 증상이 보이면 여기를 보세요.</p>
+
+    <table class="trouble">
+      <tr><th>증상</th><th>원인</th><th>해결</th></tr>
+      <tr>
+        <td>헤더에 <b>"SAM3 오프라인"</b></td>
+        <td>NUC가 4090을 못 찾음</td>
+        <td><code>SAM3_SERVER_URL</code>을 4090 실제 IP로. 같은 <code>192.168.0.x</code> 대역인지, 방화벽 5001 열렸는지 확인</td>
+      </tr>
+      <tr>
+        <td>연결은 됐는데 버튼 누르면 <b>"SAM3 서버 응답 없음"</b></td>
+        <td><code>/ping</code>은 되지만 <code>/segment</code> 추론에서 에러</td>
+        <td>4090 터미널 로그 확인. 십중팔구 아래 두 줄 중 하나</td>
+      </tr>
+      <tr>
+        <td><code>mat1 and mat2 must have the same dtype, BFloat16 and Float</code></td>
+        <td>모델은 bfloat16인데 입력이 float32</td>
+        <td><code>torch.autocast("cuda", dtype=torch.bfloat16)</code> 안에서 추론 (새 코드에 반영됨)</td>
+      </tr>
+      <tr>
+        <td><code>sam3.pt 0%</code> 에서 멈춤 (다운로드 안 됨)</td>
+        <td><code>load_from_HF=True</code>라 로컬 파일 두고 HF에서 3.45GB 받으려다 멈춤</td>
+        <td><code>checkpoint_path="sam3.pt"</code> + <code>load_from_HF=False</code> (새 코드에 반영됨)</td>
+      </tr>
+      <tr>
+        <td>GDINO 탐지가 9초나 걸림</td>
+        <td>NUC는 CPU뿐 → Grounding DINO가 느림</td>
+        <td>정상 범위. 첫 호출은 워밍업으로 더 느림. 타임아웃 30초로 늘려둠</td>
+      </tr>
+      <tr>
+        <td><code>bpe_simple_vocab_16e6.txt.gz</code> 없음</td>
+        <td>일부 sam3 설치에서 BPE 토크나이저 파일 누락</td>
+        <td>4090 폴더에 그 파일을 받아두면 코드가 자동으로 찾음 (아래 명령 참고)</td>
+      </tr>
+    </table>
+
+    <div class="cmd-card" style="--accent:#D97706; margin-top:2rem;">
+      <div class="cmd-head">
+        <span class="cmd-badge">+</span>
+        <span class="cmd-emoji">📥</span>
+        <div class="cmd-name">BPE 파일이 없다는 에러가 날 때<small>4090에서 실행 · 작은 파일 하나만 받기</small></div>
+      </div>
+      <div class="cmd-terminal">
+        <span class="prompt">$</span><code>curl -sL -o bpe_simple_vocab_16e6.txt.gz https://github.com/openai/CLIP/raw/main/clip/bpe_simple_vocab_16e6.txt.gz</code>
+        <button class="copy-btn" data-cmd="curl -sL -o bpe_simple_vocab_16e6.txt.gz https://github.com/openai/CLIP/raw/main/clip/bpe_simple_vocab_16e6.txt.gz">📋 복사</button>
+      </div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">SAM3가 글자를 이해하는 데 필요한 <strong>작은 사전 파일</strong>을 받아요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><code>sam3_server.py</code>가 있는 폴더에서 실행해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">받은 뒤 다시 <code>test_sam3.py</code>를 실행하면 자동으로 이 파일을 찾아 써요.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 추천 순서 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">✅ 추천 실행 순서</h2>
+    <p class="section-lead">처음 켤 때는 이 순서가 가장 안전해요. 한 단계씩 확인하며 올라가면 어디서 막혔는지 바로 알 수 있어요.</p>
+    <div class="mini-steps">
+      <div class="mini-step"><span class="mini-step-num" style="background:#2563EB">A</span><span class="mini-step-text"><strong>4090 먼저</strong> — <code>test_sam3.py</code>로 모델 확인 → 되면 <code>sam3_server.py</code> 켜기</span></div>
+      <div class="mini-step"><span class="mini-step-num" style="background:#0891B2">B</span><span class="mini-step-text"><strong>NUC 다음</strong> — <code>app.py</code> 켜기 → 헤더가 "SAM3 연결됨" 초록인지 확인</span></div>
+      <div class="mini-step"><span class="mini-step-num" style="background:#059669">C</span><span class="mini-step-text"><strong>브라우저</strong> — 물체 올리고 → 박스 찾고 → 정밀분할 → 비교 결과 확인</span></div>
+    </div>
+    <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>핵심 원칙:</strong> 항상 <strong>아래 단계부터(모델 → 서버 → 화면)</strong> 확인하세요. 막히면 그 단계 로그를 보면 원인이 나와요.</span></div>
+  </div>
+</section>
+
+<footer style="background:#0F172A; color:#94A3B8; padding:2rem 0; text-align:center; font-size:0.85rem;">
+  <div class="container">
+    LeKiwi 비전 파이프라인 · SAM3 정밀분할 실습 가이드 &nbsp;|&nbsp; NUC(박스) + RTX 4090(마스크)
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var cmd = btn.getAttribute('data-cmd');
+      var done = function () {
+        var original = btn.innerHTML;
+        btn.innerHTML = '✅ 복사됨';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.innerHTML = original; btn.classList.remove('copied'); }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).then(done).catch(function () { fallbackCopy(cmd, done); });
+      } else { fallbackCopy(cmd, done); }
+    });
+  });
+  function fallbackCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); done();
+  }
+</script>
+</body>
+</html>
