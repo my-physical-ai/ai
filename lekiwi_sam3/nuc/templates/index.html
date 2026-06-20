@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAM3 정밀분할 비교기 — 박스 vs 마스크</title>
+<style>
+  /* ════════════════════════════════════════════
+     디자인: "정밀분할의 차이를 눈으로 증명하는 측정 도구"
+     박스(GDINO)=빨강 / 마스크(SAM3)=초록 으로 일관되게 색 대비
+     ════════════════════════════════════════════ */
+  :root {
+    --bg:       #0A0E16;
+    --surface:  #121826;
+    --surface2: #1A2234;
+    --line:     #28324A;
+    --text:     #EAF0FA;
+    --muted:    #828FA8;
+    --box:      #F0533B;   /* 박스 = 빨강 (배경까지 포함) */
+    --box-soft: rgba(240,83,59,0.14);
+    --mask:     #34D399;   /* 마스크 = 초록 (물체만 정확) */
+    --mask-soft:rgba(52,211,153,0.14);
+    --gdino:    #A78BFA;   /* 언어탐지 보조색 */
+    --ok:       #34D399;
+    --danger:   #F0533B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+
+  /* ── 헤더 ── */
+  .header {
+    padding: 0.9rem 1.5rem; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 0.5rem;
+    background: rgba(10,14,22,0.9); backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 0.7rem; }
+  .brand .mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--box) 0%, var(--box) 48%, var(--mask) 52%, var(--mask) 100%);
+    display: grid; place-items: center; font-size: 1.1rem; color: #fff;
+  }
+  .brand h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+  .brand .sub { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.07em; text-transform: uppercase; }
+  .header-status { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.on { background: var(--ok); box-shadow: 0 0 6px rgba(52,211,153,0.5); }
+  .dot.off { background: var(--danger); }
+
+  /* ── 레이아웃 ── */
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 1.1rem; }
+
+  /* 작업 순서 스트립 */
+  .steps {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 1rem; font-size: 0.78rem;
+  }
+  .step {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.45rem 0.8rem; border-radius: 9px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--muted);
+  }
+  .step b { color: var(--text); font-weight: 600; }
+  .step .n {
+    width: 18px; height: 18px; border-radius: 5px; background: var(--surface2);
+    display: grid; place-items: center; font-size: 0.68rem; font-weight: 700;
+  }
+
+  /* ── 라이브 영상 (작게, 위쪽) ── */
+  .live {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 13px;
+    overflow: hidden; margin-bottom: 1rem;
+  }
+  .live-head {
+    padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;
+  }
+  .live-head .t { font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.45rem; }
+  .live-body { padding: 0.7rem; display: flex; gap: 0.7rem; align-items: stretch; flex-wrap: wrap; }
+  .live-video {
+    flex: 1; min-width: 280px; border-radius: 9px; overflow: hidden;
+    background: #05080F; border: 1px solid var(--line); display: grid; place-items: center;
+  }
+  .live-video img { width: 100%; display: block; }
+
+  /* 캡처/탐지 컨트롤 */
+  .capture-panel { width: 280px; display: flex; flex-direction: column; gap: 0.55rem; }
+  @media (max-width: 720px) { .capture-panel { width: 100%; } }
+  .ctrl-label { font-size: 0.66rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .seg { display: inline-flex; background: var(--surface2); border: 1px solid var(--line); border-radius: 8px; padding: 2px; gap: 2px; width: 100%; }
+  .seg button { flex: 1; border: 0; background: transparent; color: var(--muted); font-size: 0.74rem; font-weight: 600; padding: 0.34rem; border-radius: 6px; cursor: pointer; }
+  .seg button.active { background: var(--gdino); color: #1a1033; }
+
+  .text-input {
+    width: 100%; padding: 0.6rem 0.8rem; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 0.88rem;
+  }
+  .text-input:focus { outline: none; border-color: var(--gdino); }
+  .text-input::placeholder { color: #4A546C; }
+
+  .btn {
+    border: 1px solid var(--line); background: var(--surface2); color: var(--text);
+    font-size: 0.84rem; font-weight: 600; padding: 0.6rem; border-radius: 9px; cursor: pointer;
+    transition: all 0.14s; width: 100%;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--muted); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-gdino { background: var(--gdino); border-color: var(--gdino); color: #1a1033; }
+  .btn-gdino:hover:not(:disabled) { background: #b9a3fb; }
+
+  .gdino-note { font-size: 0.74rem; color: var(--muted); line-height: 1.5; }
+  .gdino-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+  .tag {
+    font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px; cursor: pointer;
+    background: var(--surface2); border: 1px solid var(--line); color: var(--muted);
+  }
+  .tag:hover { color: var(--text); border-color: var(--gdino); }
+
+  /* ════════ 메인: 정밀분할 실행 ════════ */
+  .run-bar { margin-bottom: 1rem; }
+  .sam3-btn {
+    width: 100%; border: 0; border-radius: 13px; cursor: pointer;
+    padding: 1rem; font-size: 1rem; font-weight: 700; letter-spacing: 0.01em;
+    background: linear-gradient(100deg, var(--box) 0%, #c4452f 45%, var(--mask) 55%, #2bb583 100%);
+    color: #fff; display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+    transition: all 0.16s; box-shadow: 0 4px 20px rgba(52,211,153,0.12);
+  }
+  .sam3-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 26px rgba(52,211,153,0.22); }
+  .sam3-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+  .sam3-btn .spin { width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .sam3-btn.loading .spin { display: inline-block; }
+  .sam3-btn.loading .ic { display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ════════ 비교 뷰 ════════ */
+  .compare { display: none; }
+  .compare.show { display: block; animation: fade 0.35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 1rem;
+  }
+  @media (max-width: 720px) { .compare-grid { grid-template-columns: 1fr; } }
+
+  .pane { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+  .pane.box-pane { border-color: rgba(240,83,59,0.4); }
+  .pane.mask-pane { border-color: rgba(52,211,153,0.4); }
+  .pane-head {
+    padding: 0.6rem 0.9rem; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--line); font-size: 0.82rem; font-weight: 700;
+  }
+  .box-pane .pane-head { background: var(--box-soft); color: var(--box); }
+  .mask-pane .pane-head { background: var(--mask-soft); color: var(--mask); }
+  .pane-head .area { font-size: 0.74rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .pane img { width: 100%; display: block; }
+
+  /* ════════ 핵심 수치: "박스의 N%가 배경" ════════ */
+  .verdict {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 13px;
+    padding: 1.3rem; margin-bottom: 1rem; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .verdict::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, var(--box-soft), transparent 40%, transparent 60%, var(--mask-soft));
+    pointer-events: none;
+  }
+  .verdict .big {
+    font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums; position: relative;
+  }
+  .verdict .big .pct { color: var(--mask); }
+  .verdict .cap { font-size: 0.86rem; color: var(--muted); margin-top: 0.5rem; position: relative; }
+  .verdict .cap b { color: var(--box); }
+
+  /* 정확도 바 */
+  .acc-bar { margin-top: 1rem; position: relative; }
+  .acc-track { height: 26px; border-radius: 7px; background: var(--box); overflow: hidden; position: relative; }
+  .acc-fill { height: 100%; background: var(--mask); width: 0%; transition: width 0.8s cubic-bezier(0.2,0.8,0.2,1); }
+  .acc-labels { display: flex; justify-content: space-between; margin-top: 0.4rem; font-size: 0.72rem; }
+  .acc-labels .l-box { color: var(--box); font-weight: 600; }
+  .acc-labels .l-mask { color: var(--mask); font-weight: 600; }
+
+  /* 물체별 상세 */
+  .obj-table { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+  .obj-table .th {
+    padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line);
+    font-size: 0.78rem; font-weight: 700; color: var(--muted);
+  }
+  .obj-row {
+    display: grid; grid-template-columns: 2rem 1fr 1fr 1fr; gap: 0.5rem;
+    padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line);
+    font-size: 0.8rem; align-items: center; font-variant-numeric: tabular-nums;
+  }
+  .obj-row:last-child { border-bottom: 0; }
+  .obj-row.head { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .obj-row .oid {
+    width: 1.6rem; height: 1.6rem; border-radius: 6px; background: var(--surface2);
+    display: grid; place-items: center; font-weight: 700; font-size: 0.74rem;
+  }
+  .obj-row .prec { color: var(--mask); font-weight: 700; }
+  .obj-row .bg { color: var(--box); }
+
+  .msg { font-size: 0.82rem; padding: 0.7rem 0.85rem; border-radius: 9px; margin-top: 0.8rem; }
+  .msg.err { background: rgba(240,83,59,0.1); border: 1px solid rgba(240,83,59,0.3); color: var(--danger); }
+
+  /* 빈 상태 안내 */
+  .empty {
+    text-align: center; padding: 2.5rem 1rem; color: var(--muted);
+    background: var(--surface); border: 1px dashed var(--line); border-radius: 13px;
+  }
+  .empty .icon { font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.6; }
+  .empty .t { font-size: 0.92rem; color: var(--text); margin-bottom: 0.25rem; }
+  .empty .d { font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="brand">
+    <div class="mark">◫</div>
+    <div>
+      <h1>SAM3 정밀분할 비교기</h1>
+      <div class="sub">박스 vs 픽셀 마스크</div>
+    </div>
+  </div>
+  <div class="header-status" id="headerStatus"><span class="dot off"></span>연결 확인 중…</div>
+</div>
+
+<div class="wrap">
+
+  <!-- 작업 순서 -->
+  <div class="steps">
+    <div class="step"><span class="n">1</span><span>카메라에 <b>물체(기판 등)</b> 올리기</span></div>
+    <div class="step"><span class="n">2</span><span>영어로 <b>물체 이름</b> 입력 → 박스 탐지</span></div>
+    <div class="step"><span class="n">3</span><span><b>정밀분할</b> → 박스와 마스크 차이 확인</span></div>
+  </div>
+
+  <!-- 라이브 영상 + 캡처/탐지 -->
+  <div class="live">
+    <div class="live-head">
+      <span class="t"><span class="dot on" style="background:var(--gdino)"></span>라이브 카메라 + 추적</span>
+      <span style="font-size:0.72rem;color:var(--muted)" id="liveInfo">—</span>
+    </div>
+    <div class="live-body">
+      <div class="live-video">
+        <img id="videoStream" src="/video_feed" alt="라이브 영상">
+      </div>
+      <div class="capture-panel">
+        <div>
+          <div class="ctrl-label" style="margin-bottom:0.3rem;">카메라</div>
+          <div class="seg" id="camSeg">
+            <button class="active" data-cam="front" onclick="switchCamera('front')">FRONT</button>
+            <button data-cam="top" onclick="switchCamera('top')">TOP</button>
+          </div>
+        </div>
+        <div>
+          <div class="ctrl-label" style="margin-bottom:0.3rem;">찾을 물체 (영어)</div>
+          <input class="text-input" id="gdinoText" type="text"
+                 placeholder="예: circuit board, green pcb"
+                 onkeypress="if(event.key==='Enter') detectGdino()">
+        </div>
+        <div class="gdino-tags">
+          <span class="tag" onclick="quickFill('circuit board')">circuit board</span>
+          <span class="tag" onclick="quickFill('green pcb')">green pcb</span>
+          <span class="tag" onclick="quickFill('bottle')">bottle</span>
+        </div>
+        <button class="btn btn-gdino" id="btnDetect" onclick="detectGdino()">① 박스로 위치 찾기</button>
+        <div class="gdino-note" id="gdinoNote">물체 이름을 입력하고 박스를 먼저 찾으세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 정밀분할 실행 버튼 -->
+  <div class="run-bar">
+    <button class="sam3-btn" id="btnSam3" onclick="runSam3()" disabled>
+      <span class="spin"></span>
+      <span class="ic">◫</span>
+      <span id="sam3Label">② 정밀분할 실행 (박스를 먼저 찾으세요)</span>
+    </button>
+  </div>
+
+  <!-- 빈 상태 -->
+  <div class="empty" id="emptyState">
+    <div class="icon">◫</div>
+    <div class="t">아직 분할 결과가 없습니다</div>
+    <div class="d">물체를 올리고 박스를 찾은 뒤 정밀분할을 실행하면, 여기에 박스와 마스크가 나란히 비교됩니다.</div>
+  </div>
+
+  <!-- 비교 결과 -->
+  <div class="compare" id="compareView">
+
+    <!-- 핵심 수치 -->
+    <div class="verdict">
+      <div class="big">박스의 <span id="bgPct" class="pct">—</span> 가 <span style="color:var(--box)">배경</span>이었습니다</div>
+      <div class="cap">SAM3 마스크는 <b id="boxAreaCap">—</b> 박스 중 실제 물체 <b style="color:var(--mask)" id="maskAreaCap">—</b> 만 정확히 따냈습니다</div>
+      <div class="acc-bar">
+        <div class="acc-track"><div class="acc-fill" id="accFill"></div></div>
+        <div class="acc-labels">
+          <span class="l-box">■ 박스(배경 포함) 100%</span>
+          <span class="l-mask" id="accMaskLabel">■ 마스크(물체만) —%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 좌우 비교 이미지 -->
+    <div class="compare-grid">
+      <div class="pane box-pane">
+        <div class="pane-head"><span>■ 박스 (GDINO)</span><span class="area" id="boxArea">—</span></div>
+        <img id="boxImage" src="" alt="박스 결과">
+      </div>
+      <div class="pane mask-pane">
+        <div class="pane-head"><span>■ 마스크 (SAM3)</span><span class="area" id="maskArea">—</span></div>
+        <img id="maskImage" src="" alt="마스크 결과">
+      </div>
+    </div>
+
+    <!-- 물체별 상세 -->
+    <div class="obj-table">
+      <div class="th" id="objSummary">물체별 정밀도</div>
+      <div class="obj-row head">
+        <span>#</span><span>박스 면적</span><span>마스크 면적</span><span>물체 비율</span>
+      </div>
+      <div id="objRows"></div>
+    </div>
+  </div>
+
+  <div id="sam3Msg"></div>
+</div>
+
+<script>
+let hasDetection = false;
+let sam3Online = false;
+
+function quickFill(t) {
+  document.getElementById('gdinoText').value = t;
+  detectGdino();
+}
+
+// ── 카메라 전환 ──
+function switchCamera(cam) {
+  fetch('/switch_camera', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({camera: cam})
+  }).then(r => r.json()).then(data => {
+    document.querySelectorAll('#camSeg button').forEach(b =>
+      b.classList.toggle('active', b.dataset.cam === data.camera));
+    document.getElementById('videoStream').src = '/video_feed?t=' + Date.now();
+  });
+}
+
+// ── 1단계: GDINO 박스 탐지 ──
+function detectGdino() {
+  const text = document.getElementById('gdinoText').value.trim();
+  if (!text) return;
+  const note = document.getElementById('gdinoNote');
+  note.textContent = '탐지 중…';
+  document.getElementById('btnDetect').disabled = true;
+
+  fetch('/detect', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: text})
+  }).then(r => r.json()).then(data => {
+    document.getElementById('btnDetect').disabled = false;
+    if (data.error) {
+      note.textContent = '❌ ' + data.error;
+      setReady(false); return;
+    }
+    if (data.count === 0) {
+      note.innerHTML = '<span style="color:var(--box)">"' + data.text_prompt +
+        '" 을(를) 못 찾았습니다. 물체를 화면 안에 두고 다시 시도하세요.</span>';
+      setReady(false); return;
+    }
+    note.innerHTML = '✅ <b style="color:var(--mask)">' + data.count +
+      '개</b> 찾음 (' + data.inference_ms + 'ms) — 이제 정밀분할을 실행하세요';
+    setReady(data.has_boxes && data.sam3_enabled);
+  }).catch(() => {
+    document.getElementById('btnDetect').disabled = false;
+    note.textContent = '❌ 요청 실패';
+    setReady(false);
+  });
+}
+
+// ── 2단계: SAM3 버튼 상태 ──
+function setReady(ready) {
+  hasDetection = ready;
+  updateSam3Btn();
+}
+function updateSam3Btn() {
+  const btn = document.getElementById('btnSam3');
+  const label = document.getElementById('sam3Label');
+  if (!sam3Online) {
+    btn.disabled = true; label.textContent = '② 4090 SAM3 서버 오프라인';
+  } else if (!hasDetection) {
+    btn.disabled = true; label.textContent = '② 정밀분할 실행 (박스를 먼저 찾으세요)';
+  } else {
+    btn.disabled = false; label.textContent = '② 정밀분할 실행 ▸ 박스 vs 마스크 비교';
+  }
+}
+
+// ── SAM3 실행 ──
+function runSam3() {
+  const btn = document.getElementById('btnSam3');
+  const label = document.getElementById('sam3Label');
+  const msg = document.getElementById('sam3Msg');
+  btn.classList.add('loading'); btn.disabled = true;
+  label.textContent = '4090에서 정밀분할 중…'; msg.innerHTML = '';
+
+  fetch('/segment_last', {method: 'POST'})
+    .then(r => r.json().then(j => ({ok: r.ok, data: j})))
+    .then(({ok, data}) => {
+      btn.classList.remove('loading'); btn.disabled = false;
+      label.textContent = '② 정밀분할 실행 ▸ 박스 vs 마스크 비교';
+      if (!ok || data.error) {
+        msg.innerHTML = '<div class="msg err">' + (data.error || '분할 실패') + '</div>';
+        return;
+      }
+      renderCompare(data);
+    })
+    .catch(err => {
+      btn.classList.remove('loading'); btn.disabled = false;
+      label.textContent = '② 정밀분할 실행 ▸ 박스 vs 마스크 비교';
+      msg.innerHTML = '<div class="msg err">요청 실패: ' + err + '</div>';
+    });
+}
+
+// ── 비교 결과 렌더링 ──
+function renderCompare(d) {
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('compareView').classList.add('show');
+
+  // 핵심 수치
+  document.getElementById('bgPct').textContent = d.background_pct + '%';
+  document.getElementById('boxAreaCap').textContent = fmt(d.total_box_area) + 'px';
+  document.getElementById('maskAreaCap').textContent = fmt(d.total_mask_area) + 'px';
+
+  // 정확도 바 (마스크가 박스의 몇 %)
+  document.getElementById('accFill').style.width = d.precision_pct + '%';
+  document.getElementById('accMaskLabel').textContent = '■ 마스크(물체만) ' + d.precision_pct + '%';
+
+  // 좌우 이미지
+  document.getElementById('boxImage').src = 'data:image/jpeg;base64,' + d.box_image;
+  document.getElementById('maskImage').src = 'data:image/jpeg;base64,' + d.mask_image;
+  document.getElementById('boxArea').textContent = fmt(d.total_box_area) + ' px';
+  document.getElementById('maskArea').textContent = fmt(d.total_mask_area) + ' px';
+
+  // 물체별 표
+  document.getElementById('objSummary').textContent =
+    '물체별 정밀도 — ' + d.count + '개 · SAM3 ' + d.sam3_ms + 'ms · 왕복 ' + d.round_trip_ms + 'ms';
+  let html = '';
+  d.objects.forEach(o => {
+    html += '<div class="obj-row">' +
+      '<span class="oid">' + o.id + '</span>' +
+      '<span>' + fmt(o.box_area) + ' px</span>' +
+      '<span>' + fmt(o.mask_area) + ' px</span>' +
+      '<span class="prec">' + o.precision_pct + '% <span class="bg" style="font-weight:400;font-size:0.72rem">(배경 ' + o.background_pct + '%)</span></span>' +
+      '</div>';
+  });
+  document.getElementById('objRows').innerHTML = html;
+}
+
+function fmt(n) { return (n || 0).toLocaleString(); }
+
+// ── 상태 폴링 ──
+function pollStatus() {
+  fetch('/status').then(r => r.json()).then(data => {
+    sam3Online = data.sam3_online;
+    document.getElementById('headerStatus').innerHTML =
+      '<span class="dot ' + (data.sam3_online ? 'on' : 'off') + '"></span>' +
+      'SAM3 ' + (data.sam3_online ? '연결됨 (4090)' : '오프라인');
+    document.getElementById('liveInfo').textContent =
+      (data.camera_front || data.camera_top ? '카메라 ON' : '카메라 대기') +
+      ' · ' + data.current_tracker;
+    document.querySelectorAll('#camSeg button').forEach(b =>
+      b.classList.toggle('active', b.dataset.cam === data.current_camera));
+    updateSam3Btn();
+  }).catch(() => {
+    document.getElementById('headerStatus').innerHTML = '<span class="dot off"></span>서버 연결 끊김';
+  });
+}
+setInterval(pollStatus, 3000);
+pollStatus();
+</script>
+</body>
+</html>
