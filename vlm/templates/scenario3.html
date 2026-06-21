@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 AI 물류 품질검사관 v2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;overflow-x:hidden}
+.header{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155}
+.header h1{font-size:1.3rem;font-weight:700}
+.header h1 span{color:#60a5fa}
+.status-bar{display:flex;gap:12px;font-size:.75rem}
+.st{padding:4px 10px;border-radius:12px;display:flex;align-items:center;gap:4px}
+.st-on{background:#065f4620;color:#34d399;border:1px solid #065f4650}
+.st-off{background:#7f1d1d20;color:#f87171;border:1px solid #7f1d1d50}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot-on{background:#34d399}.dot-off{background:#f87171}
+
+.main{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 52px)}
+.panel{display:flex;flex-direction:column}
+.panel-title{padding:8px 16px;font-size:.85rem;font-weight:600;background:#1e293b;border-bottom:1px solid #334155}
+.stream-box{flex:1;display:flex;align-items:center;justify-content:center;background:#000}
+.stream-box img{width:100%;height:100%;object-fit:contain}
+
+.right-panel{border-left:1px solid #334155;display:flex;flex-direction:column}
+.controls{padding:12px 16px;background:#1e293b;border-bottom:1px solid #334155}
+.prompt-row{display:flex;gap:8px;margin-bottom:8px}
+.prompt-row input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.85rem}
+.prompt-row input:focus{outline:none;border-color:#60a5fa}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:.82rem}
+.btn-inspect{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff}
+.btn-inspect:hover{background:linear-gradient(135deg,#1d4ed8,#2563eb)}
+.btn-inspect:disabled{opacity:.5;cursor:not-allowed}
+.btn-chat{background:#334155;color:#e2e8f0}
+
+.result-area{flex:1;overflow-y:auto;padding:12px 16px}
+.result-card{background:#1e293b;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #334155}
+.rc-title{font-size:.82rem;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.rc-text{font-size:.82rem;line-height:1.7;color:#cbd5e1;white-space:pre-wrap}
+
+.pipeline-bar{display:flex;gap:4px;margin-bottom:12px;font-size:.72rem}
+.pipe-step{flex:1;text-align:center;padding:6px 4px;border-radius:6px;background:#1e293b;border:1px solid #334155}
+.pipe-step.active{border-color:#60a5fa;color:#60a5fa}
+.pipe-step.done{border-color:#34d399;color:#34d399;background:#065f4615}
+.pipe-step .pipe-ms{font-size:.65rem;color:#94a3b8}
+
+.det-list{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.det-tag{padding:4px 10px;border-radius:16px;border:1px solid #475569;background:#0f172a;font-size:.75rem;cursor:pointer;transition:all .15s}
+.det-tag:hover{border-color:#60a5fa}
+.det-tag.selected{border-color:#34d399;background:#065f4620;color:#34d399}
+
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.compare-grid img{width:100%;border-radius:6px;border:1px solid #334155}
+.compare-label{font-size:.68rem;text-align:center;color:#94a3b8;margin-top:3px}
+
+.crop-img{max-width:200px;border-radius:8px;border:1px solid #475569;margin:8px 0}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.stat-card{background:#0f172a;border-radius:8px;padding:8px;text-align:center}
+.stat-n{font-size:1.2rem;font-weight:700}
+.stat-l{font-size:.65rem;color:#94a3b8}
+.c-blue{color:#60a5fa}.c-green{color:#34d399}.c-amber{color:#fbbf24}
+
+.grade{display:inline-block;padding:4px 12px;border-radius:16px;font-size:.78rem;font-weight:600}
+.grade-ok{background:#065f4630;color:#34d399}
+.grade-warn{background:#78350f30;color:#fbbf24}
+.grade-bad{background:#7f1d1d30;color:#f87171}
+
+.loading{display:none;padding:20px;text-align:center}
+.loading.active{display:block}
+.spinner{width:20px;height:20px;border:2px solid #334155;border-top:2px solid #60a5fa;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.chat-area{padding:12px 16px;background:#1e293b;border-top:1px solid #334155}
+.chat-row{display:flex;gap:8px}
+.chat-row input{flex:1;padding:8px 12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.82rem}
+.chat-bubble{background:#0f172a;border-radius:10px;padding:10px 14px;margin-top:8px;font-size:.82rem;line-height:1.6;color:#cbd5e1;max-height:120px;overflow-y:auto}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📦 AI <span>물류 품질검사관</span> <span style="font-size:.7rem;opacity:.5">v2</span></h1>
+  <div class="status-bar" id="statusBar">
+    <div class="st st-off" id="st-cam"><span class="dot dot-off"></span>카메라</div>
+    <div class="st st-off" id="st-vlm"><span class="dot dot-off"></span>VLM</div>
+    <div class="st st-off" id="st-sam"><span class="dot dot-off"></span>SAM3</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="panel-title">⚡ YOLO 실시간 감시 (Step 1: 물체 탐지)</div>
+    <div class="stream-box"><img id="yoloStream" src="/video_feed" alt="YOLO"></div>
+  </div>
+
+  <div class="panel right-panel">
+    <div class="panel-title">🔍 품질 검사 결과</div>
+
+    <div class="controls">
+      <div class="prompt-row">
+        <input type="text" id="promptInput" placeholder="추가 질문 (선택)... 예: 스크래치 있나요?">
+        <button class="btn btn-inspect" id="inspectBtn" onclick="runInspect()">🔍 검사 시작</button>
+        <button class="btn btn-inspect" id="precisionBtn" onclick="runPrecision()" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-left:4px">🔬 정밀</button>
+      </div>
+      <div class="pipeline-bar">
+        <div class="pipe-step" id="pipe1">Step 1<br>YOLO 탐지<br><span class="pipe-ms" id="pipe1-ms"></span></div>
+        <div class="pipe-step" id="pipe2">Step 2<br>SAM3 마스크<br><span class="pipe-ms" id="pipe2-ms"></span></div>
+        <div class="pipe-step" id="pipe3">Step 3<br>VLM 판단<br><span class="pipe-ms" id="pipe3-ms"></span></div>
+      </div>
+    </div>
+
+    <div class="result-area" id="resultArea">
+      <div class="loading" id="loadingBox"><div class="spinner"></div><span id="loadingText">검사 중...</span></div>
+
+      <div id="introCard" class="result-card" style="text-align:center;padding:30px 20px">
+        <div style="font-size:2rem;margin-bottom:8px">📦</div>
+        <div style="font-size:.9rem;font-weight:600;margin-bottom:8px">품질 검사를 시작하세요</div>
+        <div style="font-size:.78rem;color:#94a3b8;line-height:1.7">
+          카메라 앞에 물체를 놓고 [검사 시작] 클릭<br>
+          <strong>Step 1:</strong> YOLO가 물체를 찾습니다 (33ms)<br>
+          <strong>Step 2:</strong> SAM3가 윤곽을 그립니다<br>
+          <strong>Step 3:</strong> VLM이 손상을 판단합니다
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-row">
+        <input type="text" id="chatInput" placeholder="AI에게 질문... (예: 이 스크래치 심각한가요?)">
+        <button class="btn btn-chat" onclick="sendChat()">💬 질문</button>
+      </div>
+      <div class="chat-bubble" id="chatBubble" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function checkStatus(){
+  fetch('/status').then(r=>r.json()).then(d=>{
+    setStatus('st-cam',d.camera);
+    setStatus('st-vlm',d.vlm&&d.vlm.connected);
+    setStatus('st-sam',d.sam3&&d.sam3.connected);
+  }).catch(()=>{});
+}
+function setStatus(id,ok){
+  const el=document.getElementById(id);
+  el.className=ok?'st st-on':'st st-off';
+  el.querySelector('.dot').className=ok?'dot dot-on':'dot dot-off';
+}
+setInterval(checkStatus,3000);checkStatus();
+
+function setPipe(step,state,ms){
+  const el=document.getElementById('pipe'+step);
+  el.className='pipe-step '+(state||'');
+  document.getElementById('pipe'+step+'-ms').textContent=ms?ms+'ms':'';
+}
+
+async function runInspect(){
+  const btn=document.getElementById('inspectBtn');
+  const loading=document.getElementById('loadingBox');
+  const intro=document.getElementById('introCard');
+  const area=document.getElementById('resultArea');
+  const prompt=document.getElementById('promptInput').value.trim();
+
+  btn.disabled=true; btn.textContent='⏳ 검사 중...';
+  loading.classList.add('active');
+  if(intro) intro.style.display='none';
+  area.querySelectorAll('.result-card:not(#introCard)').forEach(c=>c.remove());
+
+  setPipe(1,'active',''); setPipe(2,'',''); setPipe(3,'','');
+  document.getElementById('loadingText').textContent='Step 1: YOLO 탐지 중...';
+
+  try{
+    const resp=await fetch('/inspect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const data=await resp.json();
+    loading.classList.remove('active');
+
+    // 파이프라인 바 업데이트
+    const y=data.yolo||{};
+    const s=data.sam3||{};
+    const v=data.vlm||{};
+    setPipe(1,'done',y.ms);
+    setPipe(2,s.error?'':'done',s.inference_ms);
+    setPipe(3,v.error?'':'done',v.inference_ms);
+
+    renderResults(data);
+  }catch(e){
+    loading.classList.remove('active');
+    area.innerHTML+=`<div class="result-card"><div class="rc-title">❌ 오류</div><div class="rc-text">${e.message}</div></div>`;
+  }
+  btn.disabled=false; btn.textContent='🔍 검사 시작';
+}
+
+function renderResults(data){
+  const area=document.getElementById('resultArea');
+  let html='';
+
+  // Step 1: YOLO 탐지 결과
+  const y=data.yolo||{};
+  const dets=y.detections||[];
+  const target=y.target||{};
+  html+=`<div class="result-card">
+    <div class="rc-title">⚡ Step 1: YOLO 탐지 <span style="font-size:.7rem;color:#94a3b8;margin-left:auto">${y.ms||0}ms</span></div>
+    <div style="font-size:.82rem;color:#94a3b8;margin-bottom:6px">${dets.length}개 물체 발견</div>
+    <div class="det-list">`;
+  dets.forEach(d=>{
+    const sel=d.label===target.label?'selected':'';
+    html+=`<span class="det-tag ${sel}">${d.label} (${(d.confidence*100).toFixed(0)}%)</span>`;
+  });
+  html+=`</div>`;
+  if(target.label){
+    html+=`<div style="font-size:.78rem;margin-top:6px">🎯 검사 대상: <strong>${target.label}</strong> (신뢰도 ${(target.confidence*100).toFixed(0)}%)</div>`;
+  }
+  html+=`</div>`;
+
+  // Step 2: SAM3 마스크
+  const s=data.sam3||{};
+  html+=`<div class="result-card">
+    <div class="rc-title">🎯 Step 2: SAM3 정밀 마스크 <span style="font-size:.7rem;color:#94a3b8;margin-left:auto">${s.inference_ms||0}ms</span></div>`;
+  if(s.box_image&&s.mask_image){
+    html+=`<div class="compare-grid">
+      <div><img src="data:image/jpeg;base64,${s.box_image}"><div class="compare-label">YOLO 박스 (사각형)</div></div>
+      <div><img src="data:image/jpeg;base64,${s.mask_image}"><div class="compare-label">SAM3 마스크 (정밀)</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-n c-blue">${s.count||0}</div><div class="stat-l">마스크</div></div>
+      <div class="stat-card"><div class="stat-n c-green">${s.precision_pct||0}%</div><div class="stat-l">정확도</div></div>
+      <div class="stat-card"><div class="stat-n c-amber">${s.background_pct||0}%</div><div class="stat-l">배경 제거</div></div>
+    </div>`;
+  }else if(s.error){
+    html+=`<div class="rc-text" style="color:#fbbf24">⚠️ ${s.error}</div>`;
+  }else if(s.message){
+    html+=`<div class="rc-text">${s.message}</div>`;
+  }
+  html+=`</div>`;
+
+  // Step 3: VLM 품질 판단
+  const v=data.vlm||{};
+  html+=`<div class="result-card">
+    <div class="rc-title">🧠 Step 3: VLM 품질 판단 <span style="font-size:.7rem;color:#94a3b8;margin-left:auto">${v.inference_ms||0}ms</span></div>`;
+  if(data.crop){
+    html+=`<img src="data:image/jpeg;base64,${data.crop}" class="crop-img" title="검사 대상 크롭 이미지">`;
+  }
+  if(v.answer){
+    html+=`<div class="rc-text">${v.answer.replace(/\n/g,'<br>')}</div>`;
+  }else if(v.error){
+    html+=`<div class="rc-text" style="color:#f87171">❌ ${v.error}</div>`;
+  }
+  html+=`</div>`;
+
+  // 전체 시간
+  html+=`<div class="result-card" style="text-align:center;padding:8px">
+    <span style="font-size:.78rem;color:#94a3b8">전체 파이프라인: <strong style="color:#60a5fa">${data.total_ms||0}ms</strong>
+    (YOLO ${y.ms||0} + SAM3 ${s.inference_ms||0} + VLM ${v.inference_ms||0})</span>
+  </div>`;
+
+  area.innerHTML+=html;
+}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const bubble=document.getElementById('chatBubble');
+  const prompt=input.value.trim();
+  if(!prompt)return;
+  bubble.style.display='block';
+  bubble.textContent='🧠 생각 중...';
+  try{
+    const resp=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const data=await resp.json();
+    bubble.innerHTML=`<strong>Q:</strong> ${prompt}<br><br><strong>A:</strong> ${(data.answer||data.error||'').replace(/\n/g,'<br>')}`;
+  }catch(e){bubble.textContent='❌ '+e.message;}
+  input.value='';
+}
+
+document.getElementById('promptInput').addEventListener('keydown',e=>{if(e.key==='Enter')runInspect()});
+document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});
+
+async function runPrecision(){
+  const btn=document.getElementById('precisionBtn');
+  const loading=document.getElementById('loadingBox');
+  const intro=document.getElementById('introCard');
+  const area=document.getElementById('resultArea');
+  const prompt=document.getElementById('promptInput').value.trim();
+
+  btn.disabled=true; btn.textContent='🔬 검사 중...';
+  loading.classList.add('active');
+  if(intro) intro.style.display='none';
+  area.querySelectorAll('.result-card:not(#introCard)').forEach(c=>c.remove());
+
+  setPipe(1,'active',''); setPipe(2,'',''); setPipe(3,'','');
+  document.getElementById('loadingText').textContent='🔬 정밀 검사: 3등분 분석 중... (약 60초)';
+
+  try{
+    const resp=await fetch('/inspect_precision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const data=await resp.json();
+    loading.classList.remove('active');
+
+    const y=data.yolo||{};
+    const s=data.sam3||{};
+    setPipe(1,'done',y.ms);
+    setPipe(2,s.error?'':'done',s.inference_ms);
+    setPipe(3,'done','');
+
+    let html='';
+
+    // YOLOE
+    html+=`<div class="result-card"><div class="rc-title">⚡ YOLOE: ${y.target?y.target.label:''} (${y.target?Math.round(y.target.confidence*100):''}%)</div></div>`;
+
+    // SAM3
+    if(s.box_image&&s.mask_image){
+      html+=`<div class="result-card"><div class="rc-title">🎯 SAM3 마스크 <span style="font-size:.7rem;color:#94a3b8;margin-left:auto">${s.inference_ms||0}ms</span></div>
+        <div class="compare-grid"><div><img src="data:image/jpeg;base64,${s.box_image}"></div><div><img src="data:image/jpeg;base64,${s.mask_image}"></div></div></div>`;
+    }
+
+    // 3등분 VLM 결과
+    const zones=data.vlm_zones||[];
+    const zimgs=data.zone_images||[];
+    html+=`<div class="result-card"><div class="rc-title">🔬 정밀 검사: 3등분 분석</div>`;
+    zones.forEach((z,i)=>{
+      const hasDefect=z.answer&&(z.answer.includes('불량')||z.answer.includes('주의')||z.answer.includes('변형')||z.answer.includes('찌그러')||z.answer.includes('주름'));
+      const color=hasDefect?'#f87171':'#34d399';
+      const badge=hasDefect?'⚠️ 결함':'✅ 양호';
+      html+=`<div style="border:1px solid ${color}30;border-radius:8px;padding:10px;margin:8px 0;border-left:3px solid ${color}">
+        <div style="font-weight:600;font-size:.85rem;color:${color};margin-bottom:6px">${badge} ${z.zone} <span style="font-size:.7rem;color:#94a3b8">${z.inference_ms||0}ms</span></div>`;
+      if(zimgs[i]) html+=`<img src="data:image/jpeg;base64,${zimgs[i]}" style="max-width:150px;border-radius:6px;margin-bottom:6px;border:1px solid #334155">`;
+      html+=`<div class="rc-text">${(z.answer||'').replace(/\\n/g,'<br>')}</div></div>`;
+    });
+    html+=`</div>`;
+
+    // 시간
+    html+=`<div class="result-card" style="text-align:center;padding:8px"><span style="font-size:.78rem;color:#94a3b8">정밀 검사 완료: <strong style="color:#a855f7">${data.total_ms||0}ms</strong></span></div>`;
+
+    area.innerHTML+=html;
+  }catch(e){
+    loading.classList.remove('active');
+    area.innerHTML+=`<div class="result-card"><div class="rc-title">❌ 오류</div><div class="rc-text">${e.message}</div></div>`;
+  }
+  btn.disabled=false; btn.textContent='🔬 정밀';
+}
+</script>
+</body>
+</html>
