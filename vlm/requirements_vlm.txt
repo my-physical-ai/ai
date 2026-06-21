@@ -1,0 +1,12 @@
+# 4070 VLM 서버 의존성 — RTX 4070 (12GB)
+# [2026-06-20 작성]
+# 설치: pip install -r requirements_vlm.txt --break-system-packages
+
+flask>=3.0
+torch>=2.1
+transformers>=4.48
+accelerate>=0.27
+bitsandbytes>=0.42
+qwen-vl-utils>=0.0.8
+Pillow>=10.0
+numpy>=1.24

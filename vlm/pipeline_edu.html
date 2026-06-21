@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 물류 품질검사 파이프라인 — YOLOE→SAM3→VLM 완전 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cp:#7C3AED;--cpl:#EDE9FE;--cs:#2563EB;--csl:#DBEAFE;--cg:#059669;--cgl:#D1FAE5;--cw:#D97706;--cwl:#FEF3C7;--cd:#DC2626;--cdl:#FEE2E2;--ct:#0891B2;--ctl:#CFFAFE;--sf:#F8FAFC;--card:#FFF;--tx:#1E293B;--mt:#64748B;--bd:#E2E8F0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--tx);background:var(--sf);line-height:1.75}
+code,pre{font-family:'JetBrains Mono',monospace}
+.ctn{max-width:900px;margin:0 auto;padding:0 1.5rem}
+section{padding:2.5rem 0}
+h2{font-size:1.75rem;font-weight:900;margin-bottom:1.5rem}
+h3{font-size:1.15rem;font-weight:700;margin:1.5rem 0 .75rem}
+p{margin-bottom:1rem}
+
+.hero{background:linear-gradient(135deg,#4C1D95,#7C3AED,#2563EB);color:#fff;padding:3.5rem 0 3rem;position:relative}
+.hero::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");pointer-events:none}
+.htags{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.htag{padding:.3rem .8rem;border-radius:20px;font-size:.78rem;font-weight:600;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)}
+.hero h1{font-size:2.4rem;font-weight:900;line-height:1.2;margin-bottom:.75rem}
+.hsub{font-size:1rem;opacity:.9;max-width:700px;line-height:1.7}
+
+.ab{display:flex;gap:1.25rem;padding:1.5rem;border-radius:12px;border-left:4px solid;margin:1.5rem 0}
+.ab-i{font-size:2.2rem;flex-shrink:0}
+.ab-t{font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem}
+
+.co{display:flex;gap:.75rem;padding:1rem 1.25rem;border-radius:10px;margin:1rem 0;align-items:flex-start}
+.co-i{font-size:1.15rem;flex-shrink:0}
+.co-c{font-size:.88rem;line-height:1.6}
+
+.scard{background:var(--card);border-radius:14px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 4px 6px -1px rgba(0,0,0,.08);border:1px solid var(--bd);position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;width:5px;height:100%;background:var(--sc,var(--ct))}
+
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem}
+.cc{border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);background:var(--card)}
+.chd{padding:1rem;color:#fff;text-align:center}
+.chd h4{margin:.2rem 0 0;font-size:1rem}
+.cbdy{padding:1rem}
+.ci{display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--bd);font-size:.85rem}
+.ci:last-child{border-bottom:none}
+.ci-l{color:var(--mt)}
+.ci-v{font-weight:700;text-align:right;max-width:55%}
+
+.tt{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.82rem;border-radius:12px;overflow:hidden}
+.tt th{background:var(--cp);color:#fff;padding:.6rem .8rem;text-align:left;font-weight:600}
+.tt td{padding:.6rem .8rem;border-bottom:1px solid var(--bd);vertical-align:top}
+.tt tr:nth-child(even){background:var(--cpl)}
+
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin:1rem 0}
+.sc{background:var(--card);border-radius:12px;padding:1rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--bd)}
+.sc-n{font-size:1.6rem;font-weight:900;line-height:1}
+.sc-l{font-weight:700;font-size:.82rem;margin-top:.3rem}
+.sc-d{font-size:.72rem;color:var(--mt);margin-top:.15rem}
+
+.code-box{background:#1E293B;color:#E2E8F0;border-radius:12px;padding:1.25rem;margin:1rem 0;overflow-x:auto;font-size:.82rem;line-height:1.9}
+.code-box .ck{color:#C084FC}.code-box .cs2{color:#86EFAC}.code-box .cf{color:#93C5FD}.code-box .cm{color:#64748B;font-style:italic}
+
+.step-flow{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:1.5rem;flex-wrap:wrap}
+.sf-box{border:2px solid var(--sfc,var(--ct));border-radius:10px;padding:.6rem .8rem;text-align:center;min-width:80px;background:var(--card)}
+.sf-num{font-size:.65rem;color:var(--mt)}
+.sf-txt{font-weight:700;font-size:.75rem}
+.sf-arr{color:var(--mt);font-size:1.1rem}
+
+.timeline{position:relative;padding-left:2rem;margin:1.5rem 0}
+.timeline::before{content:'';position:absolute;left:.5rem;top:0;bottom:0;width:2px;background:var(--bd)}
+.tl-item{position:relative;padding-bottom:1.5rem}
+.tl-dot{position:absolute;left:-1.55rem;top:.3rem;width:12px;height:12px;border-radius:50%;border:2px solid}
+.tl-title{font-weight:700;font-size:.9rem}
+.tl-desc{font-size:.82rem;color:var(--mt);margin-top:.2rem}
+
+.img-frame{background:var(--card);border-radius:16px;padding:1rem;margin:1.5rem 0;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);border:1px solid var(--bd)}
+.img-frame img{width:100%;border-radius:8px}
+.img-cap{text-align:center;font-size:.78rem;color:var(--mt);margin-top:.5rem}
+
+.ft{text-align:center;padding:2rem 0;color:var(--mt);font-size:.8rem;border-top:1px solid var(--bd);margin-top:2rem}
+@media(max-width:768px){.hero h1{font-size:1.8rem}.cg{grid-template-columns:1fr}.step-flow{flex-direction:column}.sf-arr{transform:rotate(90deg)}}
+@media print{.hero{background:#fff!important;color:#000!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+<div class="ctn">
+  <div class="htags">
+    <span class="htag">YOLOE-26</span>
+    <span class="htag">SAM3</span>
+    <span class="htag">Qwen2.5-VL</span>
+    <span class="htag">품질검사</span>
+    <span class="htag">Open Vocabulary</span>
+    <span class="htag">프롬프트 엔지니어링</span>
+  </div>
+  <h1>AI 물류 품질검사 파이프라인<br>완전 가이드</h1>
+  <p class="hsub">
+    YOLOE-26(탐지) → SAM3(정밀 분할) → VLM(품질 판단)<br>
+    시행착오부터 최적화까지 — 실전 AI 파이프라인 구축 과정의 모든 것
+  </p>
+</div>
+</header>
+
+<!-- 1. 왜 이 순서인가 -->
+<section>
+<div class="ctn">
+  <h2>🔄 1. 파이프라인 진화 과정 — 왜 이 순서가 됐나?</h2>
+
+  <p>처음부터 YOLOE→SAM3→VLM 순서가 아니었습니다. <strong>여러 번의 시행착오</strong>를 거쳐 최적 순서를 찾았습니다.</p>
+
+  <div class="scard" style="--sc:var(--cd)">
+    <h3 style="color:var(--cd)">❌ 시도 1: YOLO → VLM(좌표) → SAM3 (실패)</h3>
+    <div class="step-flow">
+      <div class="sf-box" style="--sfc:var(--cg)"><div class="sf-num">NUC</div><div class="sf-txt">YOLO26</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cd)"><div class="sf-num">4070</div><div class="sf-txt">VLM 좌표</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cd)"><div class="sf-num">4090</div><div class="sf-txt">SAM3</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cd)"><div class="sf-txt">❌ 실패</div></div>
+    </div>
+    <p style="font-size:.88rem;color:var(--mt)"><strong>문제:</strong> VLM(4bit 양자화 7B)에게 좌표 출력을 요구했으나, 쓸모없는 박스 28개를 생성하거나 좌표를 텍스트로 설명("approximately from (100,50) to (400,470)")하여 파싱 불가.</p>
+  </div>
+
+  <div class="scard" style="--sc:var(--cg)">
+    <h3 style="color:var(--cg)">✅ 최종: YOLOE → SAM3 → VLM (성공)</h3>
+    <div class="step-flow">
+      <div class="sf-box" style="--sfc:var(--cs)"><div class="sf-num">NUC</div><div class="sf-txt">YOLOE-26</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cd)"><div class="sf-num">4090</div><div class="sf-txt">SAM3 마스크</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cp)"><div class="sf-num">4070</div><div class="sf-txt">VLM 판단</div></div>
+      <div class="sf-arr">→</div>
+      <div class="sf-box" style="--sfc:var(--cg)"><div class="sf-txt">✅ 성공</div></div>
+    </div>
+    <p style="font-size:.88rem;color:var(--mt)"><strong>핵심:</strong> 각 모델이 <strong>잘하는 것만</strong> 담당. YOLOE="찾기", SAM3="윤곽 그리기", VLM="판단하기".</p>
+  </div>
+
+  <div class="ab" style="background:var(--cpl);border-left-color:var(--cp)">
+    <div class="ab-i">💡</div>
+    <div>
+      <div class="ab-t" style="color:var(--cp)">핵심 교훈</div>
+      <p>VLM은 <strong>"판단하는 모델"</strong>이지 "찾는 모델"이 아닙니다. 좌표를 요구하면 안 되고, "이 이미지에 결함이 있나?"라고 물어야 합니다. 찾는 건 YOLOE(빠르게)와 SAM3(정밀하게)가 합니다.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 2. 각 모델 역할 -->
+<section style="background:var(--card);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+<div class="ctn">
+  <h2>🧩 2. 각 모델의 역할 — 누가 뭘 하는가</h2>
+
+  <div class="cg">
+    <div class="cc">
+      <div class="chd" style="background:var(--cs)"><div style="font-size:1.5rem">⚡</div><h4>YOLOE-26 = 눈</h4></div>
+      <div class="cbdy">
+        <div class="ci"><span class="ci-l">역할</span><span class="ci-v">"뭐가 어디에 있는지"</span></div>
+        <div class="ci"><span class="ci-l">방식</span><span class="ci-v">Open Vocabulary (텍스트)</span></div>
+        <div class="ci"><span class="ci-l">속도</span><span class="ci-v">130ms (실시간)</span></div>
+        <div class="ci"><span class="ci-l">장점</span><span class="ci-v">원하는 물체 자유 지정</span></div>
+        <div class="ci"><span class="ci-l">못하는 것</span><span class="ci-v">손상 판단 ❌</span></div>
+      </div>
+    </div>
+    <div class="cc">
+      <div class="chd" style="background:var(--cd)"><div style="font-size:1.5rem">🎯</div><h4>SAM3 = 확대경</h4></div>
+      <div class="cbdy">
+        <div class="ci"><span class="ci-l">역할</span><span class="ci-v">"정확한 픽셀 경계"</span></div>
+        <div class="ci"><span class="ci-l">방식</span><span class="ci-v">텍스트 프롬프트 분할</span></div>
+        <div class="ci"><span class="ci-l">속도</span><span class="ci-v">1초</span></div>
+        <div class="ci"><span class="ci-l">장점</span><span class="ci-v">배경 제거 cutout</span></div>
+        <div class="ci"><span class="ci-l">못하는 것</span><span class="ci-v">품질 판단 ❌</span></div>
+      </div>
+    </div>
+    <div class="cc">
+      <div class="chd" style="background:var(--cp)"><div style="font-size:1.5rem">🧠</div><h4>VLM = 검사관 두뇌</h4></div>
+      <div class="cbdy">
+        <div class="ci"><span class="ci-l">역할</span><span class="ci-v">"손상 있나? 어디가?"</span></div>
+        <div class="ci"><span class="ci-l">방식</span><span class="ci-v">이미지+텍스트 이해</span></div>
+        <div class="ci"><span class="ci-l">속도</span><span class="ci-v">10~15초</span></div>
+        <div class="ci"><span class="ci-l">장점</span><span class="ci-v">스크래치/찌그러짐 판단</span></div>
+        <div class="ci"><span class="ci-l">못하는 것</span><span class="ci-v">물체 위치 찾기 ❌</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 3. YOLO26 vs YOLOE-26 -->
+<section>
+<div class="ctn">
+  <h2>⚡ 3. YOLO26 → YOLOE-26 전환 — 왜 바꿨나?</h2>
+
+  <div class="cg">
+    <div class="scard" style="--sc:var(--cd)">
+      <h3 style="color:var(--cd)">YOLO26 (80종 고정)</h3>
+      <p><strong>"사진 암기"</strong> 방식 — COCO 데이터셋 80종의 특정 모양만 인식</p>
+      <p style="font-size:.88rem;color:var(--mt)">스타벅스 컵 → "refrigerator" 오인 (학습한 컵 사진과 안 닮아서)</p>
+    </div>
+    <div class="scard" style="--sc:var(--cg)">
+      <h3 style="color:var(--cg)">YOLOE-26 (Open Vocabulary)</h3>
+      <p><strong>"개념 이해"</strong> 방식 — 영어 단어의 의미를 이해하여 매칭</p>
+      <p style="font-size:.88rem;color:var(--mt)">스타벅스 컵 → "cup" 정확 탐지 ("마시는 용기" 개념으로 이해)</p>
+    </div>
+  </div>
+
+  <div class="ab" style="background:var(--cgl);border-left-color:var(--cg)">
+    <div class="ab-i">📚</div>
+    <div>
+      <div class="ab-t" style="color:var(--cg)">비유: 시험 공부법</div>
+      <p>YOLO26 = 기출문제 80개만 외운 학생 → 새 문제 나오면 틀림.<br>
+      YOLOE-26 = 개념을 이해한 학생 → 37개만 배워도 응용 가능.</p>
+    </div>
+  </div>
+
+  <h3 style="color:var(--cs)">공장 물체 추가 3단계 전략</h3>
+  <div class="sg" style="grid-template-columns:repeat(3,1fr)">
+    <div class="sc" style="border-top:3px solid var(--cg)">
+      <div class="sc-n" style="color:var(--cg)">L1</div>
+      <div class="sc-l">이름만 추가</div>
+      <div class="sc-d">set_classes(["screw"])<br>학습 불필요, 0초</div>
+    </div>
+    <div class="sc" style="border-top:3px solid var(--cp)">
+      <div class="sc-n" style="color:var(--cp)">L2</div>
+      <div class="sc-l">사진 1장</div>
+      <div class="sc-d">Visual Prompt<br>학습 불필요, 1분</div>
+    </div>
+    <div class="sc" style="border-top:3px solid var(--cd)">
+      <div class="sc-n" style="color:var(--cd)">L3</div>
+      <div class="sc-l">커스텀 학습</div>
+      <div class="sc-d">Fine-tuning<br>사진 100~1000장</div>
+    </div>
+  </div>
+  <p style="font-size:.88rem;color:var(--mt);text-align:center">30종 중 28종은 무료(L1), 학습이 필요한 건 2종뿐 → <strong>전이 학습의 경제성</strong></p>
+</div>
+</section>
+
+<!-- 4. SAM3 시행착오 -->
+<section style="background:var(--card);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+<div class="ctn">
+  <h2>🎯 4. SAM3 — 텍스트 vs 박스 프롬프트 시행착오</h2>
+
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--cd);background:var(--cdl)"></div>
+      <div class="tl-title" style="color:var(--cd)">문제 1: "tumbler"를 모른다</div>
+      <div class="tl-desc">SAM3의 set_text_prompt("tumbler") → "찾지 못했습니다" 에러. SAM3가 모든 영어 단어를 아는 게 아님.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--cw);background:var(--cwl)"></div>
+      <div class="tl-title" style="color:var(--cw)">해결 시도: SAM3_LABEL_MAP 매핑</div>
+      <div class="tl-desc">"tumbler"→"bottle", "package"→"box" 변환 테이블. 동작했지만 근본 해결은 아님.</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--cs);background:var(--csl)"></div>
+      <div class="tl-title" style="color:var(--cs)">시도: add_geometric_prompt (박스 프롬프트)</div>
+      <div class="tl-desc">"이름이 왜 필요해? 위치만 주면 되잖아!" → 맞지만 마스크가 박스 전체를 채움 (100% 정확도 = 분할 안 됨).</div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="border-color:var(--cg);background:var(--cgl)"></div>
+      <div class="tl-title" style="color:var(--cg)">최종 결정: 텍스트 프롬프트 + LABEL_MAP 유지</div>
+      <div class="tl-desc">set_text_prompt("bottle")가 가장 정밀한 윤곽을 그림. YOLOE 라벨을 매핑해서 전달.</div>
+    </div>
+  </div>
+
+  <div class="ab" style="background:var(--ctl);border-left-color:var(--ct)">
+    <div class="ab-i">🔬</div>
+    <div>
+      <div class="ab-t" style="color:var(--ct)">SAM3 cutout의 가치</div>
+      <p>SAM3 마스크로 <strong>배경을 흰색으로 제거</strong>한 cutout 이미지를 VLM에 전달하면, VLM이 배경에 신경 쓰지 않고 <strong>물체 표면만 집중</strong> 분석합니다. 이 cutout을 확대하면 미세한 결함도 감지 가능.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 5. VLM 프롬프트 엔지니어링 -->
+<section>
+<div class="ctn">
+  <h2>🧠 5. VLM 프롬프트 엔지니어링 — 핵심 교훈 5가지</h2>
+
+  <div class="scard" style="--sc:var(--cp)">
+    <h3 style="color:var(--cp)">교훈 1: "정상 기준"을 알려줘야 한다</h3>
+    <div class="cg">
+      <div style="background:var(--cdl);border-radius:10px;padding:1rem">
+        <p style="font-weight:700;color:var(--cd);font-size:.88rem">❌ 기준 없음</p>
+        <p style="font-size:.82rem">"상태를 분석해주세요" → VLM: "병이 보입니다. 이상 없어요"</p>
+      </div>
+      <div style="background:var(--cgl);border-radius:10px;padding:1rem">
+        <p style="font-weight:700;color:var(--cg);font-size:.88rem">✅ 기준 제시</p>
+        <p style="font-size:.82rem">"정상은 매끄럽고 대칭. 이 사진과 비교하세요" → VLM: "울퉁불퉁 → 불량!"</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="scard" style="--sc:var(--cp)">
+    <h3 style="color:var(--cp)">교훈 2: "역할 부여"가 효과적</h3>
+    <p style="font-size:.88rem">"당신은 엄격한 품질검사관입니다" → VLM이 더 꼼꼼하게 검사.</p>
+  </div>
+
+  <div class="scard" style="--sc:var(--cp)">
+    <h3 style="color:var(--cp)">교훈 3: "무시할 것"을 명시해야 한다</h3>
+    <p style="font-size:.88rem">확대 이미지에서 금형 자국, 엠보싱을 결함으로 오인 → "정상 제조 특성은 무시하세요" 추가.</p>
+  </div>
+
+  <div class="scard" style="--sc:var(--cp)">
+    <h3 style="color:var(--cp)">교훈 4: 여러 위치를 동시에 묻지 않는다</h3>
+    <div class="cg">
+      <div style="background:var(--cdl);border-radius:10px;padding:1rem">
+        <p style="font-weight:700;color:var(--cd);font-size:.88rem">❌ "위 중앙 아래 다 봐"</p>
+        <p style="font-size:.82rem">VLM이 3곳을 동시에 보다가 혼란 → "정상"</p>
+      </div>
+      <div style="background:var(--cgl);border-radius:10px;padding:1rem">
+        <p style="font-weight:700;color:var(--cg);font-size:.88rem">✅ "가운데만 봐"</p>
+        <p style="font-size:.82rem">한 곳에 집중 → "찌그러짐 발견!" → 정밀 검사(3등분) 탄생</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="scard" style="--sc:var(--cp)">
+    <h3 style="color:var(--cp)">교훈 5: 확대 크기의 균형</h3>
+    <div class="sg" style="grid-template-columns:repeat(3,1fr)">
+      <div class="sc"><div class="sc-n" style="color:var(--cw)">640px</div><div class="sc-l">원본 크기</div><div class="sc-d">디테일 부족<br>찌그러짐 못 잡음</div></div>
+      <div class="sc" style="border:2px solid var(--cg)"><div class="sc-n" style="color:var(--cg)">1024px</div><div class="sc-l">최적값 ✅</div><div class="sc-d">결함 감지 + 정상 구분<br>균형 잡힌 크기</div></div>
+      <div class="sc"><div class="sc-n" style="color:var(--cd)">2048px</div><div class="sc-l">너무 큼</div><div class="sc-d">제조 특성도<br>결함으로 오인</div></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- 6. 양자화 -->
+<section style="background:var(--card);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+<div class="ctn">
+  <h2>⚖️ 6. 양자화 — 4bit vs 8bit 실전 비교</h2>
+
+  <table class="tt">
+    <thead><tr><th></th><th>4bit 양자화</th><th>8bit 양자화</th></tr></thead>
+    <tbody>
+      <tr><td><strong>VRAM</strong></td><td>~5GB</td><td>~9GB</td></tr>
+      <tr><td><strong>추론 속도</strong></td><td>~850ms</td><td>~10~15초</td></tr>
+      <tr><td><strong>디테일 인식</strong></td><td>약함 (찌그러짐 못 잡음)</td><td>강함 (미세 변형 감지)</td></tr>
+      <tr><td><strong>적합한 용도</strong></td><td>빠른 분류, 대략적 판단</td><td>품질검사, 정밀 분석</td></tr>
+      <tr><td><strong>4070 12GB</strong></td><td>여유 있음</td><td>적합 (3GB 여유)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="co" style="background:var(--cwl);border-left:3px solid var(--cw)"><div class="co-i">⚠️</div><div class="co-c"><strong>실전 발견:</strong> 4bit에서 확실히 찌그러진 병도 "이상 없음"으로 판단. 8bit로 전환 후 "주름과 울퉁불퉁한 부분 → 불량!" 정확 판단. 품질검사에는 8bit 필수.</div></div>
+</div>
+</section>
+
+<!-- 7. 전체 아키텍처 -->
+<section>
+<div class="ctn">
+  <h2>🏗️ 7. 최종 아키텍처 — 4대 컴퓨터 협업</h2>
+
+  <div class="sg">
+    <div class="sc"><div class="sc-n" style="color:var(--mt)">Pi 5</div><div class="sc-l">카메라</div><div class="sc-d">ZeroMQ 15fps<br>192.168.50.111</div></div>
+    <div class="sc"><div class="sc-n" style="color:var(--cs)">NUC</div><div class="sc-l">오케스트레이터</div><div class="sc-d">YOLOE + Flask<br>192.168.0.65</div></div>
+    <div class="sc"><div class="sc-n" style="color:var(--cp)">4070</div><div class="sc-l">VLM 판단</div><div class="sc-d">Qwen2.5-VL 8bit<br>192.168.0.36</div></div>
+    <div class="sc"><div class="sc-n" style="color:var(--cd)">4090</div><div class="sc-l">SAM3 분할</div><div class="sc-d">SAM3 공식 패키지<br>192.168.0.75</div></div>
+  </div>
+
+  <div class="code-box" style="text-align:center;font-size:.85rem;line-height:2.2">
+    Pi 카메라 → ZeroMQ → <span class="cf">NUC(YOLOE-26 탐지 130ms)</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ 영어 라벨 + 박스<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cd" style="color:#F09595">4090(SAM3 마스크 1초)</span> → cutout(배경 제거)<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓ 확대 1024px<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">4070(VLM 판단 10초)</span> → "불량! 찌그러짐 발견"<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs2">NUC Flask → 브라우저 결과 표시</span>
+  </div>
+</div>
+</section>
+
+<!-- 8. 공장 배포 -->
+<section style="background:var(--card);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)">
+<div class="ctn">
+  <h2>🏭 8. 교실 → 공장 — 무엇이 달라지나</h2>
+
+  <table class="tt">
+    <thead><tr><th></th><th>교실 (현재)</th><th>공장 (실무)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>카메라</strong></td><td>Pi 카메라 640×480</td><td>산업카메라 4K/8K</td></tr>
+      <tr><td><strong>조명</strong></td><td>실내 조명 (불균일)</td><td>링라이트/백라이트 (균일)</td></tr>
+      <tr><td><strong>물체</strong></td><td>다양 (병, 컵, 상자)</td><td>동일 제품 반복</td></tr>
+      <tr><td><strong>VLM</strong></td><td>7B 8bit (4070)</td><td>72B (A100/H100) 또는 전용 모델</td></tr>
+      <tr><td><strong>속도</strong></td><td>~15초/건</td><td>~1초/건 (GPU 최적화)</td></tr>
+      <tr><td><strong>확대 필요</strong></td><td>640→1024 (보간법)</td><td>불필요 (원본이 4K)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="co" style="background:var(--cgl);border-left:3px solid var(--cg)"><div class="co-i">💡</div><div class="co-c"><strong>핵심:</strong> 파이프라인 구조(YOLOE→SAM3→VLM)는 동일합니다. 카메라 해상도, 모델 크기, 조명만 업그레이드하면 교실에서 만든 시스템이 그대로 공장에 적용됩니다.</div></div>
+</div>
+</section>
+
+<!-- 9. 핵심 정리 -->
+<section style="background:linear-gradient(135deg,#4C1D95,#7C3AED);color:#fff;padding:2.5rem 0">
+<div class="ctn">
+  <h2 style="color:#fff">🔑 9. 핵심 교훈 정리</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem">
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🔄 순서가 중요하다</p>
+      <p style="font-size:.85rem;opacity:.9">VLM에게 좌표를 요구하면 실패. "찾기→분할→판단" 순서로 각 모델이 잘하는 역할만 맡겨야 합니다.</p>
+    </div>
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">⚡ Open Vocabulary의 힘</p>
+      <p style="font-size:.85rem;opacity:.9">YOLOE-26은 80종 고정이 아니라 텍스트로 무엇이든 탐지. "개념 이해"가 "사진 암기"보다 강력합니다.</p>
+    </div>
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🎯 SAM3 cutout + 확대</p>
+      <p style="font-size:.85rem;opacity:.9">SAM3로 배경 제거 → 물체만 1024px 확대 → VLM이 표면 디테일에 집중. 이 조합이 품질검사의 핵심입니다.</p>
+    </div>
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">💬 프롬프트 = 검사 기준서</p>
+      <p style="font-size:.85rem;opacity:.9">"정상 기준" + "무시할 것" + "찾을 것"을 명확히 지시. 공장 검사 기준서와 같은 역할을 프롬프트가 합니다.</p>
+    </div>
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">⚖️ 양자화와 해상도의 균형</p>
+      <p style="font-size:.85rem;opacity:.9">4bit는 빠르지만 둔감, 8bit는 느리지만 정밀. 1024px가 결함 감지와 오탐 방지의 최적 균형점입니다.</p>
+    </div>
+
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🏭 교실 → 공장</p>
+      <p style="font-size:.85rem;opacity:.9">파이프라인 구조는 동일. 카메라(4K) + 모델(72B) + 조명만 업그레이드하면 산업 현장에 바로 적용 가능합니다.</p>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<footer class="ft">
+<div class="ctn">
+  <p>피지컬 AI 산업체험 교육 · AI 물류 품질검사 파이프라인<br>
+  YOLOE-26 + SAM3 + Qwen2.5-VL · 2026-06-21</p>
+</div>
+</footer>
+</body>
+</html>

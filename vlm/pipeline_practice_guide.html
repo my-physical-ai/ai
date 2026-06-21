@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실습 가이드 YOLOE SAM3 VLM 품질검사 파이프라인</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--color-primary:#2563EB;--color-primary-light:#DBEAFE;--color-secondary:#7C3AED;--color-secondary-light:#EDE9FE;--color-success:#059669;--color-success-light:#D1FAE5;--color-warning:#D97706;--color-warning-light:#FEF3C7;--color-danger:#DC2626;--color-danger-light:#FEE2E2;--color-surface:#F8FAFC;--color-card:#FFFFFF;--color-text:#1E293B;--color-muted:#64748B;--color-border:#E2E8F0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--color-text);background:var(--color-surface);line-height:1.75}
+code,pre{font-family:'JetBrains Mono',monospace}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem}
+section{padding:3rem 0}
+.section-title{font-size:1.85rem;font-weight:700;margin-bottom:0.5rem}
+.section-lead{color:var(--color-muted);margin-bottom:2rem}
+
+.hero{background:linear-gradient(135deg,#4C1D95,#8B5CF6);color:white;padding:3.5rem 0 3rem;position:relative}
+.hero::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");pointer-events:none}
+.hero h1{font-size:2.6rem;font-weight:900;line-height:1.2}
+.hero-subtitle{font-size:1.1rem;margin-top:0.85rem;opacity:0.95}
+.hero-tags{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.pill{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);padding:0.3rem 0.85rem;border-radius:999px;font-size:0.8rem;font-weight:500}
+
+.flow-diagram{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:2rem;background:var(--color-card);border:1px solid var(--color-border);border-radius:16px;overflow-x:auto;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.flow-node{background:var(--color-card);border:2px solid var(--node-color,var(--color-primary));border-radius:12px;padding:1.1rem;text-align:center;min-width:120px;transition:transform 0.2s,box-shadow 0.2s}
+.flow-node:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,0.12)}
+.flow-node-icon{font-size:1.8rem;margin-bottom:0.4rem}
+.flow-node-title{font-weight:700;font-size:0.9rem}
+.flow-node-desc{font-size:0.78rem;color:var(--color-muted);margin-top:0.2rem}
+.flow-arrow{flex-shrink:0}
+@media(max-width:768px){.flow-diagram{flex-direction:column}.flow-arrow svg{transform:rotate(90deg)}}
+
+.cmd-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:16px;overflow:hidden;margin-bottom:2rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.08)}
+.cmd-head{display:flex;align-items:center;gap:0.85rem;padding:1.1rem 1.5rem;color:white;background:var(--accent,var(--color-primary))}
+.cmd-badge{flex-shrink:0;width:2.1rem;height:2.1rem;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.05rem}
+.cmd-emoji{font-size:1.7rem}
+.cmd-name{font-weight:700;font-size:1.15rem}
+.cmd-name small{display:block;font-weight:400;font-size:0.8rem;opacity:0.85;margin-top:0.1rem}
+.cmd-terminal{background:#0F172A;color:#E2E8F0;padding:1.1rem 1.5rem;font-size:0.95rem;display:flex;align-items:center;gap:0.6rem;overflow-x:auto;font-family:'JetBrains Mono',monospace}
+.cmd-terminal .prompt{color:#4ADE80;user-select:none}
+.cmd-terminal code{white-space:nowrap;flex:1}
+.copy-btn{flex-shrink:0;margin-left:auto;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#E2E8F0;border-radius:8px;padding:0.35rem 0.75rem;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;transition:background 0.15s}
+.copy-btn:hover{background:rgba(255,255,255,0.22)}
+.copy-btn.copied{background:var(--color-success);border-color:var(--color-success);color:white}
+.cmd-body{padding:1.5rem}
+.cmd-result-label{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent,var(--color-primary));margin-bottom:0.6rem}
+.big-easy{font-size:1.05rem;font-weight:500}
+.mini-steps{display:flex;flex-direction:column;gap:0.6rem;margin-top:1rem}
+.mini-step{display:flex;gap:0.75rem;align-items:flex-start;background:var(--color-surface);border-radius:10px;padding:0.75rem 1rem}
+.mini-step-num{flex-shrink:0;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--accent,var(--color-primary));color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700}
+.mini-step-text{font-size:0.92rem}
+
+.analogy-box{display:flex;gap:1.1rem;padding:1.25rem;background:var(--color-secondary-light);border-radius:12px;border-left:4px solid var(--color-secondary);margin-top:1rem}
+.analogy-icon{font-size:2rem;flex-shrink:0}
+.analogy-title{font-weight:700;font-size:0.8rem;color:var(--color-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.35rem}
+.analogy-text{line-height:1.65;font-size:0.95rem}
+.callout{display:flex;gap:0.75rem;padding:1rem 1.25rem;border-radius:10px;align-items:flex-start;margin-top:1.5rem}
+.callout-icon{font-size:1.25rem;flex-shrink:0}
+.callout-content{font-size:0.95rem;line-height:1.6}
+.callout-tip{background:var(--color-success-light);border-left:3px solid var(--color-success)}
+.callout-warning{background:var(--color-warning-light);border-left:3px solid var(--color-warning)}
+.callout-info{background:var(--color-primary-light);border-left:3px solid var(--color-primary)}
+
+.arch-table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.85rem}
+.arch-table th{background:var(--color-primary);color:white;padding:0.6rem 0.8rem;text-align:left}
+.arch-table td{padding:0.6rem 0.8rem;border-bottom:1px solid var(--color-border)}
+.arch-table tr:nth-child(even){background:var(--color-primary-light)}
+
+.file-list{display:grid;gap:0.8rem;margin:1rem 0}
+.file-item{display:flex;align-items:center;gap:0.75rem;padding:0.8rem 1rem;background:var(--color-card);border:1px solid var(--color-border);border-radius:10px}
+.file-icon{font-size:1.3rem}
+.file-name{font-weight:700;font-size:0.88rem;font-family:'JetBrains Mono',monospace}
+.file-desc{font-size:0.78rem;color:var(--color-muted)}
+
+footer{text-align:center;padding:2rem 0;color:var(--color-muted);font-size:0.8rem;border-top:1px solid var(--color-border);margin-top:2rem}
+@media print{.hero{background:white!important;color:black!important}.copy-btn{display:none}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+<div class="container">
+  <div class="hero-tags">
+    <span class="pill">YOLOE-26</span>
+    <span class="pill">SAM3</span>
+    <span class="pill">VLM (Qwen2.5-VL)</span>
+    <span class="pill">품질검사</span>
+    <span class="pill">4대 컴퓨터 협업</span>
+  </div>
+  <h1>실습 가이드<br>YOLOE→SAM3→VLM 품질검사</h1>
+  <p class="hero-subtitle">Open Vocabulary 탐지 → 정밀 분할 → AI 품질 판단<br>4대 컴퓨터(Pi, NUC, 4070, 4090)가 협업하는 물류 품질검사 시스템</p>
+</div>
+</header>
+
+<!-- 한눈에 보기 -->
+<section>
+<div class="container">
+  <h2 class="section-title">🗺️ 한눈에 보기</h2>
+  <p class="section-lead">6단계로 AI 품질검사 시스템을 구축합니다</p>
+
+  <div class="flow-diagram">
+    <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">📦</div><div class="flow-node-title">1. 환경 준비</div><div class="flow-node-desc">패키지 설치</div></div>
+    <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+    <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">⚡</div><div class="flow-node-title">2. YOLOE-26</div><div class="flow-node-desc">모델 설치</div></div>
+    <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+    <div class="flow-node" style="--node-color:#DC2626"><div class="flow-node-icon">🎯</div><div class="flow-node-title">3. SAM3</div><div class="flow-node-desc">4090 서버</div></div>
+    <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+    <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">🧠</div><div class="flow-node-title">4. VLM</div><div class="flow-node-desc">4070 서버</div></div>
+    <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+    <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">🔍</div><div class="flow-node-title">5. 검사!</div><div class="flow-node-desc">실행</div></div>
+  </div>
+
+  <div class="analogy-box" style="margin-top:2rem">
+    <div class="analogy-icon">🏭</div>
+    <div class="analogy-content">
+      <div class="analogy-title">전체 흐름 비유</div>
+      <p class="analogy-text">공장의 품질검사 라인과 같습니다. <strong>YOLOE = 작업자 눈</strong>(물체 발견), <strong>SAM3 = 확대경</strong>(정밀 윤곽), <strong>VLM = 검사관 두뇌</strong>(합격/불합격 판단). 세 역할이 순서대로 협력합니다.</p>
+    </div>
+  </div>
+
+  <table class="arch-table" style="margin-top:1.5rem">
+    <thead><tr><th>컴퓨터</th><th>역할</th><th>모델</th><th>IP:포트</th></tr></thead>
+    <tbody>
+      <tr><td>Pi 5</td><td>카메라 촬영</td><td>—</td><td>192.168.50.111:5556</td></tr>
+      <tr><td>NUC</td><td>오케스트레이터 + YOLOE</td><td>YOLOE-26s (OpenVINO)</td><td>192.168.0.65:5000</td></tr>
+      <tr><td>4070 PC</td><td>VLM 품질 판단</td><td>Qwen2.5-VL-7B (8bit)</td><td>192.168.0.36:5002</td></tr>
+      <tr><td>4090 PC</td><td>SAM3 정밀 분할</td><td>SAM3 공식 패키지</td><td>192.168.0.75:5001</td></tr>
+    </tbody>
+  </table>
+</div>
+</section>
+
+<!-- Step 1 -->
+<section style="background:var(--color-card);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+<div class="container">
+  <h2 class="section-title">📦 파일 구성</h2>
+  <p class="section-lead">실습에 사용하는 파일 5개</p>
+
+  <div class="file-list">
+    <div class="file-item"><span class="file-icon">⚡</span><div><div class="file-name">setup_yoloe.py</div><div class="file-desc">NUC — YOLOE-26 모델 다운로드 + OpenVINO 변환 (최초 1회)</div></div></div>
+    <div class="file-item"><span class="file-icon">🎛️</span><div><div class="file-name">app_scenario3.py</div><div class="file-desc">NUC — 오케스트레이터 (YOLOE→SAM3→VLM 파이프라인)</div></div></div>
+    <div class="file-item"><span class="file-icon">🌐</span><div><div class="file-name">scenario3.html</div><div class="file-desc">NUC — 웹 UI (templates/ 폴더에 배치)</div></div></div>
+    <div class="file-item"><span class="file-icon">🧠</span><div><div class="file-name">vlm_server.py</div><div class="file-desc">4070 — VLM 서버 (8bit 양자화)</div></div></div>
+    <div class="file-item"><span class="file-icon">🔧</span><div><div class="file-name">patch_sam3_cutout.py</div><div class="file-desc">4090 — SAM3에 cutout(배경 제거) 기능 추가</div></div></div>
+  </div>
+</div>
+</section>
+
+<!-- Step 2: YOLOE 설치 -->
+<section>
+<div class="container">
+  <h2 class="section-title">⚡ Step 1: YOLOE-26 모델 설치 (NUC)</h2>
+  <p class="section-lead">YOLOE-26은 텍스트로 원하는 물체를 탐지하는 Open Vocabulary 모델입니다</p>
+
+  <div class="cmd-card" style="--accent:#64748B">
+    <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">📦</span><div class="cmd-name">ultralytics 업데이트<small>YOLOE 지원 버전 필요</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>pip install --upgrade ultralytics</code><button class="copy-btn" data-cmd="pip install --upgrade ultralytics">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">YOLOE-26을 사용할 수 있는 <strong>최신 ultralytics</strong>가 설치돼요.</p>
+    </div>
+  </div>
+
+  <div class="cmd-card" style="--accent:#2563EB">
+    <div class="cmd-head"><span class="cmd-badge">2</span><span class="cmd-emoji">⚡</span><div class="cmd-name">YOLOE-26 다운로드 + OpenVINO 변환<small>최초 1회만 실행</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>cd ~/lerobot && python setup_yoloe.py</code><button class="copy-btn" data-cmd="cd ~/lerobot && python setup_yoloe.py">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">YOLOE-26s 모델을 다운로드하고 <strong>NUC CPU에서 빠르게 돌아가도록</strong> OpenVINO로 변환해요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">yoloe-26s-seg.pt 모델 파일이 자동 다운로드됩니다 (~100MB)</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">set_classes()로 37종 탐지 대상(cup, bottle, box...)이 설정됩니다</span></div>
+        <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">OpenVINO 포맷으로 변환되어 yoloe-26s-seg_openvino_model/ 폴더에 저장됩니다</span></div>
+      </div>
+      <div class="analogy-box">
+        <div class="analogy-icon">📚</div>
+        <div class="analogy-content">
+          <div class="analogy-title">YOLO26 vs YOLOE-26 차이</div>
+          <p class="analogy-text"><strong>YOLO26</strong>은 80종 사진을 외운 학생 — 외운 것만 인식. <strong>YOLOE-26</strong>은 영어 단어의 의미를 이해한 학생 — "cup"이라고 하면 어떤 컵이든 찾아요. 80종보다 적게 설정해도 더 정확합니다!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>탐지 대상 변경:</strong> setup_yoloe.py의 <code>DETECT_CLASSES</code> 리스트를 수정하면 원하는 물체를 추가/제거할 수 있습니다. 수정 후 다시 실행하면 새 클래스가 적용돼요.</span></div>
+</div>
+</section>
+
+<!-- Step 3: SAM3 -->
+<section style="background:var(--color-card);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+<div class="container">
+  <h2 class="section-title">🎯 Step 2: SAM3 서버 시작 (4090)</h2>
+  <p class="section-lead">SAM3는 물체의 정확한 픽셀 경계(윤곽선)를 그려주는 정밀 분할 모델입니다</p>
+
+  <div class="cmd-card" style="--accent:#DC2626">
+    <div class="cmd-head"><span class="cmd-badge">3</span><span class="cmd-emoji">🔧</span><div class="cmd-name">SAM3에 cutout 기능 추가<small>배경 제거 이미지 생성 (최초 1회)</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>cd ~/lekiwi_sam3/4090 && python patch_sam3_cutout.py</code><button class="copy-btn" data-cmd="cd ~/lekiwi_sam3/4090 && python patch_sam3_cutout.py">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">SAM3 서버에 <strong>배경을 흰색으로 제거</strong>하는 cutout 기능이 추가돼요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">기존 sam3_server.py를 자동 백업합니다</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">/segment 응답에 cutout_image 필드가 추가됩니다</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-card" style="--accent:#DC2626">
+    <div class="cmd-head"><span class="cmd-badge">4</span><span class="cmd-emoji">🎯</span><div class="cmd-name">SAM3 서버 시작<small>4090 GPU에서 실행</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>cd ~/lekiwi_sam3/4090 && python sam3_server.py</code><button class="copy-btn" data-cmd="cd ~/lekiwi_sam3/4090 && python sam3_server.py">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">4090 GPU에서 SAM3 정밀 분할 서버가 <strong>포트 5001</strong>에서 대기해요.</p>
+    </div>
+  </div>
+
+  <div class="analogy-box">
+    <div class="analogy-icon">🔍</div>
+    <div class="analogy-content">
+      <div class="analogy-title">SAM3의 역할</div>
+      <p class="analogy-text">YOLOE가 "여기에 병이 있다"는 <strong>사각형 박스</strong>를 주면, SAM3는 그 안에서 병의 <strong>정확한 윤곽</strong>을 픽셀 단위로 그려줘요. 사각형에는 배경이 20% 정도 포함되는데, SAM3 마스크는 물체만 정확히 분리합니다.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Step 4: VLM -->
+<section>
+<div class="container">
+  <h2 class="section-title">🧠 Step 3: VLM 서버 시작 (4070)</h2>
+  <p class="section-lead">VLM은 이미지를 보고 "이 물체가 정상인가? 결함이 있나?"를 판단하는 AI 두뇌입니다</p>
+
+  <div class="cmd-card" style="--accent:#7C3AED">
+    <div class="cmd-head"><span class="cmd-badge">5</span><span class="cmd-emoji">🧠</span><div class="cmd-name">VLM 서버 시작<small>Qwen2.5-VL-7B 8bit 양자화</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>cd ~/vlm && python vlm_server.py</code><button class="copy-btn" data-cmd="cd ~/vlm && python vlm_server.py">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">4070 GPU에서 VLM 서버가 <strong>포트 5002</strong>에서 대기해요. 모델 로딩에 2~3분 걸려요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">Qwen2.5-VL-7B 모델이 8bit 양자화로 로드됩니다 (~9GB VRAM)</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">"✅ VLM 로드 완료" 메시지가 나오면 준비 완료!</span></div>
+      </div>
+      <div class="callout callout-info"><span class="callout-icon">📌</span><span class="callout-content"><strong>8bit vs 4bit:</strong> 8bit(~9GB)는 4bit(~5GB)보다 디테일 인식력이 높습니다. 미세한 찌그러짐, 작은 스크래치를 감지하려면 8bit를 권장합니다.</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Step 5: NUC -->
+<section style="background:var(--color-card);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border)">
+<div class="container">
+  <h2 class="section-title">🎛️ Step 4: NUC 오케스트레이터 시작</h2>
+  <p class="section-lead">NUC가 지휘자 역할 — YOLOE, SAM3, VLM을 순서대로 호출합니다</p>
+
+  <div class="cmd-card" style="--accent:#2563EB">
+    <div class="cmd-head"><span class="cmd-badge">6</span><span class="cmd-emoji">🎛️</span><div class="cmd-name">오케스트레이터 시작<small>YOLOE + 웹 서버 + 파이프라인</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>cd ~/vlm && python app_scenario3.py</code><button class="copy-btn" data-cmd="cd ~/vlm && python app_scenario3.py">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">NUC에서 웹 서버가 <strong>포트 5000</strong>에 열리고, 브라우저에서 품질검사를 할 수 있어요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">YOLOE-26 OpenVINO 모델이 로드됩니다</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">Pi 카메라에서 ZeroMQ로 프레임을 수신합니다</span></div>
+        <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">http://192.168.0.65:5000 에서 웹 UI가 열립니다</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Step 6: 실행 -->
+<section>
+<div class="container">
+  <h2 class="section-title">🔍 Step 5: 품질검사 실행</h2>
+  <p class="section-lead">브라우저에서 물체를 검사하고 결과를 확인합니다</p>
+
+  <div class="cmd-card" style="--accent:#059669">
+    <div class="cmd-head"><span class="cmd-badge">7</span><span class="cmd-emoji">🌐</span><div class="cmd-name">브라우저 접속<small>같은 네트워크의 PC/태블릿에서</small></div></div>
+    <div class="cmd-terminal"><span class="prompt">$</span><code>http://192.168.0.65:5000</code><button class="copy-btn" data-cmd="http://192.168.0.65:5000">📋 복사</button></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">AI 물류 품질검사관 웹 UI가 열려요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">왼쪽에 YOLOE 실시간 감시 화면이 보입니다</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">카메라 앞에 물체(병, 컵, 상자 등)를 놓으세요</span></div>
+        <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">[🔍 검사 시작] 또는 [🔬 정밀] 버튼을 클릭하세요</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-card" style="--accent:#059669">
+    <div class="cmd-head"><span class="cmd-badge">8</span><span class="cmd-emoji">🔍</span><div class="cmd-name">일반 검사 (🔍)<small>전체 물체를 1회 검사</small></div></div>
+    <div class="cmd-terminal"><span class="prompt"> </span><code>[🔍 검사 시작] 버튼 클릭 → 약 15초 소요</code></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">YOLOE→SAM3→VLM 3단계 파이프라인이 <strong>순서대로 실행</strong>돼요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><strong>Step 1 YOLOE (130ms):</strong> 물체를 탐지하고 영어 라벨을 붙여요 (bottle, cup...)</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><strong>Step 2 SAM3 (1초):</strong> YOLOE 라벨로 정밀 마스크를 만들고 배경을 제거해요</span></div>
+        <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text"><strong>Step 3 VLM (10초):</strong> 배경 제거된 물체를 확대해서 손상 여부를 판단해요</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cmd-card" style="--accent:#7C3AED">
+    <div class="cmd-head"><span class="cmd-badge">9</span><span class="cmd-emoji">🔬</span><div class="cmd-name">정밀 검사 (🔬)<small>상/중/하 3등분 검사</small></div></div>
+    <div class="cmd-terminal"><span class="prompt"> </span><code>[🔬 정밀] 버튼 클릭 → 약 45초 소요</code></div>
+    <div class="cmd-body">
+      <div class="cmd-result-label">▶ 이렇게 하면</div>
+      <p class="big-easy">물체를 <strong>상단/중앙/하단 3등분</strong>하여 각각 VLM이 검사해요.</p>
+      <div class="mini-steps">
+        <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">SAM3 cutout을 3등분하여 각 영역을 1024px로 확대</span></div>
+        <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">VLM이 각 영역을 개별적으로 검사 (VLM x3회 호출)</span></div>
+        <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">한쪽면만 찌그러진 미세한 결함도 감지 가능!</span></div>
+      </div>
+      <div class="analogy-box">
+        <div class="analogy-icon">🔬</div>
+        <div class="analogy-content">
+          <div class="analogy-title">왜 3등분인가?</div>
+          <p class="analogy-text">VLM에게 "위 중앙 아래 다 봐!"라고 하면 혼란스러워합니다. 대신 "여기만 봐!"라고 한 부분씩 보여주면 <strong>집중해서 결함을 찾아요.</strong> 사람도 병 전체를 한 번에 보는 것보다 위/중간/아래를 나눠서 보면 더 정확하잖아요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>프롬프트 팁:</strong> "추가 질문" 입력란에 "찌그러짐 확인"처럼 구체적으로 쓰면 VLM이 해당 결함에 집중합니다. "상태 확인해주세요"처럼 모호한 질문은 정확도가 떨어져요.</span></div>
+</div>
+</section>
+
+<!-- 핵심 개념 정리 -->
+<section style="background:linear-gradient(135deg,#4C1D95,#8B5CF6);color:white;padding:2.5rem 0">
+<div class="container">
+  <h2 style="color:white;font-size:1.85rem;font-weight:700;margin-bottom:1.5rem">🔑 핵심 개념 정리</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem">
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">⚡ YOLOE-26 = 눈</p>
+      <p style="font-size:.85rem;opacity:.9">Open Vocabulary로 텍스트 설명만으로 어떤 물체든 탐지. 80종 고정이 아니라 <strong>원하는 물체를 자유롭게 지정</strong>.</p>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🎯 SAM3 = 확대경</p>
+      <p style="font-size:.85rem;opacity:.9">YOLOE 박스에서 물체만 정밀 분리 (배경 제거). 이 cutout을 <strong>확대하면 표면 디테일 극대화</strong>.</p>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🧠 VLM = 검사관 두뇌</p>
+      <p style="font-size:.85rem;opacity:.9">"정상은 이렇다"는 기준과 비교하여 스크래치, 찌그러짐, 변형을 <strong>한국어로 설명</strong>.</p>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">📐 확대의 균형</p>
+      <p style="font-size:.85rem;opacity:.9">1024px = 결함+정상 구분 최적. 2048px = 너무 디테일해서 제조 특성도 결함으로 오인 가능.</p>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">💬 프롬프트 엔지니어링</p>
+      <p style="font-size:.85rem;opacity:.9">"정상 기준" + "무시할 것" + "찾을 것"을 명확히 지시해야 AI가 정확하게 판단합니다.</p>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:1.25rem">
+      <p style="font-weight:900;font-size:1.05rem;margin-bottom:.4rem">🏭 공장 배포 시</p>
+      <p style="font-size:.85rem;opacity:.9">동일 제품이므로 SAM3_LABEL_MAP + 고해상도 카메라 + 72B 모델로 정밀도를 높일 수 있습니다.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<footer>
+<div class="container">
+  <p>제타위성로보틱스 · 피지컬 AI 교육<br>
+  YOLOE-26 + SAM3 + VLM 품질검사 파이프라인 실습 가이드 · 2026-06-21</p>
+</div>
+</footer>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var cmd=btn.getAttribute('data-cmd');
+    var done=function(){var o=btn.innerHTML;btn.innerHTML='✅ 복사됨';btn.classList.add('copied');setTimeout(function(){btn.innerHTML=o;btn.classList.remove('copied')},1500)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cmd).then(done).catch(function(){fallbackCopy(cmd,done)})}else{fallbackCopy(cmd,done)}
+  });
+});
+function fallbackCopy(t,d){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a);d()}
+</script>
+</body>
+</html>
