@@ -100,12 +100,31 @@
     td:first-child { font-weight: 600; }
     td .mono { font-size: 0.8rem; color: var(--color-secondary); }
 
-    .links-box { background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: 10px; padding: 0.85rem 1.1rem; margin-top: 0.85rem; }
-    .links-box .lb-label { font-size: 0.72rem; font-weight: 700; color: var(--color-muted); display: block; margin-bottom: 0.3rem; }
-    .links-box .lb-url { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--color-secondary); word-break: break-all; line-height: 1.7; display: block; }
+    .links-box { background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: 10px; padding: 0.9rem 1.1rem; margin-top: 0.85rem; }
+    .links-box .lb-label { font-size: 0.74rem; font-weight: 700; color: var(--color-muted); display: block; margin-bottom: 0.55rem; }
+    .link-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    a.link-btn { display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 0.5rem 0.85rem; border-radius: 9px; background: var(--color-secondary); color: #fff; transition: transform 0.12s, box-shadow 0.12s; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    a.link-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(37,99,235,0.3); }
+    a.link-btn.video { background: var(--color-danger); }
+    a.link-btn.video:hover { box-shadow: 0 4px 10px rgba(220,38,38,0.3); }
+    a.link-btn.play { background: var(--color-primary); }
+    a.link-btn.play:hover { box-shadow: 0 4px 10px rgba(124,58,237,0.3); }
+    a.link-btn.data { background: var(--color-success); }
+    a.link-btn.data:hover { box-shadow: 0 4px 10px rgba(5,150,105,0.3); }
+    a.link-btn.star { background: linear-gradient(135deg, #D97706, #F59E0B); }
+    a.link-btn .lb-host { font-family: 'JetBrains Mono', monospace; font-weight: 400; opacity: 0.85; font-size: 0.72rem; }
+
+    .quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 0.85rem; }
+    a.quick-card { display: flex; flex-direction: column; gap: 0.35rem; text-decoration: none; background: var(--color-card); border: 1px solid var(--color-border); border-left: 5px solid var(--qc, var(--color-primary)); border-radius: 12px; padding: 1rem 1.1rem; transition: transform 0.12s, box-shadow 0.12s; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    a.quick-card:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
+    .qc-num { width: 26px; height: 26px; border-radius: 7px; background: var(--qc, var(--color-primary)); color: #fff; font-weight: 900; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; }
+    .qc-name { font-weight: 700; font-size: 0.92rem; color: var(--color-text); }
+    .qc-go { font-size: 0.82rem; font-weight: 600; color: var(--qc, var(--color-primary)); }
 
     .footer { background: #1E293B; color: #CBD5E1; padding: 2.5rem 0; font-size: 0.85rem; }
     .footer h4 { color: white; margin-bottom: 0.75rem; }
+    .footer a { color: #A5B4FC; text-decoration: none; border-bottom: 1px solid rgba(165,180,252,0.4); }
+    .footer a:hover { color: #C7D2FE; border-bottom-color: #C7D2FE; }
     .footer ul { list-style: none; }
     .footer li { margin-bottom: 0.35rem; }
 
@@ -183,11 +202,59 @@
     </div>
   </section>
 
+  <!-- 전체 데모 빠른 링크 모음 -->
+  <section style="background:linear-gradient(180deg,#FAFAFF,#F1F5F9); border-top:1px solid var(--color-border);">
+    <div class="container">
+      <h2 class="section-title">🚀 전체 데모 빠른 링크 (바로 클릭)</h2>
+      <p class="section-lead">각 케이스에서 SAM 3가 실제로 도는 영상·데모를 한 번에 모았습니다. 아래 버튼을 누르면 새 탭에서 열립니다.</p>
+      <div class="quick-grid">
+        <a class="quick-card" href="https://jianingnz.github.io/sa-fari-explorer" target="_blank" rel="noopener" style="--qc:#059669">
+          <span class="qc-num">1</span><span class="qc-name">SA-FARI 동물 영상</span><span class="qc-go">▶ 영상 보기</span>
+        </a>
+        <a class="quick-card" href="https://database.fathomnet.org/fathomnet" target="_blank" rel="noopener" style="--qc:#0891B2">
+          <span class="qc-num">2</span><span class="qc-name">FathomNet 수중</span><span class="qc-go">🐟 DB 열기</span>
+        </a>
+        <a class="quick-card" href="https://about.fb.com/news/2025/04/introducing-edits-streamlined-video-creation-app" target="_blank" rel="noopener" style="--qc:#DC2626">
+          <span class="qc-num">3</span><span class="qc-name">Instagram Edits</span><span class="qc-go">▶ 효과 영상</span>
+        </a>
+        <a class="quick-card" href="https://aidemos.meta.com/segment-anything" target="_blank" rel="noopener" style="--qc:#D97706">
+          <span class="qc-num">4</span><span class="qc-name">View in Room (3D)</span><span class="qc-go">🧊 3D 데모</span>
+        </a>
+        <a class="quick-card" href="https://playground.roboflow.com" target="_blank" rel="noopener" style="--qc:#7C3AED">
+          <span class="qc-num">5</span><span class="qc-name">Roboflow 라벨링</span><span class="qc-go">▶ 직접 해보기</span>
+        </a>
+        <a class="quick-card" href="https://docs.roboflow.com/deploy/supported-models/sam3" target="_blank" rel="noopener" style="--qc:#2563EB">
+          <span class="qc-num">6</span><span class="qc-name">Azure 인원/익명화</span><span class="qc-go">🖼️ 결과 보기</span>
+        </a>
+        <a class="quick-card" href="https://ai.meta.com/blog/segment-anything-model-3" target="_blank" rel="noopener" style="--qc:#059669">
+          <span class="qc-num">7</span><span class="qc-name">로보틱스 Aria 'hands'</span><span class="qc-go">▶ 1인칭 영상</span>
+        </a>
+        <a class="quick-card" href="https://blog.roboflow.com/what-is-sam3" target="_blank" rel="noopener" style="--qc:#D97706">
+          <span class="qc-num">8</span><span class="qc-name">자율주행 vehicle</span><span class="qc-go">🚗 결과 보기</span>
+        </a>
+        <a class="quick-card" href="https://blog.roboflow.com/fine-tune-sam3" target="_blank" rel="noopener" style="--qc:#DC2626">
+          <span class="qc-num">9</span><span class="qc-name">의료 파인튜닝</span><span class="qc-go">🩺 가이드</span>
+        </a>
+        <a class="quick-card" href="https://aidemos.meta.com/segment-anything/gallery" target="_blank" rel="noopener" style="--qc:#0891B2">
+          <span class="qc-num">10</span><span class="qc-name">Playground ⭐</span><span class="qc-go">⭐ 공식 갤러리</span>
+        </a>
+      </div>
+      <div class="callout callout-tip" style="margin-top:1.5rem;">
+        <div class="callout-icon">⭐</div>
+        <div class="callout-content">
+          <strong>딱 하나만 본다면 → 10번 "Meta 공식 갤러리"</strong>를 누르세요.
+          코딩 없이 사진·영상을 올려 SAM 3가 분할·추적하는 장면을 바로 볼 수 있습니다.
+          본문에는 <strong>강아지·축구선수 영상</strong>이 이미 임베드되어 인터넷 없이도 재생됩니다.
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- 활용 사례 10가지 -->
   <section>
     <div class="container">
       <h2 class="section-title">🌍 활용 사례 10선 — 실제 동작 자료와 함께</h2>
-      <p class="section-lead">🎬 = 영상 데모 · 🖼️ = 이미지 결과 · 🧊 = 3D 복원. 일부는 라이선스상 공식 링크로 안내합니다.</p>
+      <p class="section-lead">🎬 = 영상 데모 · 🖼️ = 이미지 결과 · 🧊 = 3D 복원. 각 케이스 하단의 버튼을 누르면 실제 자료가 새 탭에서 열립니다.</p>
 
       <!-- 1 -->
       <div class="case" style="--case-color:#059669">
@@ -210,9 +277,12 @@
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model green">SAM 3 (Video)</span><span class="used-model green">DETR Detector</span><span class="used-model green">SAM 2 Tracker</span></div>
           <div class="case-fact">🔢 <span><strong>10,000+</strong> 영상 · <strong>100+</strong> 종 · 프레임별 마스크 + 추적 ID</span></div>
           <div class="links-box">
-            <span class="lb-label">🔗 실제 SA-FARI 동물 영상 보기 (프레임별 마스크 스크럽)</span>
-            <span class="lb-url">jianingnz.github.io/sa-fari-explorer</span>
-            <span class="lb-url">conservationxlabs.com/sa-fari · 🤗 huggingface.co/datasets/facebook/SA-FARI</span>
+            <span class="lb-label">🔗 실제 SA-FARI 동물 영상 보기 (아래 버튼 클릭)</span>
+            <div class="link-btns">
+              <a class="link-btn video" href="https://jianingnz.github.io/sa-fari-explorer" target="_blank" rel="noopener">▶ 동물 영상 + 마스크 스크럽 <span class="lb-host">explorer</span></a>
+              <a class="link-btn data" href="https://www.conservationxlabs.com/sa-fari" target="_blank" rel="noopener">🦌 SA-FARI 공식 <span class="lb-host">conservationxlabs.com</span></a>
+              <a class="link-btn data" href="https://huggingface.co/datasets/facebook/SA-FARI" target="_blank" rel="noopener">🤗 데이터셋(MP4) <span class="lb-host">huggingface.co</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#영상추적</span><span class="case-tag">#다중객체</span><span class="case-tag">#생태학</span></div>
         </div>
@@ -239,7 +309,10 @@
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model">SAM 3 (Image)</span><span class="used-model">Perception Encoder</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 수중 분할 결과 보기</span>
-            <span class="lb-url">database.fathomnet.org/fathomnet · fathomnet.org</span>
+            <div class="link-btns">
+              <a class="link-btn data" href="https://database.fathomnet.org/fathomnet" target="_blank" rel="noopener">🐟 FathomNet 데이터베이스 <span class="lb-host">database.fathomnet.org</span></a>
+              <a class="link-btn" href="https://www.fathomnet.org" target="_blank" rel="noopener">🌊 FathomNet 공식 <span class="lb-host">fathomnet.org</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#수중영상</span><span class="case-tag">#인스턴스분할</span><span class="case-tag">#해양생물학</span></div>
         </div>
@@ -265,8 +338,10 @@
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model red">SAM 3 (Video Tracker)</span><span class="used-model red">← SAM 2.1 (이전 Cutouts)</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 Edits 효과 영상 보기</span>
-            <span class="lb-url">about.fb.com/news/2025/04/introducing-edits-streamlined-video-creation-app</span>
-            <span class="lb-url">aidemos.meta.com/segment-anything/gallery (스포트라이트·모션트레일 템플릿)</span>
+            <div class="link-btns">
+              <a class="link-btn video" href="https://about.fb.com/news/2025/04/introducing-edits-streamlined-video-creation-app" target="_blank" rel="noopener">▶ Edits 효과 영상 <span class="lb-host">about.fb.com</span></a>
+              <a class="link-btn play" href="https://aidemos.meta.com/segment-anything/gallery" target="_blank" rel="noopener">🎬 효과 템플릿 갤러리 <span class="lb-host">aidemos.meta.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#영상편집</span><span class="case-tag">#객체추적</span><span class="case-tag">#크리에이터</span></div>
         </div>
@@ -299,7 +374,10 @@
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model orange">SAM 3</span><span class="used-model orange">SAM 3D Objects</span><span class="used-model orange">SAM 3D Body</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 사진→3D 변환 직접 해보기</span>
-            <span class="lb-url">aidemos.meta.com/segment-anything (3D 변환 데모) · ai.meta.com/blog/sam-3d</span>
+            <div class="link-btns">
+              <a class="link-btn play" href="https://aidemos.meta.com/segment-anything" target="_blank" rel="noopener">🧊 3D 변환 데모 열기 <span class="lb-host">aidemos.meta.com</span></a>
+              <a class="link-btn" href="https://ai.meta.com/blog/sam-3d" target="_blank" rel="noopener">📖 SAM 3D 블로그(영상) <span class="lb-host">ai.meta.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#3D복원</span><span class="case-tag">#AR</span><span class="case-tag">#SAM3D</span></div>
         </div>
@@ -334,10 +412,12 @@ inputs = processor(images=image, text=<span class="str">"solar panel"</span>, re
     outputs = model(**inputs)  <span class="cmt"># SAM 3 추론</span>
 results = processor.<span class="fn">post_process_instance_segmentation</span>(outputs, threshold=<span class="str">0.5</span>)[<span class="str">0</span>]  <span class="cmt"># 마스크 후처리</span></div>
           <div class="links-box">
-            <span class="lb-label">🔗 실제 "solar panel"·"vehicle"·"box" 분할 결과 이미지</span>
-            <span class="lb-url">blog.roboflow.com/what-is-sam3 (solar/vehicle/warehouse box 예시)</span>
-            <span class="lb-url">blog.roboflow.com/detect-solar-panel-failure (눈 덮인 패널 탐지)</span>
-            <span class="lb-url">playground.roboflow.com (직접 이미지 올려보기)</span>
+            <span class="lb-label">🔗 실제 분할 결과 이미지 + 직접 해보기</span>
+            <div class="link-btns">
+              <a class="link-btn" href="https://blog.roboflow.com/what-is-sam3" target="_blank" rel="noopener">🖼️ solar/vehicle/box 결과 <span class="lb-host">blog.roboflow.com</span></a>
+              <a class="link-btn" href="https://blog.roboflow.com/detect-solar-panel-failure" target="_blank" rel="noopener">❄️ 눈 덮인 패널 탐지 <span class="lb-host">blog.roboflow.com</span></a>
+              <a class="link-btn play" href="https://playground.roboflow.com" target="_blank" rel="noopener">▶ 직접 이미지 올려보기 <span class="lb-host">playground.roboflow.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#오토라벨링</span><span class="case-tag">#Roboflow</span><span class="case-tag">#지식증류</span></div>
         </div>
@@ -353,8 +433,10 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model blue">facebook/sam3 (Azure 호스팅)</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 인원 분할 / 익명화 결과</span>
-            <span class="lb-url">docs.roboflow.com/deploy/supported-models/sam3 (people-walking)</span>
-            <span class="lb-url">aidemos.meta.com/segment-anything (얼굴·번호판 픽셀화 템플릿)</span>
+            <div class="link-btns">
+              <a class="link-btn" href="https://docs.roboflow.com/deploy/supported-models/sam3" target="_blank" rel="noopener">🖼️ people-walking 분할 <span class="lb-host">docs.roboflow.com</span></a>
+              <a class="link-btn play" href="https://aidemos.meta.com/segment-anything" target="_blank" rel="noopener">🔒 얼굴·번호판 픽셀화 <span class="lb-host">aidemos.meta.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#Azure</span><span class="case-tag">#클라우드</span><span class="case-tag">#익명화</span></div>
         </div>
@@ -377,9 +459,11 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
             </div>
           </div>
           <div class="links-box">
-            <span class="lb-label">🔗 실제 1인칭 "hands" 분할 영상 (로봇 시점)</span>
-            <span class="lb-url">ai.meta.com/blog/segment-anything-model-3 ("hands" Aria Gen 2 영상)</span>
-            <span class="lb-url">projectaria.com/datasets/gen2pilot</span>
+            <span class="lb-label">🔗 실제 1인칭 'hands' 분할 영상 (로봇 시점)</span>
+            <div class="link-btns">
+              <a class="link-btn video" href="https://ai.meta.com/blog/segment-anything-model-3" target="_blank" rel="noopener">▶ Aria 'hands' 영상 <span class="lb-host">ai.meta.com</span></a>
+              <a class="link-btn data" href="https://www.projectaria.com/datasets/gen2pilot" target="_blank" rel="noopener">🥽 Aria Gen 2 데이터셋 <span class="lb-host">projectaria.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#오픈보캐뷸러리</span><span class="case-tag">#1인칭시점</span><span class="case-tag">#SAM3Agent</span></div>
         </div>
@@ -395,8 +479,10 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model orange">SAM 3 (라벨/검증)</span><span class="used-model blue">경량 탐지기 (차량 탑재)</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 "vehicle" 거리 분할 결과</span>
-            <span class="lb-url">blog.roboflow.com/what-is-sam3 (vehicle 거리 예시)</span>
-            <span class="lb-url">roboflow.com/model/segment-anything-3</span>
+            <div class="link-btns">
+              <a class="link-btn" href="https://blog.roboflow.com/what-is-sam3" target="_blank" rel="noopener">🚗 vehicle 거리 분할 <span class="lb-host">blog.roboflow.com</span></a>
+              <a class="link-btn play" href="https://roboflow.com/model/segment-anything-3" target="_blank" rel="noopener">▶ SAM 3 모델 데모 <span class="lb-host">roboflow.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#자율주행</span><span class="case-tag">#희귀객체</span><span class="case-tag">#엣지배포</span></div>
         </div>
@@ -413,7 +499,9 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
           <div class="callout callout-warning"><div class="callout-icon">⚠️</div><div class="callout-content"><strong>한계 인지:</strong> 의료·과학 전문 개념은 zero-shot으로 약함. <strong>반드시 도메인 파인튜닝 + 전문가 검수</strong> 전제.</div></div>
           <div class="links-box">
             <span class="lb-label">🔗 실제 파인튜닝 후 분할 결과</span>
-            <span class="lb-url">blog.roboflow.com/fine-tune-sam3 (파인튜닝 결과 이미지)</span>
+            <div class="link-btns">
+              <a class="link-btn" href="https://blog.roboflow.com/fine-tune-sam3" target="_blank" rel="noopener">🩺 파인튜닝 가이드+결과 <span class="lb-host">blog.roboflow.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#의료영상</span><span class="case-tag">#파인튜닝</span><span class="case-tag">#MedSAM</span></div>
         </div>
@@ -429,8 +517,10 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
           <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model">SAM 3</span><span class="used-model blue">Stable Diffusion / ControlNet</span><span class="used-model green">Sam3Tracker (PVS)</span></div>
           <div class="links-box">
             <span class="lb-label">🔗 ⭐ 가장 추천하는 실시간 시연 (코딩 불필요)</span>
-            <span class="lb-url">aidemos.meta.com/segment-anything/gallery ⭐</span>
-            <span class="lb-url">playground.roboflow.com (이미지 드래그&드롭)</span>
+            <div class="link-btns">
+              <a class="link-btn star" href="https://aidemos.meta.com/segment-anything/gallery" target="_blank" rel="noopener">⭐ Meta 공식 갤러리(영상) <span class="lb-host">aidemos.meta.com</span></a>
+              <a class="link-btn play" href="https://playground.roboflow.com" target="_blank" rel="noopener">▶ 이미지 드래그&드롭 <span class="lb-host">playground.roboflow.com</span></a>
+            </div>
           </div>
           <div class="case-tags"><span class="case-tag">#Playground</span><span class="case-tag">#노코드</span><span class="case-tag">#VFX</span><span class="case-tag">#GIS</span></div>
         </div>
@@ -483,15 +573,15 @@ results = processor.<span class="fn">post_process_instance_segmentation</span>(o
 
   <footer class="footer">
     <div class="container">
-      <h4>📚 임베드 자료 출처 & 더 보기</h4>
+      <h4>📚 임베드 자료 출처 & 더 보기 (클릭)</h4>
       <ul>
-        <li>• 🎬 강아지·축구선수 영상, 모델 다이어그램, SA-Co 이미지 — github.com/facebookresearch/sam3 (assets/)</li>
-        <li>• 🧊 SAM 3D Body 구조 — github.com/facebookresearch/sam-3d-body (assets/)</li>
-        <li>• Meta 공식 블로그 — ai.meta.com/blog/segment-anything-model-3 (Aria "hands" 영상 포함)</li>
-        <li>• SA-FARI Explorer — jianingnz.github.io/sa-fari-explorer (동물 영상 프레임별 마스크)</li>
-        <li>• Roboflow — blog.roboflow.com/what-is-sam3 (solar/vehicle/box 결과 이미지)</li>
-        <li>• 공식 Playground — aidemos.meta.com/segment-anything/gallery ⭐</li>
-        <li>• 논문 — arXiv 2511.16719 · 모델 — 🤗 facebook/sam3</li>
+        <li>• 🎬 영상·다이어그램·SA-Co 이미지 — <a href="https://github.com/facebookresearch/sam3" target="_blank" rel="noopener">github.com/facebookresearch/sam3</a></li>
+        <li>• 🧊 SAM 3D Body — <a href="https://github.com/facebookresearch/sam-3d-body" target="_blank" rel="noopener">github.com/facebookresearch/sam-3d-body</a></li>
+        <li>• Meta 공식 블로그(Aria "hands" 영상) — <a href="https://ai.meta.com/blog/segment-anything-model-3" target="_blank" rel="noopener">ai.meta.com/blog/segment-anything-model-3</a></li>
+        <li>• SA-FARI Explorer — <a href="https://jianingnz.github.io/sa-fari-explorer" target="_blank" rel="noopener">jianingnz.github.io/sa-fari-explorer</a></li>
+        <li>• Roboflow 결과 이미지 — <a href="https://blog.roboflow.com/what-is-sam3" target="_blank" rel="noopener">blog.roboflow.com/what-is-sam3</a></li>
+        <li>• ⭐ 공식 Playground — <a href="https://aidemos.meta.com/segment-anything/gallery" target="_blank" rel="noopener">aidemos.meta.com/segment-anything/gallery</a></li>
+        <li>• 논문 — <a href="https://arxiv.org/abs/2511.16719" target="_blank" rel="noopener">arXiv 2511.16719</a> · 모델 — <a href="https://huggingface.co/facebook/sam3" target="_blank" rel="noopener">🤗 facebook/sam3</a></li>
       </ul>
       <p style="margin-top:1.25rem; color:#94A3B8; font-size:0.8rem;">
         제타위성로보틱스 피지컬 AI 교육자료 · SAM 3 활용 사례 10선 (실제 동작 영상·이미지 포함) · 2025.11 공개 기준
