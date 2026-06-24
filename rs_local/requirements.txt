@@ -1,0 +1,6 @@
+# NUC LOCAL 전용 의존성 목록 (Type A — RealSense 직결)
+# [2026-02-21 생성] Pi/ZeroMQ 불필요, 최소 패키지만 포함
+pyrealsense2          # Intel RealSense SDK Python 바인딩
+flask                 # 웹서버 + MJPEG 스트리밍
+opencv-python         # 영상 처리 + JPEG 인코딩
+numpy                 # Depth 배열 수치 연산

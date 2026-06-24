@@ -1,0 +1,369 @@
+<!-- NUC LOCAL 전용 웹 UI — 미션 1~7 + 공장 미션 4-1/5-1/6-1 -->
+<!-- [2026-02-22 수정] 4-1/5-1/6-1 실제 구현, 캡처 버튼, 노란 테두리 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏭 RealSense Depth Vision Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#06060e;color:#e2e8f0;font-family:'Noto Sans KR',sans-serif;min-height:100vh;overflow-x:hidden}
+.hero{position:relative;text-align:center;padding:50px 20px 40px;overflow:hidden;
+  background:linear-gradient(160deg,#020617 0%,#0c1530 30%,#0a1628 60%,#030712 100%)}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(6,182,212,.12) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 30%,rgba(139,92,246,.08) 0%,transparent 50%)}
+.hero *{position:relative;z-index:1}
+.hb{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;
+  background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);font-size:.75em;color:#67e8f9;font-weight:600;margin-bottom:16px}
+.hb .dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pd 2s ease-in-out infinite}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-size:2.4em;font-weight:900;line-height:1.2;margin-bottom:8px;
+  background:linear-gradient(135deg,#e2e8f0 0%,#67e8f9 50%,#a78bfa 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{color:#94a3b8;font-size:1em;font-weight:300}
+.container{max-width:1100px;margin:0 auto;padding:24px 16px}
+.sl{font-size:.75em;font-weight:700;color:#67e8f9;letter-spacing:2px;text-transform:uppercase;margin:20px 0 14px}
+
+/* 카드 */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{position:relative;background:rgba(15,23,42,.6);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:20px;cursor:pointer;
+  transition:all .4s cubic-bezier(.4,0,.2,1);overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:18px 18px 0 0;opacity:0;transition:opacity .3s}
+.card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-5px);box-shadow:0 16px 32px rgba(0,0,0,.4)}
+.card:hover::before{opacity:1}
+.card::before{background:linear-gradient(90deg,#06b6d4,#3b82f6)}
+/* 노란색 공장 카드 */
+.card-factory{border:2px solid #fbbf24!important;background:rgba(251,191,36,.05)!important}
+.card-factory:hover{border-color:#fbbf24!important;box-shadow:0 8px 30px rgba(251,191,36,.2)!important}
+.card-factory::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)!important;opacity:1!important}
+.ci{font-size:1.8em;margin-bottom:6px;display:block}
+.cn{position:absolute;top:14px;right:16px;font-size:2.2em;font-weight:900;color:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace}
+.card h3{font-size:.98em;font-weight:700;margin-bottom:4px}
+.card p{font-size:.78em;color:#94a3b8;line-height:1.5}
+.ct{display:inline-block;margin-top:8px;padding:3px 10px;border-radius:6px;font-size:.7em;font-weight:600}
+.ct-c{background:rgba(52,211,153,.15);color:#34d399}
+.ct-k{background:rgba(167,139,250,.15);color:#a78bfa}
+.ct-d{background:rgba(251,191,36,.15);color:#fbbf24}
+.ct-s{background:rgba(248,113,113,.15);color:#f87171}
+.ct-a{background:rgba(103,232,249,.15);color:#67e8f9}
+.ct-f{background:rgba(251,191,36,.25);color:#fbbf24;border:1px solid rgba(251,191,36,.4)}
+
+/* 미션 상세 */
+.mv{display:none;margin-top:8px}.mv.show{display:block}
+.bb{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#94a3b8;
+  padding:8px 20px;border-radius:10px;cursor:pointer;font-size:.85em;margin-bottom:16px;
+  transition:all .2s;font-family:'Noto Sans KR',sans-serif}
+.bb:hover{background:rgba(103,232,249,.1);color:#67e8f9;border-color:rgba(103,232,249,.3)}
+.mt{font-size:1.3em;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.sb{background:#000;border-radius:16px;overflow:hidden;text-align:center;min-height:200px;
+  border:1px solid rgba(255,255,255,.06);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.sb img{width:100%;height:auto;display:block}
+
+/* 데이터 패널 */
+.dp{margin-top:14px;background:rgba(15,23,42,.8);border:1px solid rgba(52,211,153,.2);border-radius:14px;padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:.88em}
+.dv{color:#34d399;font-weight:700}
+.dl{color:#67e8f9;font-weight:600;font-size:.85em}
+
+/* 컬러맵 */
+.cp{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cc{background:rgba(15,23,42,.8);border-radius:14px;padding:14px;text-align:center;cursor:pointer;transition:all .3s;border:2px solid transparent}
+.cc.active{border-color:#fbbf24;box-shadow:0 0 20px rgba(251,191,36,.2)}
+.cc:hover{transform:translateY(-3px)}
+.cb{height:24px;border-radius:8px;margin-bottom:10px}
+.cb1{background:linear-gradient(90deg,#00008B,#0000FF,#00FFFF,#00FF00,#FFFF00,#FF0000,#8B0000)}
+.cb2{background:linear-gradient(90deg,#30123b,#4662d7,#36aab8,#1ae4b6,#a8f644,#fca636,#e6550d,#7a0403)}
+.cb3{background:linear-gradient(90deg,#000,#2a3a5c,#6888aa,#a0bcc8,#c8dce8,#fff)}
+.cb4{background:linear-gradient(90deg,#000,#330000,#880000,#F00,#F80,#FF0,#FFF)}
+.ccn{font-weight:700;font-size:.95em;margin-bottom:4px}
+.ccd{font-size:.72em;color:#94a3b8;line-height:1.4}
+.ck{display:inline-block;width:22px;height:22px;border-radius:6px;background:rgba(255,255,255,.1);font-size:.7em;line-height:22px;font-weight:700;color:#fbbf24;margin-top:6px;font-family:'JetBrains Mono',monospace}
+
+/* ROI 안내 */
+.rh{margin-top:14px;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.2);border-radius:14px;padding:14px 18px;font-size:.82em;color:#67e8f9;display:flex;align-items:center;gap:10px}
+
+/* 필터 설명 */
+.fp{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fc{background:rgba(15,23,42,.8);border-radius:14px;padding:16px;border:1px solid rgba(255,255,255,.06)}
+.fc h4{font-size:.95em;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.fc p{font-size:.78em;color:#94a3b8;line-height:1.6}
+.fc b{color:#e2e8f0}
+.ft{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.68em;font-weight:600;margin-top:8px}
+.ft-r{background:rgba(248,113,113,.15);color:#f87171}
+.ft-g{background:rgba(52,211,153,.15);color:#34d399}
+
+/* 근접 경고 */
+.ap{margin-top:14px;background:rgba(15,23,42,.9);border-radius:16px;padding:20px;border:1px solid rgba(239,68,68,.15)}
+.at{font-size:.9em;font-weight:700;color:#f87171;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sr{display:flex;align-items:center;gap:12px;margin:10px 0}
+.sr label{font-size:.82em;color:#94a3b8;min-width:110px;font-weight:500}
+.sr input[type=range]{flex:1;accent-color:#ef4444;height:6px}
+.sr .sv{color:#f87171;font-family:'JetBrains Mono',monospace;font-weight:700;min-width:60px;text-align:right;font-size:.9em}
+.az{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.zc{border-radius:10px;padding:12px;text-align:center;font-size:.75em;font-weight:600}
+.z-s{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399}
+.z-w{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24}
+.z-d{background:rgba(239,68,68,.15);border:2px solid rgba(239,68,68,.5);color:#f87171;animation:dp 1.5s ease-in-out infinite}
+@keyframes dp{0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 20px rgba(239,68,68,.3),inset 0 0 15px rgba(239,68,68,.1)}}
+
+/* 캡처 컨트롤 (4-1, 5-1, 6-1) */
+.cap-panel{margin-top:14px;background:rgba(251,191,36,.06);border:2px solid rgba(251,191,36,.3);border-radius:16px;padding:20px}
+.cap-title{font-size:.9em;font-weight:700;color:#fbbf24;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.cap-desc{font-size:.8em;color:#94a3b8;margin-bottom:14px;line-height:1.6}
+.cap-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;border:none;padding:12px 28px;
+  border-radius:12px;font-weight:700;font-size:.95em;cursor:pointer;transition:all .2s;
+  font-family:'Noto Sans KR',sans-serif;display:inline-flex;align-items:center;gap:8px}
+.cap-btn:hover{transform:scale(1.05);box-shadow:0 4px 20px rgba(251,191,36,.4)}
+.cap-btn:active{transform:scale(0.98)}
+.cap-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.cap-status{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:.82em;font-family:'JetBrains Mono',monospace;display:none}
+.cap-ok{display:block;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399}
+.cap-fail{display:block;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171}
+
+@media(max-width:768px){.hero h1{font-size:1.6em}.cards{grid-template-columns:1fr}.cp{grid-template-columns:repeat(2,1fr)}.fp,.az{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hb"><span class="dot"></span> LIVE · NUC LOCAL 직결</div>
+  <h1>RealSense<br>Depth Vision Lab</h1>
+  <p class="sub">Intel NUC + RealSense D435i/D455 · 10가지 Depth 미션</p>
+</div>
+
+<div class="container">
+  <div id="V">
+    <div class="sl">BASIC MISSIONS</div>
+    <div class="cards">
+      <div class="card" onclick="go(1)"><span class="cn">01</span><span class="ci">👁️</span><h3>RGB + Depth 듀얼 뷰</h3><p>Color와 Depth를 좌우 나란히 실시간 비교</p><span class="ct ct-a">자동</span></div>
+      <div class="card" onclick="go(2)"><span class="cn">02</span><span class="ci">📏</span><h3>클릭 거리 측정</h3><p>화면 클릭 → 거리(cm) 실시간 측정</p><span class="ct ct-c">클릭</span></div>
+      <div class="card" onclick="go(3)"><span class="cn">03</span><span class="ci">🎯</span><h3>2D → 3D 좌표 변환</h3><p>클릭 → (X,Y,Z) 실제 3D 좌표</p><span class="ct ct-c">클릭</span></div>
+      <div class="card" onclick="go(4)"><span class="cn">04</span><span class="ci">🎨</span><h3>Depth 컬러맵 변경</h3><p>4가지 색상 스타일로 거리 시각화</p><span class="ct ct-k">키보드 1~4</span></div>
+      <div class="card" onclick="go(5)"><span class="cn">05</span><span class="ci">📊</span><h3>ROI 영역 통계</h3><p>드래그 → 평균·최소·최대 거리 분석</p><span class="ct ct-d">드래그</span></div>
+      <div class="card" onclick="go(6)"><span class="cn">06</span><span class="ci">✨</span><h3>필터 비교</h3><p>원본(RAW) vs 필터 적용 결과 비교</p><span class="ct ct-a">자동 비교</span></div>
+      <div class="card" onclick="go(7)"><span class="cn">07</span><span class="ci">🚨</span><h3>근접 경고 시스템</h3><p>물체가 너무 가까우면 빨간 위험 경고</p><span class="ct ct-s">슬라이더</span></div>
+    </div>
+
+    <div class="sl">🏭 FACTORY APPLICATIONS</div>
+    <div class="cards">
+      <div class="card card-factory" onclick="go(41)"><span class="cn">4-1</span><span class="ci">📏</span><h3>제품 높이 검사</h3><p>배경 Depth를 기준으로 제품 높이를 측정하고 합격/불합격을 판정합니다</p><span class="ct ct-f">📸 캡처 + 실시간 검사</span></div>
+      <div class="card card-factory" onclick="go(51)"><span class="cn">5-1</span><span class="ci">🔍</span><h3>표면 결함 히트맵</h3><p>양품 Depth 대비 편차를 TURBO 컬러맵으로 시각화하여 결함을 감지합니다</p><span class="ct ct-f">📸 캡처 + 결함 감지</span></div>
+      <div class="card card-factory" onclick="go(61)"><span class="cn">6-1</span><span class="ci">📦</span><h3>적재량 모니터링</h3><p>빈 팔레트 대비 채움률(%)을 실시간 산출하여 적재 상태를 모니터링합니다</p><span class="ct ct-f">📸 캡처 + 채움률 측정</span></div>
+    </div>
+  </div>
+
+  <div id="M" class="mv">
+    <button class="bb" onclick="back()">← 미션 목록</button>
+    <div id="T" class="mt"></div>
+    <div id="S" class="sb"><p style="padding:100px 20px;color:#334155">미션을 시작하면 실시간 영상이 표시됩니다</p></div>
+
+    <!-- 미션 2,3: 측정 데이터 -->
+    <div id="P2" class="dp" style="display:none">📐 <span class="dl">측정 결과 ·</span> <span id="D">화면을 클릭하면 거리와 좌표가 표시됩니다</span></div>
+
+    <!-- 미션 4: 컬러맵 -->
+    <div id="P4" class="cp" style="display:none">
+      <div class="cc active" onclick="key('1',this)"><div class="cb cb1"></div><div class="ccn">JET</div><div class="ccd"><b style="color:#3b82f6">파랑/검정 = 가까움</b><br><b style="color:#ef4444">빨강 = 멀리</b><br>무지개색 거리 시각화</div><div class="ck">1</div></div>
+      <div class="cc" onclick="key('2',this)"><div class="cb cb2"></div><div class="ccn">TURBO</div><div class="ccd"><b style="color:#7c3aed">보라 = 가까움</b><br><b style="color:#ef4444">빨강 = 멀리</b><br>균일한 색 변화 → 미세 차이 구분</div><div class="ck">2</div></div>
+      <div class="cc" onclick="key('3',this)"><div class="cb cb3"></div><div class="ccn">BONE</div><div class="ccd"><b style="color:#475569">검정 = 가까움</b><br><b style="color:#f1f5f9">흰색 = 멀리</b><br>X-ray 느낌 · 윤곽 선명</div><div class="ck">3</div></div>
+      <div class="cc" onclick="key('4',this)"><div class="cb cb4"></div><div class="ccn">HOT</div><div class="ccd"><b style="color:#475569">검정 = 가까움</b><br><b style="color:#fbbf24">노랑/흰 = 멀리</b><br>열화상 카메라 스타일</div><div class="ck">4</div></div>
+    </div>
+
+    <!-- 미션 5: ROI 안내 -->
+    <div id="P5" class="rh" style="display:none"><span style="font-size:1.4em">🖱️</span><span>마우스를 <b>드래그</b>하여 분석할 영역을 선택하세요</span></div>
+
+    <!-- 미션 6: 필터 설명 -->
+    <div id="P6" class="fp" style="display:none">
+      <div class="fc"><h4><span style="font-size:1.3em">🔴</span> RAW (원본)</h4><p>😵 <b>빈 구멍</b>(검은 점) 많음<br>📐 가장자리 <b>들쭉날쭉</b><br>🔄 프레임마다 값 <b>흔들림</b></p><span class="ft ft-r">노이즈 있음</span></div>
+      <div class="fc"><h4><span style="font-size:1.3em">🟢</span> FILTERED</h4><p><b>① Spatial</b> — 🧹 노이즈 제거<br><b>② Temporal</b> — ⏱️ 흔들림 안정화<br><b>③ Hole Fill</b> — 🕳️ 구멍 메꾸기</p><span class="ft ft-g">부드럽고 안정적</span></div>
+    </div>
+
+    <!-- 미션 7: 근접 경고 -->
+    <div id="P7" class="ap" style="display:none">
+      <div class="at">🚨 근접 경고 설정</div>
+      <div class="sr"><label>🎯 감지 영역</label><input type="range" id="zP" min="10" max="80" value="30" oninput="upA()"><span class="sv" id="zPV">30%</span></div>
+      <div class="sr"><label>⚠️ 임계 거리</label><input type="range" id="aD" min="20" max="200" value="50" oninput="upA()"><span class="sv" id="aDV">50cm</span></div>
+      <div class="az">
+        <div class="zc z-s"><span style="font-size:1.4em;display:block;margin-bottom:4px">✅</span><b>안전</b><br><span style="font-size:.7em;color:#94a3b8">임계 거리 밖</span></div>
+        <div class="zc z-w"><span style="font-size:1.4em;display:block;margin-bottom:4px">⚠️</span><b>주의</b><br><span style="font-size:.7em;color:#94a3b8">임계 거리 근접</span></div>
+        <div class="zc z-d"><span style="font-size:1.4em;display:block;margin-bottom:4px">🔴</span><b>위험!</b><br><span style="font-size:.7em;color:#94a3b8">즉시 후퇴 필요</span></div>
+      </div>
+    </div>
+
+    <!-- ===== 미션 4-1: 높이 검사 캡처 ===== -->
+    <div id="P41" class="cap-panel" style="display:none">
+      <div class="cap-title">📏 제품 높이 검사 — 3단계 워크플로우</div>
+      <div class="cap-desc">
+        <b>Step 1:</b> 제품이 <b>없는 상태</b>에서 [배경 캡처] → 배경 등록<br>
+        <b>Step 2:</b> <b>양품(정상 제품)</b>을 놓고 [규격 설정] → 이 높이가 기준이 됩니다<br>
+        <b>Step 3:</b> 다른 제품을 올려놓으면 → 규격 ±2mm 이내면 <span style="color:#34d399">PASS</span>, 이탈 시 <span style="color:#f87171">FAIL</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="cap-btn" onclick="capture(41)">📸 Step 1: 배경 캡처</button>
+        <button class="cap-btn" onclick="setSpec()" style="background:linear-gradient(135deg,#2563EB,#1d4ed8)">📏 Step 2: 규격 설정</button>
+      </div>
+      <div id="CS41" class="cap-status"></div>
+    </div>
+
+    <!-- ===== 미션 5-1: 결함 히트맵 캡처 ===== -->
+    <div id="P51" class="cap-panel" style="display:none">
+      <div class="cap-title">🔍 표면 결함 히트맵 — 양품 캡처</div>
+      <div class="cap-desc">
+        ① <b>양품(정상 제품)</b>을 카메라 앞에 놓고 [양품 캡처] 버튼을 누르세요<br>
+        ② 캡처 완료 후 <b>검사할 제품</b>을 같은 위치에 놓으면 편차가 히트맵으로 표시됩니다<br>
+        ③ 좌측 = Color 원본, 우측 = <span style="color:#fbbf24">TURBO 히트맵</span> (밝을수록 편차 큼)
+      </div>
+      <button class="cap-btn" onclick="capture(51)">📸 양품 Golden Sample 캡처</button>
+      <div id="CS51" class="cap-status"></div>
+    </div>
+
+    <!-- ===== 미션 6-1: 적재량 캡처 ===== -->
+    <div id="P61" class="cap-panel" style="display:none">
+      <div class="cap-title">📦 적재량 모니터링 — 빈 팔레트 캡처</div>
+      <div class="cap-desc">
+        ① <b>빈 팔레트(물건 없는 상태)</b>를 카메라에 비추고 [기준 캡처] 버튼을 누르세요<br>
+        ② 캡처 완료 후 <b>물건을 올려놓으면</b> 채움률(%)이 실시간 표시됩니다<br>
+        ③ <span style="color:#34d399">80% 이상 → 출하 가능</span> / <span style="color:#fbbf24">30~80% → 추가 적재</span> / <span style="color:#f87171">30% 미만 → 거의 비어있음</span>
+      </div>
+      <button class="cap-btn" onclick="capture(61)">📸 빈 팔레트 기준 캡처</button>
+      <div id="CS61" class="cap-status"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let cur=0,prev=null;
+const INFO={1:{i:'👁️',t:'RGB + Depth 듀얼 뷰'},2:{i:'📏',t:'클릭 거리 측정'},3:{i:'🎯',t:'2D → 3D 좌표 변환'},
+  4:{i:'🎨',t:'Depth 컬러맵 변경'},5:{i:'📊',t:'ROI 영역 통계'},6:{i:'✨',t:'필터 비교 (RAW vs FILTERED)'},
+  7:{i:'🚨',t:'근접 경고 시스템'},41:{i:'📏',t:'제품 높이 검사'},51:{i:'🔍',t:'표면 결함 히트맵'},61:{i:'📦',t:'적재량 모니터링'}};
+
+function go(id){
+  cur=id; const inf=INFO[id];
+  document.getElementById('V').style.display='none';
+  document.getElementById('M').classList.add('show');
+  document.getElementById('T').innerHTML=`<span style="font-size:1.2em">${inf.i}</span> ${inf.t}`;
+
+  // 모든 패널 숨기기
+  ['P2','P4','P5','P6','P7','P41','P51','P61'].forEach(p=>document.getElementById(p).style.display='none');
+
+  // 미션별 패널 표시
+  if([2,3].includes(id)){document.getElementById('P2').style.display='block';document.getElementById('D').textContent='화면을 클릭하면 거리와 좌표가 표시됩니다';}
+  if(id===4)document.getElementById('P4').style.display='grid';
+  if(id===5)document.getElementById('P5').style.display='flex';
+  if(id===6)document.getElementById('P6').style.display='grid';
+  if(id===7)document.getElementById('P7').style.display='block';
+  if(id===41)document.getElementById('P41').style.display='block';
+  if(id===51)document.getElementById('P51').style.display='block';
+  if(id===61)document.getElementById('P61').style.display='block';
+
+  const start=()=>{
+    fetch(`/mission/${id}/start`,{method:'POST'}).then(r=>r.json()).then(d=>{
+      if(d.error){alert(d.error);return}
+      const b=document.getElementById('S');
+      b.innerHTML=`<img src="/mission/${id}/feed?t=${Date.now()}" style="width:100%;height:auto;display:block;cursor:${[2,3,5].includes(id)?'crosshair':'default'}" alt="Live">`;
+      const img=b.querySelector('img');if(!img)return;
+
+      if([2,3].includes(id)){
+        img.addEventListener('click',function(e){
+          const r=img.getBoundingClientRect();
+          const pn=[1,4,6,51].includes(cur)?2:1;
+          const sx=(640*pn)/r.width,sy=480/r.height;
+          const x=Math.round((e.clientX-r.left)*sx),y=Math.round((e.clientY-r.top)*sy);
+          fetch(`/mission/${cur}/click`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({x,y})})
+          .then(r=>r.json()).then(d=>{
+            let h='';
+            if(d.depth_cm!==undefined)h+=`<span class="dv">${d.depth_cm} cm</span>`;
+            if(d.X_cm!==undefined)h+=` · <span class="dv">X:${d.X_cm}  Y:${d.Y_cm}  Z:${d.Z_cm}</span> <span style="color:#94a3b8">cm</span>`;
+            document.getElementById('D').innerHTML=h||'<span style="color:#f87171">측정 불가 (depth=0)</span>';
+          });
+        });
+      }
+      if(id===5){
+        let dr=false;
+        img.addEventListener('mousedown',function(e){e.preventDefault();dr=true;
+          const r=img.getBoundingClientRect();
+          fetch(`/mission/5/roi`,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'start',x:Math.round((e.clientX-r.left)*640/r.width),y:Math.round((e.clientY-r.top)*480/r.height)})});
+        });
+        img.addEventListener('mouseup',function(e){if(!dr)return;dr=false;
+          const r=img.getBoundingClientRect();
+          fetch(`/mission/5/roi`,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'end',x:Math.round((e.clientX-r.left)*640/r.width),y:Math.round((e.clientY-r.top)*480/r.height)})});
+        });
+      }
+    }).catch(()=>{});
+  };
+  if(prev&&prev!==id){fetch(`/mission/${prev}/stop`,{method:'POST'}).finally(start)}else{start()}
+  prev=id;
+}
+
+function back(){
+  document.getElementById('M').classList.remove('show');
+  document.getElementById('V').style.display='block';
+  if(prev)fetch(`/mission/${prev}/stop`,{method:'POST'});
+  cur=0;
+}
+
+function key(k,c){
+  fetch(`/mission/${cur}/key`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:k})});
+  document.querySelectorAll('.cc').forEach(x=>x.classList.remove('active'));
+  if(c)c.classList.add('active');
+}
+
+function upA(){
+  const z=document.getElementById('zP').value,d=document.getElementById('aD').value;
+  document.getElementById('zPV').textContent=z+'%';document.getElementById('aDV').textContent=d+'cm';
+  fetch(`/mission/7/settings`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({alert_zone_pct:parseInt(z),alert_dist_m:parseInt(d)/100})});
+}
+
+// 기준 프레임 캡처 (4-1, 5-1, 6-1)
+function capture(mid){
+  const btn=event.target;
+  const statusEl=document.getElementById('CS'+mid);
+  btn.disabled=true;btn.textContent='📸 캡처 중...';
+  statusEl.className='cap-status';statusEl.style.display='none';
+
+  fetch(`/mission/${mid}/capture`,{method:'POST'}).then(r=>r.json()).then(d=>{
+    btn.disabled=false;
+    if(d.error){
+      statusEl.textContent='❌ '+d.error;statusEl.className='cap-status cap-fail';
+      btn.textContent='📸 다시 캡처';
+    }else{
+      statusEl.textContent=`✅ ${d.label} 캡처 완료 — 중앙 depth: ${d.center_depth_mm}mm (${d.frames_used}프레임 평균)`;
+      statusEl.className='cap-status cap-ok';
+      btn.textContent='📸 다시 캡처 (초기화)';
+    }
+  }).catch(e=>{
+    btn.disabled=false;btn.textContent='📸 다시 캡처';
+    statusEl.textContent='❌ 서버 연결 실패';statusEl.className='cap-status cap-fail';
+  });
+}
+
+// 규격 설정 (4-1) — 현재 제품 높이를 기준으로 등록
+function setSpec(){
+  const statusEl=document.getElementById('CS41');
+  statusEl.className='cap-status';statusEl.textContent='📏 규격 측정 중...';statusEl.className='cap-status cap-ok';statusEl.style.display='block';
+
+  fetch('/mission/41/setspec',{method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.error){
+      statusEl.textContent='❌ '+d.error;statusEl.className='cap-status cap-fail';
+    }else{
+      statusEl.textContent=`✅ 규격 설정 완료: ${d.spec_height_mm}mm ±${d.tolerance_mm}mm — 이제 다른 제품으로 교체하세요`;
+      statusEl.className='cap-status cap-ok';
+    }
+  }).catch(()=>{
+    statusEl.textContent='❌ 서버 연결 실패';statusEl.className='cap-status cap-fail';
+  });
+}
+
+document.onkeydown=function(e){
+  if(cur===4&&['1','2','3','4'].includes(e.key)){
+    const cs=document.querySelectorAll('.cc');key(e.key,cs[parseInt(e.key)-1]);}
+};
+</script>
+</body>
+</html>

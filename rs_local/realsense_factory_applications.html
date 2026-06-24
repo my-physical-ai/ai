@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏭 Depth 공장 적용 — 설계 원리 + 코드 예제</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#2563EB;--blue-l:#DBEAFE;--green:#059669;--green-l:#D1FAE5;--orange:#D97706;--orange-l:#FEF3C7;--red:#DC2626;--red-l:#FEE2E2;--purple:#7C3AED;--purple-l:#EDE9FE;--teal:#0891B2;--teal-l:#CFFAFE;--text:#1E293B;--muted:#64748B;--border:#E2E8F0;--card:#fff;--bg:#F8FAFC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);line-height:1.75}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem}
+code{font-family:'JetBrains Mono',monospace;background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:.88em;color:var(--blue)}
+pre{font-family:'JetBrains Mono',monospace;background:#1E293B;color:#E2E8F0;padding:20px;border-radius:14px;overflow-x:auto;font-size:.85em;line-height:1.7;margin:1rem 0}
+pre .c{color:#94A3B8} pre .k{color:#F472B6} pre .s{color:#34D399} pre .f{color:#C4B5FD} pre .n{color:#67E8F9}
+
+/* 히어로 */
+.hero{background:linear-gradient(135deg,#064E3B,#059669,#0D9488);color:#fff;padding:4rem 1.5rem;text-align:center}
+.hero h1{font-size:2.5rem;font-weight:900;line-height:1.2;margin-bottom:.5rem}
+.hero p{font-size:1.1rem;opacity:.9;margin-bottom:1rem}
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pill{padding:4px 14px;border-radius:20px;font-size:.82em;font-weight:600;background:rgba(255,255,255,.2)}
+
+section{padding:3rem 0}
+section h2{font-size:1.8rem;font-weight:900;margin-bottom:1.5rem;padding-bottom:.5rem;border-bottom:3px solid var(--green)}
+
+/* 비유 박스 */
+.analogy{border-radius:16px;padding:1.2rem 1.5rem;margin:1.5rem 0;display:flex;align-items:flex-start;gap:14px;font-size:.95em}
+.analogy-icon{font-size:2em;flex-shrink:0;line-height:1}
+.analogy-text{flex:1}
+.analogy-text b{color:var(--text)}
+.a-green{background:var(--green-l);border-left:5px solid var(--green)}
+.a-blue{background:var(--blue-l);border-left:5px solid var(--blue)}
+.a-orange{background:var(--orange-l);border-left:5px solid var(--orange)}
+.a-teal{background:var(--teal-l);border-left:5px solid var(--teal)}
+.a-purple{background:var(--purple-l);border-left:5px solid var(--purple)}
+.a-red{background:var(--red-l);border-left:5px solid var(--red)}
+
+/* 카드 */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin:1rem 0;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:1rem 0}
+.point-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;text-align:center}
+.point-card .pi{font-size:2em;margin-bottom:6px}
+.point-card h4{font-size:.92em;margin-bottom:4px}
+.point-card p{font-size:.8em;color:var(--muted)}
+
+/* CSS 다이어그램 */
+.diagram{background:#1E293B;border-radius:16px;padding:2rem;margin:1.5rem 0;color:#E2E8F0;position:relative;overflow:hidden}
+.diagram-title{text-align:center;font-weight:700;color:#34D399;margin-bottom:1.5rem;font-size:1.1em}
+
+/* 설치 다이어그램 */
+.setup-scene{display:flex;flex-direction:column;align-items:center;gap:0;position:relative;min-height:300px}
+.cam-mount{text-align:center;z-index:2}
+.cam-box{display:inline-flex;align-items:center;gap:8px;background:rgba(6,182,212,.2);border:2px solid #06B6D4;border-radius:12px;padding:10px 20px;font-weight:700;color:#67E8F9;font-size:.9em}
+.cam-height{color:#94A3B8;font-size:.8em;margin-top:4px}
+.depth-rays{display:flex;justify-content:center;gap:30px;margin:8px 0}
+.ray{width:2px;height:60px;background:linear-gradient(180deg,#06B6D4,rgba(6,182,212,.1));position:relative}
+.ray::after{content:'▼';position:absolute;bottom:-12px;left:-5px;color:#06B6D4;font-size:.7em}
+.conveyor{width:100%;max-width:500px;background:linear-gradient(180deg,#334155,#475569);border-radius:10px;padding:16px;display:flex;align-items:flex-end;justify-content:center;gap:20px;min-height:80px;border:2px solid #475569;position:relative}
+.conveyor::before{content:'컨베이어 벨트';position:absolute;bottom:4px;right:12px;font-size:.7em;color:#94A3B8}
+.product{border-radius:6px;text-align:center;font-size:.75em;font-weight:600;padding:4px 8px;position:relative}
+.product-ok{background:#059669;color:#fff;width:60px;height:50px;display:flex;align-items:center;justify-content:center}
+.product-ng{background:#DC2626;color:#fff;width:60px;height:70px;display:flex;align-items:center;justify-content:center}
+.product-label{position:absolute;top:-18px;font-size:.68em;white-space:nowrap}
+.product-ok .product-label{color:#34D399}
+.product-ng .product-label{color:#F87171}
+
+/* 높이 계산 다이어그램 */
+.height-calc{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:12px;margin:1rem 0;text-align:center;font-size:.85em}
+.calc-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px}
+.calc-box .val{font-size:1.3em;font-weight:900;font-family:'JetBrains Mono',monospace}
+.calc-op{font-size:1.5em;font-weight:900;color:#34D399}
+
+/* 히트맵 다이어그램 */
+.heatmap-flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:10px;margin:1rem 0}
+.hmap-box{border-radius:12px;padding:14px;text-align:center}
+.hmap-golden{background:rgba(52,211,153,.1);border:2px solid #34D399}
+.hmap-current{background:rgba(103,232,249,.1);border:2px solid #67E8F9}
+.hmap-result{background:rgba(251,191,36,.1);border:2px solid #FBBF24}
+.hmap-arrow{font-size:1.3em;color:#94A3B8}
+.hmap-title{font-weight:700;font-size:.85em;margin-bottom:6px}
+.hmap-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;margin:8px auto;max-width:100px}
+.hmap-cell{width:100%;aspect-ratio:1;border-radius:3px}
+
+/* 적재 다이어그램 */
+.pallet-scene{display:flex;justify-content:center;gap:40px;align-items:flex-end;margin:1rem 0}
+.pallet{text-align:center}
+.pallet-box{width:120px;border:2px solid #475569;border-radius:8px;overflow:hidden;position:relative}
+.pallet-fill{background:linear-gradient(180deg,rgba(251,191,36,.3),rgba(251,191,36,.6))}
+.pallet-empty{background:rgba(30,41,59,.8)}
+.pallet-label{font-size:.78em;color:#94A3B8;margin-top:6px}
+.pallet-pct{font-size:1.2em;font-weight:900;font-family:'JetBrains Mono',monospace;margin-top:4px}
+
+/* 스텝 카드 */
+.step{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem}
+.step-header{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.step-num{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;font-weight:900;font-size:1.2em;flex-shrink:0;color:#fff}
+.sn-1{background:var(--green)}
+.sn-2{background:var(--blue)}
+.sn-3{background:var(--orange)}
+.step-title{font-size:1.1em;font-weight:700}
+.step-desc{color:var(--muted);font-size:.9em;margin-bottom:.5rem}
+
+/* 인쇄 */
+.print-btn{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:30px;font-weight:700;cursor:pointer;font-size:.88em;box-shadow:0 4px 12px rgba(5,150,105,.3);z-index:100}
+@media print{.print-btn{display:none}pre{background:#f5f5f5;color:#333;page-break-inside:avoid}.hero{background:#e8f5e9;color:#333}.diagram{background:#f5f5f5;color:#333}}
+@media(max-width:768px){.hero h1{font-size:1.8rem}.height-calc,.heatmap-flow{grid-template-columns:1fr;gap:8px}.calc-op,.hmap-arrow{transform:rotate(90deg)}.pallet-scene{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨️ 인쇄</button>
+
+<!-- ========== 히어로 ========== -->
+<div class="hero">
+  <h1>🏭 Depth로 공장 검사하기</h1>
+  <p>RealSense 카메라 1대로 높이 검사, 결함 감지, 적재량 측정까지 — 설계 원리와 코드</p>
+  <div class="pills">
+    <span class="pill">📏 높이 검사</span>
+    <span class="pill">🔍 결함 히트맵</span>
+    <span class="pill">📦 적재량 측정</span>
+    <span class="pill">Python 코드 포함</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ================================================================ -->
+<!-- 시나리오 1: 제품 높이 검사 -->
+<!-- ================================================================ -->
+<section>
+  <h2>📏 시나리오 1 — 제품 높이 검사</h2>
+
+  <div class="analogy a-green">
+    <span class="analogy-icon">🚪</span>
+    <div class="analogy-text">
+      <b>문 위에 줄자를 달아놓고 사람 키를 재는 것과 같습니다.</b><br>
+      카메라 = 천장에 달린 줄자, 컨베이어 = 바닥, 제품 = 지나가는 사람.<br>
+      "천장에서 바닥까지 거리"에서 "천장에서 제품 꼭대기까지 거리"를 빼면 = 제품 높이!
+    </div>
+  </div>
+
+  <!-- 설치 다이어그램 -->
+  <div class="diagram">
+    <div class="diagram-title">📐 설치 구조 — 카메라를 컨베이어 위에 하방 설치</div>
+    <div class="setup-scene">
+      <div class="cam-mount">
+        <div class="cam-box">📷 RealSense D435i</div>
+        <div class="cam-height">↕ 설치 높이: 0.5~1.0m</div>
+      </div>
+      <div class="depth-rays">
+        <div class="ray"></div>
+        <div class="ray" style="height:40px"></div>
+        <div class="ray"></div>
+        <div class="ray" style="height:40px"></div>
+        <div class="ray"></div>
+      </div>
+      <div class="conveyor">
+        <div class="product product-ok">
+          <span class="product-label" style="color:#34D399">양품 50mm</span>
+          양품
+        </div>
+        <div class="product product-ng">
+          <span class="product-label" style="color:#F87171">불량 70mm ❌</span>
+          불량
+        </div>
+        <div class="product product-ok">
+          <span class="product-label" style="color:#34D399">양품 50mm</span>
+          양품
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 핵심 원리 -->
+  <div class="analogy a-blue">
+    <span class="analogy-icon">💡</span>
+    <div class="analogy-text">
+      <b>핵심 공식:</b> 제품 높이 = 배경 Depth - 현재 Depth<br>
+      카메라에서 <b>빈 컨베이어</b>까지 거리 = 800mm<br>
+      카메라에서 <b>제품 꼭대기</b>까지 거리 = 750mm<br>
+      → 제품 높이 = 800 - 750 = <b>50mm</b>
+    </div>
+  </div>
+
+  <!-- 높이 계산 다이어그램 -->
+  <div class="diagram">
+    <div class="diagram-title">🔢 높이 계산 원리 — 배경 대비 차분</div>
+    <div class="height-calc">
+      <div class="calc-box">
+        <div style="color:#34D399;font-size:.8em;margin-bottom:4px">배경 Depth (빈 컨베이어)</div>
+        <div class="val" style="color:#34D399">800mm</div>
+        <div style="font-size:.7em;color:#94A3B8;margin-top:4px">제품 없을 때 미리 기록</div>
+      </div>
+      <div class="calc-op">−</div>
+      <div class="calc-box">
+        <div style="color:#67E8F9;font-size:.8em;margin-bottom:4px">현재 Depth (제품 위)</div>
+        <div class="val" style="color:#67E8F9">750mm</div>
+        <div style="font-size:.7em;color:#94A3B8;margin-top:4px">실시간 측정</div>
+      </div>
+      <div class="calc-op">=</div>
+      <div class="calc-box" style="border-color:#FBBF24">
+        <div style="color:#FBBF24;font-size:.8em;margin-bottom:4px">제품 높이</div>
+        <div class="val" style="color:#FBBF24">50mm</div>
+        <div style="font-size:.7em;color:#94A3B8;margin-top:4px">규격: 50±2mm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 단계별 코드 -->
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-1">1</div><div class="step-title">배경 Depth 기록 (제품 없을 때 1회)</div></div>
+    <p class="step-desc">컨베이어에 제품이 없을 때 5프레임을 평균하여 "기준 높이"로 저장합니다.</p>
+<pre><span class="c"># 빈 컨베이어의 Depth를 5프레임 평균으로 기록</span>
+bg_frames = []
+<span class="k">for</span> i <span class="k">in</span> range(5):
+    frames = pipeline.wait_for_frames()
+    aligned = align.process(frames)
+    depth = np.asanyarray(aligned.get_depth_frame().get_data())
+    bg_frames.append(depth.astype(np.float64))
+
+<span class="c"># 5프레임 평균 = 노이즈 제거된 안정적 배경</span>
+depth_bg = np.mean(bg_frames, axis=0)  <span class="c"># shape: (480, 640)</span>
+print(<span class="s">f"배경 기록 완료 — 중앙 depth: {depth_bg[240,320] * depth_scale * 1000:.1f}mm"</span>)</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-2">2</div><div class="step-title">실시간 높이 측정 (제품 통과 시)</div></div>
+    <p class="step-desc">현재 프레임과 배경의 차분으로 높이를 산출합니다. 상위 95 퍼센타일로 노이즈를 제거합니다.</p>
+<pre><span class="c"># 실시간 프레임에서 높이 산출</span>
+<span class="k">def</span> <span class="f">measure_height</span>(depth_now, depth_bg, depth_scale, threshold_mm=10):
+    <span class="c"># 배경 대비 높이 차이 (mm 단위)</span>
+    diff_mm = (depth_bg - depth_now.astype(np.float64)) * depth_scale * 1000
+
+    <span class="c"># threshold 이상 솟아오른 영역 = 제품이 있는 곳</span>
+    mask = diff_mm > threshold_mm  <span class="c"># 10mm 이상 차이나는 픽셀만</span>
+
+    <span class="k">if</span> np.sum(mask) < 100:        <span class="c"># 유효 픽셀 100개 미만 = 제품 없음</span>
+        <span class="k">return</span> None, None
+
+    <span class="c"># 상위 95% 값 = 제품 꼭대기 높이 (노이즈 제거)</span>
+    height_mm = float(np.percentile(diff_mm[mask], 95))
+    <span class="k">return</span> round(height_mm, 1), mask</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-3">3</div><div class="step-title">합격/불합격 판정</div></div>
+<pre><span class="c"># 규격 검사: 50mm ± 2mm</span>
+SPEC_HEIGHT = 50.0  <span class="c"># 기준 높이 (mm)</span>
+TOLERANCE = 2.0     <span class="c"># 허용 오차 (mm)</span>
+
+height, mask = measure_height(depth_now, depth_bg, depth_scale)
+<span class="k">if</span> height <span class="k">is not</span> None:
+    deviation = abs(height - SPEC_HEIGHT)  <span class="c"># 기준 대비 편차</span>
+    <span class="k">if</span> deviation <= TOLERANCE:
+        result = <span class="s">"✅ 합격"</span>     <span class="c"># 편차 2mm 이내</span>
+    <span class="k">else</span>:
+        result = <span class="s">"❌ 불합격"</span>    <span class="c"># 편차 2mm 초과</span>
+    print(<span class="s">f"높이: {height:.1f}mm  편차: {deviation:.1f}mm  → {result}"</span>)</pre>
+  </div>
+
+  <div class="card-grid">
+    <div class="point-card"><div class="pi">🎯</div><h4>왜 95 퍼센타일?</h4><p>상위 5%는 노이즈일 수 있음. 95% 지점이 실제 꼭대기 높이에 가장 가깝습니다</p></div>
+    <div class="point-card"><div class="pi">📷</div><h4>설치 거리</h4><p>D435i는 0.5~1.0m에서 최적. 너무 가까우면 시야가 좁고, 너무 멀면 정밀도↓</p></div>
+    <div class="point-card"><div class="pi">🔧</div><h4>필터 필수!</h4><p>Temporal 필터 없이는 높이가 ±5mm 흔들림. 적용 후 ±1mm로 안정</p></div>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- 시나리오 2: 표면 결함 히트맵 -->
+<!-- ================================================================ -->
+<section>
+  <h2>🔍 시나리오 2 — 표면 결함 히트맵</h2>
+
+  <div class="analogy a-orange">
+    <span class="analogy-icon">🪙</span>
+    <div class="analogy-text">
+      <b>동전 위에 종이를 올리고 연필로 문지르면 동전 무늬가 나타나는 것과 같습니다.</b><br>
+      양품의 Depth = "매끈한 종이", 불량품의 Depth = "동전 위 종이".<br>
+      두 Depth의 차이(편차)를 <b>색깔로 칠하면</b> — 찍힌 곳, 튀어나온 곳이 바로 보입니다!
+    </div>
+  </div>
+
+  <!-- 히트맵 흐름 다이어그램 -->
+  <div class="diagram">
+    <div class="diagram-title">🔬 결함 검출 원리 — 양품 대비 편차를 컬러맵으로 변환</div>
+    <div class="heatmap-flow">
+      <div class="hmap-box hmap-golden">
+        <div class="hmap-title" style="color:#34D399">① 양품 (Golden)</div>
+        <div class="hmap-grid">
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+        </div>
+        <div style="font-size:.7em;color:#94A3B8">균일한 Depth</div>
+      </div>
+      <div class="hmap-arrow">−</div>
+      <div class="hmap-box hmap-current">
+        <div class="hmap-title" style="color:#67E8F9">② 검사품</div>
+        <div class="hmap-grid">
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#c0392b"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+          <div class="hmap-cell" style="background:#1a5276"></div>
+        </div>
+        <div style="font-size:.7em;color:#94A3B8">찍힘 있음 🔴</div>
+      </div>
+      <div class="hmap-arrow">=</div>
+      <div class="hmap-box hmap-result">
+        <div class="hmap-title" style="color:#FBBF24">③ 편차 히트맵</div>
+        <div class="hmap-grid">
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#f39c12"></div>
+          <div class="hmap-cell" style="background:#e67e22"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#e67e22"></div>
+          <div class="hmap-cell" style="background:#e74c3c"></div>
+          <div class="hmap-cell" style="background:#e67e22"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#f39c12"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+          <div class="hmap-cell" style="background:#1a1a2e"></div>
+        </div>
+        <div style="font-size:.7em;color:#FBBF24">결함 위치 발견! 🎯</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="analogy a-purple">
+    <span class="analogy-icon">🎨</span>
+    <div class="analogy-text">
+      <b>왜 TURBO 컬러맵이 결함 감지에 좋은가?</b><br>
+      JET은 초록→노랑 구간에서 색 변화가 <b>급격</b>해서 0.3mm 차이와 0.8mm 차이가 비슷해 보입니다.<br>
+      TURBO는 모든 구간에서 색 변화가 <b>균일</b>해서 0.3mm = 약한 노랑, 0.8mm = 진한 빨강으로 <b>심각도를 직감</b>할 수 있습니다.
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-1">1</div><div class="step-title">양품(Golden Sample) Depth 기록</div></div>
+<pre><span class="c"># 양품의 Depth를 5프레임 평균으로 기록 — "이게 정상이다"</span>
+golden_frames = []
+<span class="k">for</span> i <span class="k">in</span> range(5):
+    frames = pipeline.wait_for_frames()
+    aligned = align.process(frames)
+    depth = np.asanyarray(aligned.get_depth_frame().get_data())
+    golden_frames.append(depth.astype(np.float64))
+
+depth_golden = np.mean(golden_frames, axis=0)  <span class="c"># 양품 기준 Depth</span></pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-2">2</div><div class="step-title">검사품과 비교 → 편차 히트맵 생성</div></div>
+<pre><span class="c"># 검사품 Depth와 양품의 편차를 TURBO 컬러맵으로 시각화</span>
+<span class="k">def</span> <span class="f">detect_defect</span>(depth_now, depth_golden, depth_scale, threshold_mm=0.5):
+    <span class="c"># 양품 대비 편차 (mm) — 양수 = 튀어나옴, 음수 = 찍힘</span>
+    diff_mm = np.abs(
+        depth_now.astype(np.float64) - depth_golden
+    ) * depth_scale * 1000  <span class="c"># mm 변환</span>
+
+    <span class="c"># 0.5mm 이상 편차 = 결함 후보</span>
+    defect_mask = diff_mm > threshold_mm
+
+    <span class="c"># 편차를 0~255로 정규화 → TURBO 컬러맵 적용</span>
+    heatmap = cv2.normalize(diff_mm, None, 0, 255, cv2.NORM_MINMAX)
+    heatmap = heatmap.astype(np.uint8)
+    heatmap_color = cv2.applyColorMap(heatmap, cv2.COLORMAP_TURBO)  <span class="c"># ← TURBO!</span>
+
+    <span class="c"># 결함 면적 비율 (%) = 결함 픽셀 수 / 전체 픽셀 수</span>
+    defect_pct = np.sum(defect_mask) / defect_mask.size * 100
+    <span class="k">return</span> defect_mask, defect_pct, heatmap_color</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-3">3</div><div class="step-title">결함 판정 + 위치 표시</div></div>
+<pre><span class="c"># 결함 판정: 결함 면적이 1% 이상이면 불합격</span>
+mask, pct, heatmap = detect_defect(depth_now, depth_golden, depth_scale)
+
+<span class="k">if</span> pct > 1.0:  <span class="c"># 결함 면적 1% 초과</span>
+    <span class="c"># 결함 영역의 외곽선(contour)을 찾아서 빨간 박스 표시</span>
+    contours, _ = cv2.findContours(
+        mask.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+    <span class="k">for</span> cnt <span class="k">in</span> contours:
+        <span class="k">if</span> cv2.contourArea(cnt) > 50:  <span class="c"># 너무 작은 영역 제외</span>
+            x, y, w, h = cv2.boundingRect(cnt)  <span class="c"># 결함 박스</span>
+            cv2.rectangle(color_image, (x,y), (x+w,y+h), (0,0,255), 2)
+            cv2.putText(color_image, <span class="s">"DEFECT"</span>, (x,y-5),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 2)</pre>
+  </div>
+
+  <div class="card-grid">
+    <div class="point-card"><div class="pi">🔴</div><h4>찍힘 (Dent)</h4><p>양품보다 Depth가 더 큼 (더 멀어짐) → 표면이 안으로 들어간 것</p></div>
+    <div class="point-card"><div class="pi">🔵</div><h4>돌출 (Bump)</h4><p>양품보다 Depth가 더 작음 (더 가까워짐) → 표면이 밖으로 나온 것</p></div>
+    <div class="point-card"><div class="pi">⚙️</div><h4>임계값 0.5mm</h4><p>D435i 기준 0.5m 거리에서 약 1mm 정밀도. D405는 0.1mm까지 감지</p></div>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- 시나리오 3: 적재량 측정 -->
+<!-- ================================================================ -->
+<section>
+  <h2>📦 시나리오 3 — 팔레트 적재량 측정</h2>
+
+  <div class="analogy a-teal">
+    <span class="analogy-icon">🛁</span>
+    <div class="analogy-text">
+      <b>욕조에 물을 얼마나 채웠는지 재는 것과 같습니다.</b><br>
+      빈 욕조 높이(바닥까지 거리) - 물 표면까지 거리 = 물 높이.<br>
+      이걸 욕조의 넓이(면적)와 곱하면 = 물의 부피.<br>
+      <b>팔레트 = 욕조, 적재물 = 물, Depth = 수면 높이</b>
+    </div>
+  </div>
+
+  <!-- 적재 다이어그램 -->
+  <div class="diagram">
+    <div class="diagram-title">📦 적재량 산출 원리 — Depth 차분 → 높이 → 면적 × 높이 = 체적</div>
+    <div class="pallet-scene">
+      <div class="pallet">
+        <div class="pallet-box" style="height:120px">
+          <div class="pallet-empty" style="height:100%"></div>
+        </div>
+        <div class="pallet-label">빈 팔레트</div>
+        <div class="pallet-pct" style="color:#94A3B8">0%</div>
+      </div>
+      <div class="pallet">
+        <div class="pallet-box" style="height:120px">
+          <div class="pallet-empty" style="height:60%"></div>
+          <div class="pallet-fill" style="height:40%;display:flex;align-items:center;justify-content:center;font-size:.7em;color:#92400E">📦📦</div>
+        </div>
+        <div class="pallet-label">40% 적재</div>
+        <div class="pallet-pct" style="color:#FBBF24">40%</div>
+      </div>
+      <div class="pallet">
+        <div class="pallet-box" style="height:120px">
+          <div class="pallet-empty" style="height:15%"></div>
+          <div class="pallet-fill" style="height:85%;display:flex;align-items:center;justify-content:center;font-size:.7em;color:#92400E">📦📦📦📦</div>
+        </div>
+        <div class="pallet-label">85% 적재</div>
+        <div class="pallet-pct" style="color:#34D399">85%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-1">1</div><div class="step-title">빈 팔레트 Depth 기록</div></div>
+<pre><span class="c"># 빈 팔레트(적재물 없음) 상태의 Depth를 기준으로 저장</span>
+depth_empty = np.mean([
+    np.asanyarray(align.process(pipeline.wait_for_frames()).get_depth_frame().get_data())
+    .astype(np.float64) <span class="k">for</span> _ <span class="k">in</span> range(5)
+], axis=0)
+
+<span class="c"># 팔레트 영역 좌표 (ROI) — 미션 5에서 드래그로 설정한 값 사용!</span>
+ROI = (100, 80, 540, 400)  <span class="c"># (x1, y1, x2, y2) 팔레트 영역</span>
+MAX_HEIGHT_MM = 500        <span class="c"># 팔레트 최대 적재 높이 (mm)</span></pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-2">2</div><div class="step-title">채움률(%) 산출</div></div>
+    <p class="step-desc">ROI 내 각 픽셀의 높이를 적분하여 체적을 구하고, 최대 체적 대비 비율을 계산합니다.</p>
+<pre><span class="c"># 적재량 측정 — ROI 내 Depth 차분 적분</span>
+<span class="k">def</span> <span class="f">measure_fill_level</span>(depth_now, depth_empty, depth_scale, roi, max_h_mm):
+    x1, y1, x2, y2 = roi
+    <span class="c"># ROI 내 빈 팔레트 대비 높이 (mm)</span>
+    roi_empty = depth_empty[y1:y2, x1:x2]
+    roi_now = depth_now[y1:y2, x1:x2].astype(np.float64)
+    height_mm = (roi_empty - roi_now) * depth_scale * 1000  <span class="c"># mm 변환</span>
+
+    <span class="c"># 0보다 큰 곳만 = 물건이 있는 곳</span>
+    height_mm = np.clip(height_mm, 0, max_h_mm)  <span class="c"># 최대 높이 제한</span>
+
+    <span class="c"># 평균 높이 / 최대 높이 = 채움률 (%)</span>
+    avg_height = float(np.mean(height_mm))  <span class="c"># 전체 ROI의 평균 높이</span>
+    fill_pct = (avg_height / max_h_mm) * 100
+    <span class="k">return</span> round(fill_pct, 1), round(avg_height, 1)</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num sn-3">3</div><div class="step-title">알림 기준 설정</div></div>
+<pre><span class="c"># 채움률에 따른 3단계 판정</span>
+fill_pct, avg_h = measure_fill_level(depth_now, depth_empty, depth_scale, ROI, MAX_HEIGHT_MM)
+
+<span class="k">if</span> fill_pct >= 80:
+    status = <span class="s">"✅ 출하 가능"</span>        <span class="c"># 80% 이상 → 충분</span>
+<span class="k">elif</span> fill_pct >= 30:
+    status = <span class="s">"⚠️ 추가 적재 필요"</span>    <span class="c"># 30~80% → 부족</span>
+<span class="k">else</span>:
+    status = <span class="s">"📭 거의 비어있음"</span>      <span class="c"># 30% 미만</span>
+
+print(<span class="s">f"채움률: {fill_pct:.1f}%  평균높이: {avg_h:.1f}mm  → {status}"</span>)</pre>
+  </div>
+
+  <div class="analogy a-red">
+    <span class="analogy-icon">🔗</span>
+    <div class="analogy-text">
+      <b>미션 5(ROI 통계)와의 연결:</b><br>
+      미션 5에서 드래그로 설정한 ROI 좌표 → 그대로 적재량 측정의 팔레트 영역으로 사용!<br>
+      미션 5의 Mean(평균) 값이 변하면 → 적재물이 추가/제거된 것.<br>
+      미션 5의 Std(표준편차)가 크면 → 적재물이 고르지 않게 쌓인 것.
+    </div>
+  </div>
+
+</section>
+
+<!-- ========== 전체 연결 정리 ========== -->
+<section>
+  <h2>🔗 미션 4·5·6 → 공장 적용 연결 정리</h2>
+  <div class="card">
+    <table style="width:100%;border-collapse:collapse;font-size:.88em">
+      <tr style="border-bottom:2px solid var(--border)">
+        <th style="text-align:left;padding:10px;color:var(--green)">실습 미션</th>
+        <th style="text-align:left;padding:10px;color:var(--blue)">배운 기술</th>
+        <th style="text-align:left;padding:10px;color:var(--orange)">공장 적용</th>
+        <th style="text-align:left;padding:10px;color:var(--purple)">핵심 코드</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px"><b>미션 4</b><br>컬러맵</td>
+        <td style="padding:10px">Depth를 색상으로<br>시각화하는 방법</td>
+        <td style="padding:10px">결함 히트맵을<br>TURBO로 표시</td>
+        <td style="padding:10px"><code>applyColorMap(diff, TURBO)</code></td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px"><b>미션 5</b><br>ROI 통계</td>
+        <td style="padding:10px">영역 선택 후<br>Mean/Min/Max/Std</td>
+        <td style="padding:10px">높이 검사 (Mean)<br>적재량 (Mean/Max)<br>평탄도 (Std)</td>
+        <td style="padding:10px"><code>np.mean(roi[roi>0])</code></td>
+      </tr>
+      <tr>
+        <td style="padding:10px"><b>미션 6</b><br>필터</td>
+        <td style="padding:10px">Spatial+Temporal<br>+HoleFill</td>
+        <td style="padding:10px">측정 정밀도 향상<br>±5mm → ±1mm<br>오탐 방지</td>
+        <td style="padding:10px"><code>spatial.process(depth)</code></td>
+      </tr>
+    </table>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="text-align:center;padding:2rem;color:var(--muted);font-size:.82em;border-top:1px solid var(--border);margin-top:2rem">
+  🏭 Depth 공장 적용 — 설계 원리 + 코드 예제<br>
+  제타위성로보틱스 피지컬 AI 교육팀 · 2026-02-22
+</footer>
+
+</div>
+</body>
+</html>

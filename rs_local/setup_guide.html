@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 RealSense LOCAL 설치 가이드 — NUC 직결 미션 1~7</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--blue:#2563EB;--blue-light:#DBEAFE;--green:#059669;--green-light:#D1FAE5;--orange:#D97706;--orange-light:#FEF3C7;--red:#DC2626;--red-light:#FEE2E2;--purple:#7C3AED;--purple-light:#EDE9FE;--text:#1E293B;--muted:#64748B;--border:#E2E8F0;--card:#fff;--bg:#F8FAFC}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);line-height:1.75}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem}
+code{font-family:'JetBrains Mono',monospace;background:#F1F5F9;padding:2px 6px;border-radius:4px;font-size:0.88em;color:var(--blue)}
+pre{font-family:'JetBrains Mono',monospace;background:#1E293B;color:#E2E8F0;padding:18px;border-radius:12px;overflow-x:auto;font-size:0.88em;line-height:1.7;margin:1rem 0}
+pre .cmt{color:#94A3B8} pre .kw{color:#F472B6} pre .str{color:#34D399}
+
+/* 히어로 */
+.hero{background:linear-gradient(135deg,#064E3B,#10B981);color:#fff;padding:3.5rem 1.5rem;text-align:center}
+.hero h1{font-size:2.5rem;font-weight:900;line-height:1.2;margin-bottom:0.5rem}
+.hero p{font-size:1.1rem;opacity:0.9;margin-bottom:1rem}
+.pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pill{display:inline-block;padding:4px 14px;border-radius:20px;font-size:0.82em;font-weight:600;background:rgba(255,255,255,0.2);color:#fff}
+
+/* 섹션 */
+section{padding:3rem 0}
+section h2{font-size:1.75rem;font-weight:700;margin-bottom:1.5rem;padding-bottom:0.5rem;border-bottom:3px solid var(--blue)}
+
+/* 스텝 카드 */
+.step{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}
+.step-header{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.step-num{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--blue);color:#fff;font-weight:900;font-size:1.2em;flex-shrink:0}
+.step-title{font-size:1.15em;font-weight:700}
+.step-desc{color:var(--muted);font-size:0.9em;margin-bottom:0.8rem}
+
+/* 아키텍처 다이어그램 */
+.arch{background:linear-gradient(135deg,#1E293B,#334155);border-radius:16px;padding:2rem;margin:2rem 0;color:#E2E8F0}
+.arch-title{font-size:1.1em;font-weight:700;color:#34D399;margin-bottom:1rem;text-align:center}
+.arch-flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;font-family:'JetBrains Mono',monospace;font-size:0.85em}
+.arch-box{background:rgba(52,211,153,0.15);border:1px solid rgba(52,211,153,0.4);padding:10px 16px;border-radius:10px;text-align:center}
+.arch-arrow{color:#94A3B8;font-size:1.3em}
+.arch-detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:1.5rem;font-size:0.85em}
+.arch-detail div{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px}
+.arch-detail .label{color:#34D399;font-weight:600}
+
+/* 파일 테이블 */
+.file-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.file-table th{background:var(--blue);color:#fff;text-align:left;padding:10px 14px;font-weight:600;font-size:0.88em}
+.file-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.88em}
+.file-table tr:hover td{background:var(--blue-light)}
+
+/* 미션 그리드 */
+.mission-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:1rem 0}
+.mission-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+.mission-card .m-num{font-size:1.6em;font-weight:900;color:var(--blue);margin-bottom:4px}
+.mission-card h4{font-size:0.92em;margin-bottom:4px}
+.mission-card p{font-size:0.78em;color:var(--muted)}
+.mission-card .tags{margin-top:6px}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.72em;font-weight:600}
+.tag-click{background:var(--green-light);color:var(--green)}
+.tag-key{background:var(--purple-light);color:var(--purple)}
+.tag-drag{background:var(--orange-light);color:var(--orange)}
+.tag-slider{background:var(--red-light);color:var(--red)}
+.tag-auto{background:var(--blue-light);color:var(--blue)}
+
+/* 경고/팁 박스 */
+.warn{background:var(--orange-light);border-left:4px solid var(--orange);border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:0.9em}
+.tip{background:var(--green-light);border-left:4px solid var(--green);border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:0.9em}
+.danger{background:var(--red-light);border-left:4px solid var(--red);border-radius:0 12px 12px 0;padding:1rem 1.2rem;margin:1rem 0;font-size:0.9em}
+
+/* 트러블슈팅 */
+.trouble{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin-bottom:12px}
+.trouble-q{font-weight:700;color:var(--red);font-size:0.9em;margin-bottom:4px}
+.trouble-a{color:var(--muted);font-size:0.85em}
+
+/* 인쇄 */
+.print-btn{position:fixed;bottom:20px;right:20px;background:var(--green);color:#fff;border:none;padding:10px 18px;border-radius:30px;font-weight:700;cursor:pointer;font-size:0.88em;box-shadow:0 4px 12px rgba(5,150,105,0.3);z-index:100}
+@media print{.print-btn{display:none}pre{background:#f5f5f5;color:#333}.hero{background:#e8f5e9;color:#333}}
+@media(max-width:768px){.hero h1{font-size:1.8rem}.arch-flow{flex-direction:column}.arch-detail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨️ 인쇄</button>
+
+<!-- ========== 히어로 ========== -->
+<div class="hero">
+  <h1>📦 RealSense LOCAL<br>설치 가이드</h1>
+  <p>NUC에 RealSense를 직결하여 7가지 Depth 미션을 실행하는 단계별 안내</p>
+  <div class="pills">
+    <span class="pill">Intel NUC</span>
+    <span class="pill">RealSense D435i</span>
+    <span class="pill">Flask MJPEG</span>
+    <span class="pill">Type A 전용</span>
+    <span class="pill">5개 파일</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ========== 아키텍처 ========== -->
+<section>
+  <h2>🏗️ 시스템 아키텍처</h2>
+  <div class="arch">
+    <div class="arch-title">NUC LOCAL (Type A) — 단일 장비 구성</div>
+    <div class="arch-flow">
+      <div class="arch-box">📷 RealSense<br><small>D435i / D455</small></div>
+      <span class="arch-arrow">──USB 3.0──▶</span>
+      <div class="arch-box">💻 Intel NUC<br><small>i7-10710U</small></div>
+      <span class="arch-arrow">──HTTP──▶</span>
+      <div class="arch-box">🌐 브라우저<br><small>Chrome/Firefox</small></div>
+    </div>
+    <div class="arch-detail">
+      <div><span class="label">카메라</span><br>Color 640×480 @30fps<br>Depth 640×480 @30fps<br>Align(Color) + 필터</div>
+      <div><span class="label">서버</span><br>Flask :5000 (MJPEG)<br>REST API (클릭/키/ROI)<br>threaded=True</div>
+      <div><span class="label">장점</span><br>네트워크 지연 0ms<br>단일 장비로 완결<br>설치 5분 이내</div>
+      <div><span class="label">성능</span><br>~30 FPS 실시간<br>Depth 필터 ON/OFF<br>MJPEG 품질 80%</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 1단계: 환경설정 ========== -->
+<section>
+  <h2>1️⃣ 환경설정</h2>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">1</div><div class="step-title">USB 연결 확인</div></div>
+    <p class="step-desc">RealSense를 NUC의 USB 3.0 (파란색) 포트에 꽂고 인식되는지 확인합니다.</p>
+<pre><span class="cmt"># RealSense 카메라가 USB에 인식되는지 확인</span>
+lsusb | grep -i intel
+
+<span class="cmt"># 예상 출력:</span>
+<span class="cmt"># Bus 002 Device 003: ID 8086:0b3a Intel Corp. Intel(R) RealSense(TM) Depth Camera 435i</span></pre>
+    <div class="warn">⚠️ <strong>USB 2.0에 꽂으면 안 됩니다.</strong> Depth 스트림이 정상 작동하지 않거나 FPS가 심하게 떨어집니다. 반드시 파란색(USB 3.0) 포트를 사용하세요.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">2</div><div class="step-title">conda 가상환경 활성화</div></div>
+    <p class="step-desc">기존 lerobot 가상환경을 재활용합니다. (새 환경 불필요)</p>
+<pre><span class="cmt"># conda 초기화 (최초 1회 — 이미 했으면 스킵)</span>
+~/miniconda3/bin/conda init bash
+<span class="kw">source</span> ~/.bashrc
+
+<span class="cmt"># lerobot 가상환경 활성화</span>
+conda activate lerobot
+
+<span class="cmt"># (lerobot) 프롬프트가 보이면 성공</span></pre>
+    <div class="tip">💡 <code>conda: 명령을 찾을 수 없습니다</code> 오류 시 <code>conda init bash</code> 먼저 실행하세요.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">3</div><div class="step-title">USB 드라이버 + 패키지 설치</div></div>
+    <p class="step-desc">RealSense USB 커널 드라이버와 Python 패키지를 설치합니다.</p>
+<pre><span class="cmt"># USB 커널 드라이버 설치 (apt — conda로는 불가)</span>
+sudo apt install -y libusb-1.0-0 libusb-1.0-0-dev
+
+<span class="cmt"># Python 패키지 설치 (pip)</span>
+pip install pyrealsense2 flask opencv-python numpy</pre>
+  </div>
+</section>
+
+<!-- ========== 2단계: 파일 배치 ========== -->
+<section>
+  <h2>2️⃣ 파일 배치</h2>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">4</div><div class="step-title">프로젝트 폴더 생성 + 파일 복사</div></div>
+    <p class="step-desc">5개 파일을 아래 구조로 NUC에 배치합니다.</p>
+<pre><span class="cmt"># 프로젝트 폴더 생성</span>
+mkdir -p ~/rs_local/templates
+
+<span class="cmt"># ZIP을 다운받았다면 압축 해제</span>
+unzip rs_local_typeA.zip -d ~/</pre>
+
+    <table class="file-table">
+      <tr><th>#</th><th>파일</th><th>역할</th><th>줄 수</th></tr>
+      <tr><td>1</td><td><code>app.py</code></td><td>Flask 메인 서버 (미션 1~7 전체)</td><td>~640</td></tr>
+      <tr><td>2</td><td><code>templates/index.html</code></td><td>웹 UI (미션 카드 + MJPEG 스트림)</td><td>~240</td></tr>
+      <tr><td>3</td><td><code>test_realsense.py</code></td><td>RealSense 사전 테스트 (6항목 PASS/FAIL)</td><td>~130</td></tr>
+      <tr><td>4</td><td><code>requirements.txt</code></td><td>pip 의존성 목록 (4개 패키지)</td><td>5</td></tr>
+      <tr><td>5</td><td><code>file_list.md</code></td><td>전체 파일 목록 + 설명 + 실행 순서</td><td>-</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ========== 3단계: 사전 테스트 ========== -->
+<section>
+  <h2>3️⃣ 사전 테스트</h2>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">5</div><div class="step-title">test_realsense.py 실행</div></div>
+    <p class="step-desc">app.py를 실행하기 전에 카메라가 정상 작동하는지 6가지 항목을 검증합니다.</p>
+<pre><span class="cmt"># RealSense 사전 테스트 실행</span>
+<span class="kw">cd</span> ~/rs_local
+python3 test_realsense.py</pre>
+<pre><span class="cmt"># 예상 출력:</span>
+=========================================================
+🔍 RealSense 사전 테스트 (app.py 실행 전 확인)
+=========================================================
+
+[1/6] pyrealsense2 패키지 import ...
+  ✅ PASS — 버전: 2.55.1
+
+[2/6] RealSense 카메라 연결 확인 ...
+  ✅ PASS — Intel RealSense D435i (S/N: 123456789, FW: 5.16.0.1)
+
+[3/6] 파이프라인 시작 (640x480 Color+Depth) ...
+  ✅ PASS — 파이프라인 시작 성공
+
+[4/6] Depth 스케일 + 카메라 파라미터 ...
+  ✅ PASS — depth_scale=0.001000
+           fx=615.7  fy=616.3
+           cx=325.3  cy=240.1
+
+[5/6] 프레임 획득 테스트 (5프레임) ...
+  프레임 1: Color=(480, 640, 3) Depth=(480, 640) 중심거리=1.23m
+  프레임 2: Color=(480, 640, 3) Depth=(480, 640) 중심거리=1.22m
+  ...
+  ✅ PASS — 5/5 프레임 성공
+
+[6/6] Depth 필터 체인 테스트 ...
+  RAW  무효 픽셀: 15,234개
+  FILT 무효 픽셀: 892개 (감소: 14,342)
+  ✅ PASS — 필터 체인 정상
+
+=========================================================
+📊 테스트 결과 요약
+=========================================================
+  ✅ pyrealsense2 import
+  ✅ 카메라 연결
+  ✅ 파이프라인 시작
+  ✅ Depth 스케일/Intrinsics
+  ✅ 프레임 획득
+  ✅ 필터 체인
+=========================================================
+🎉 모든 테스트 통과! python3 app.py 실행 가능</pre>
+    <div class="danger">❌ 테스트 실패 시 해당 항목의 오류 메시지를 확인하고 해결한 뒤 다시 실행하세요.</div>
+  </div>
+</section>
+
+<!-- ========== 4단계: 서버 실행 ========== -->
+<section>
+  <h2>4️⃣ Flask 서버 실행</h2>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">6</div><div class="step-title">app.py 실행</div></div>
+    <p class="step-desc">Flask 웹서버를 시작합니다. RealSense는 미션 시작 시 자동 초기화됩니다.</p>
+<pre><span class="cmt"># Flask 서버 실행</span>
+<span class="kw">cd</span> ~/rs_local
+python3 app.py</pre>
+<pre><span class="cmt"># 예상 출력:</span>
+============================================================
+🏭 RealSense LOCAL — NUC 직결 미션 서버
+============================================================
+🌐 http://localhost:5000
+📷 RealSense D435i/D455 USB 직결 전용
+🎯 미션 1~7 (Type A LOCAL)
+============================================================</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">7</div><div class="step-title">브라우저에서 접속</div></div>
+    <p class="step-desc">NUC 또는 같은 네트워크의 PC에서 브라우저를 열고 접속합니다.</p>
+<pre><span class="cmt"># NUC 자체에서 접속</span>
+http://localhost:5000
+
+<span class="cmt"># 같은 네트워크의 다른 PC에서 접속</span>
+http://192.168.0.65:5000   <span class="cmt"># ← NUC의 IP 주소</span></pre>
+    <div class="tip">💡 NUC의 IP 주소 확인: <code>hostname -I</code></div>
+  </div>
+</section>
+
+<!-- ========== 미션 구성 ========== -->
+<section>
+  <h2>🎯 미션 구성 (7개)</h2>
+  <p style="color:var(--muted);margin-bottom:1rem">브라우저에서 미션 카드를 클릭하면 해당 미션이 시작되고 실시간 MJPEG 영상이 표시됩니다.</p>
+  <div class="mission-grid">
+    <div class="mission-card"><div class="m-num">01</div><h4>RGB + Depth 듀얼 뷰</h4><p>Color와 Depth를 좌우 나란히 실시간 표시</p><div class="tags"><span class="tag tag-auto">자동</span></div></div>
+    <div class="mission-card"><div class="m-num">02</div><h4>클릭 거리 측정</h4><p>화면 클릭 → 거리(cm) 실시간 표시</p><div class="tags"><span class="tag tag-click">클릭</span></div></div>
+    <div class="mission-card"><div class="m-num">03</div><h4>2D→3D 좌표 변환</h4><p>클릭 → (X,Y,Z) 실제 3D 좌표 계산</p><div class="tags"><span class="tag tag-click">클릭</span></div></div>
+    <div class="mission-card"><div class="m-num">04</div><h4>Depth 컬러맵 변경</h4><p>JET·TURBO·BONE·HOT 시각화 전환</p><div class="tags"><span class="tag tag-key">키보드 1~4</span></div></div>
+    <div class="mission-card"><div class="m-num">05</div><h4>ROI 영역 통계</h4><p>드래그 → 평균/최소/최대 거리 분석</p><div class="tags"><span class="tag tag-drag">드래그</span></div></div>
+    <div class="mission-card"><div class="m-num">06</div><h4>필터 비교</h4><p>RAW vs Spatial+Temporal+HoleFill</p><div class="tags"><span class="tag tag-auto">자동</span></div></div>
+    <div class="mission-card"><div class="m-num">07</div><h4>근접 경고 시스템</h4><p>ROI 기반 거리 감지 → 경고 알림</p><div class="tags"><span class="tag tag-slider">슬라이더</span></div></div>
+  </div>
+</section>
+
+<!-- ========== 주요 소스 설명 ========== -->
+<section>
+  <h2>📝 주요 소스 설명</h2>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">A</div><div class="step-title">app.py — RealSense 초기화 핵심</div></div>
+    <p class="step-desc">Align은 반드시 설정해야 합니다. 없으면 클릭 좌표와 Depth 값이 어긋납니다.</p>
+<pre><span class="cmt"># Depth를 Color 좌표계에 정렬 (필수!)</span>
+rs_align = rs.align(rs.stream.color)
+
+<span class="cmt"># 매 프레임마다 정렬 적용</span>
+aligned = rs_align.process(frames)
+color_frame = aligned.get_color_frame()
+depth_frame = aligned.get_depth_frame()</pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">B</div><div class="step-title">app.py — 역투영 공식 (미션 3)</div></div>
+    <p class="step-desc">2D 픽셀 (u,v) + Depth Z → 3D 좌표 (X,Y,Z) 변환의 핵심 수학입니다.</p>
+<pre><span class="cmt"># 역투영 공식: 2D 픽셀 → 3D 실제 좌표 (미터)</span>
+X = (u - cx) * Z / fx   <span class="cmt"># 좌우 위치 (미터)</span>
+Y = (v - cy) * Z / fy   <span class="cmt"># 상하 위치 (미터)</span>
+Z = depth                <span class="cmt"># 거리 (미터, 센서 값 그대로)</span>
+
+<span class="cmt"># cx, cy, fx, fy = 카메라 내부 파라미터 (자동 읽기)</span></pre>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">C</div><div class="step-title">app.py — 근접 경고 로직 (미션 7)</div></div>
+    <p class="step-desc">공장 안전존 적용의 핵심 패턴. ROI 내 유효 최소 거리로 위험 판정합니다.</p>
+<pre><span class="cmt"># ROI 영역에서 Depth 데이터 추출</span>
+roi = depth_array[y1:y2, x1:x2].astype(np.float64) * rs_depth_scale
+
+<span class="cmt"># 무효 데이터(0값) 제거 후 최소 거리 산출</span>
+valid = roi[roi > 0.1]   <span class="cmt"># 0.1m 이상만 유효</span>
+min_dist = float(np.min(valid))
+
+<span class="cmt"># 임계 거리 이하면 경고</span>
+<span class="kw">if</span> 0 < min_dist < alert_dist:
+    <span class="cmt"># 경고 시각 효과 + 알림 트리거</span></pre>
+    <div class="tip">💡 <code>alert_zone_pct</code>(감지 영역 %)와 <code>alert_dist_m</code>(임계 거리)은 브라우저 슬라이더로 실시간 조절 가능합니다.</div>
+  </div>
+
+  <div class="step">
+    <div class="step-header"><div class="step-num">D</div><div class="step-title">app.py — 설정값 수정 위치</div></div>
+    <p class="step-desc">app.py 상단에서 환경에 맞게 수정할 5개 값입니다.</p>
+<pre>FLASK_HOST = <span class="str">"0.0.0.0"</span>   <span class="cmt"># ← NUC만 접속: "127.0.0.1" 로 변경</span>
+FLASK_PORT = 5000         <span class="cmt"># ← 포트 충돌 시 변경</span>
+CAMERA_W = 640            <span class="cmt"># ← 해상도 가로 (320~1280)</span>
+CAMERA_H = 480            <span class="cmt"># ← 해상도 세로 (240~720)</span>
+CAMERA_FPS = 30           <span class="cmt"># ← 프레임 레이트 (15 또는 30)</span></pre>
+  </div>
+</section>
+
+<!-- ========== 트러블슈팅 ========== -->
+<section>
+  <h2>🔧 문제 해결</h2>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ No RealSense device found</div>
+    <div class="trouble-a">→ USB 3.0(파란색) 포트에 꽂았는지 확인<br>→ <code>lsusb | grep Intel</code>로 인식 확인<br>→ 다른 프로그램이 카메라 사용 중: <code>sudo fuser /dev/video*</code></div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ Frame didn't arrive within 1000ms</div>
+    <div class="trouble-a">→ test_realsense.py가 아직 실행 중이면 종료 후 재시도<br>→ USB 케이블을 뺐다 다시 꽂고 3초 대기</div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ Address already in use (포트 5000)</div>
+    <div class="trouble-a">→ 이전 app.py가 아직 실행 중: <code>sudo kill $(sudo lsof -ti :5000)</code><br>→ 또는 app.py 상단에서 <code>FLASK_PORT = 5001</code>로 변경</div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ 브라우저에서 영상이 안 나옴</div>
+    <div class="trouble-a">→ 방화벽 확인: <code>sudo ufw allow 5000</code><br>→ NUC IP 확인: <code>hostname -I</code><br>→ 미션 카드를 클릭해야 RealSense가 초기화됩니다</div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ ModuleNotFoundError: pyrealsense2</div>
+    <div class="trouble-a">→ <code>conda activate lerobot</code> 후 <code>pip install pyrealsense2</code></div>
+  </div>
+
+  <div class="trouble">
+    <div class="trouble-q">❌ 클릭해도 거리가 0cm로 표시</div>
+    <div class="trouble-a">→ Depth 센서 최소 거리 이내 (D435i: 약 10cm 이상 필요)<br>→ 반사가 심한 물체(거울, 금속 광택면)는 Depth 값이 0</div>
+  </div>
+</section>
+
+<!-- ========== Footer ========== -->
+<footer style="text-align:center;padding:2rem;color:var(--muted);font-size:0.82em;border-top:1px solid var(--border);margin-top:2rem">
+  📦 RealSense LOCAL 설치 가이드 — Type A (NUC 직결) 전용<br>
+  제타위성로보틱스 피지컬 AI 교육팀 · 2026-02-21
+</footer>
+
+</div><!-- container -->
+</body>
+</html>
