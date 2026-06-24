@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YOLO 사례 1~5 심층 토의 자료 - Physical AI Education</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-primary: #7C3AED; --color-primary-light: #EDE9FE;
+      --color-secondary: #2563EB; --color-secondary-light: #DBEAFE;
+      --color-success: #059669; --color-success-light: #D1FAE5;
+      --color-warning: #D97706; --color-warning-light: #FEF3C7;
+      --color-danger: #DC2626; --color-danger-light: #FEE2E2;
+      --color-teal: #0891B2; --color-pink: #DB2777;
+      --color-surface: #F8FAFC; --color-card: #FFFFFF;
+      --color-text: #1E293B; --color-muted: #64748B; --color-border: #E2E8F0;
+    }
+    body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.75; }
+    code { font-family: 'JetBrains Mono', monospace; }
+    .container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+    section { padding: 2.5rem 0; }
+
+    /* 히어로 */
+    .hero { background: linear-gradient(135deg, #312E81, #6D28D9); color: white; padding: 3.5rem 0 3rem; position: relative; overflow: hidden; }
+    .hero::before { content:""; position:absolute; inset:0;
+      background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0 2px, transparent 2px), radial-gradient(circle at 75% 65%, rgba(255,255,255,0.08) 0 3px, transparent 3px);
+      background-size: 130px 130px, 180px 180px; pointer-events:none; }
+    .hero .container { position: relative; }
+    .hero-badge { display:inline-block; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); padding:0.4rem 1rem; border-radius:999px; font-size:0.85rem; font-weight:700; margin-bottom:1.1rem; }
+    .hero h1 { font-size:2.5rem; font-weight:900; line-height:1.2; margin-bottom:0.8rem; }
+    .hero-subtitle { font-size:1.1rem; opacity:0.92; max-width:720px; }
+    .hero-how { margin-top:1.5rem; background:rgba(255,255,255,0.12); border-radius:12px; padding:1rem 1.3rem; font-size:0.95rem; display:flex; gap:0.8rem; align-items:flex-start; }
+    .hero-how .hh-icon { font-size:1.4rem; }
+
+    /* 토의 진행 안내 */
+    .guide-bar { background:white; border-bottom:1px solid var(--color-border); }
+    .guide-steps { display:flex; flex-wrap:wrap; gap:0.8rem; }
+    .guide-step { flex:1; min-width:150px; background:var(--color-surface); border:1px solid var(--color-border); border-radius:10px; padding:0.9rem 1rem; }
+    .guide-step-num { font-size:0.72rem; font-weight:700; color:var(--color-primary); letter-spacing:0.04em; }
+    .guide-step-txt { font-size:0.9rem; font-weight:500; margin-top:0.2rem; }
+
+    .section-title { font-size:1.7rem; font-weight:900; margin-bottom:0.4rem; }
+    .section-intro { color:var(--color-muted); margin-bottom:1.5rem; }
+
+    /* 사례 카드 */
+    .case { background:var(--color-card); border:1px solid var(--color-border); border-radius:18px; overflow:hidden; box-shadow:0 4px 12px -2px rgba(0,0,0,0.08); margin-bottom:3rem; }
+    .case-head { padding:1.6rem 1.8rem; color:white; background:var(--cc,#2563EB); }
+    .case-head-top { display:flex; align-items:center; gap:1rem; }
+    .case-no { font-size:1.5rem; font-weight:900; background:rgba(255,255,255,0.22); width:54px; height:54px; display:flex; align-items:center; justify-content:center; border-radius:14px; flex-shrink:0; }
+    .case-head h2 { font-size:1.4rem; font-weight:900; line-height:1.3; }
+    .case-tagline { font-size:0.9rem; opacity:0.92; margin-top:0.7rem; line-height:1.6; }
+    .case-models { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:1rem; }
+    .chip { font-family:'JetBrains Mono',monospace; font-size:0.76rem; font-weight:600; padding:0.3rem 0.7rem; border-radius:7px; background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); }
+    .case-body { padding:1.8rem; }
+
+    /* "어떻게 동작하나" SVG */
+    .how-figure { border-radius:12px; overflow:hidden; border:1px solid var(--color-border); margin-bottom:1.6rem; }
+    .how-figure svg { display:block; width:100%; height:auto; background:#0f172a; }
+    .how-cap { background:color-mix(in srgb, var(--cc) 8%, white); padding:0.6rem 1rem; font-size:0.8rem; border-top:1px solid var(--color-border); }
+    .how-cap strong { color:var(--cc); }
+
+    /* 분야별 적용 블록 */
+    .field-title { font-size:1.05rem; font-weight:900; margin:1.8rem 0 1rem; display:flex; align-items:center; gap:0.5rem; padding-bottom:0.5rem; border-bottom:2px solid var(--cc); }
+    .field-title .ft-tag { font-size:0.7rem; background:var(--cc); color:white; padding:0.15rem 0.5rem; border-radius:5px; font-weight:700; }
+
+    .app-card { border:1px solid var(--color-border); border-left:4px solid var(--cc); border-radius:10px; padding:1.1rem 1.3rem; margin-bottom:1rem; background:var(--color-surface); }
+    .app-where { font-size:0.78rem; font-weight:700; color:var(--cc); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:0.4rem; }
+    .app-what { line-height:1.7; margin-bottom:0.6rem; }
+    .app-what strong { color:var(--color-text); }
+    .app-effect { display:flex; gap:0.6rem; align-items:flex-start; background:white; border-radius:8px; padding:0.7rem 0.9rem; font-size:0.9rem; border:1px solid var(--color-border); }
+    .app-effect .ae-icon { color:var(--color-success); font-weight:900; flex-shrink:0; }
+    .app-effect strong { color:var(--color-success); }
+
+    /* 수치 카드 */
+    .nums { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:0.7rem; margin:1.2rem 0; }
+    .num-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:10px; padding:0.9rem; text-align:center; }
+    .num-v { font-size:1.5rem; font-weight:900; color:var(--cc); line-height:1.1; }
+    .num-l { font-size:0.74rem; color:var(--color-muted); margin-top:0.25rem; }
+
+    /* 토의 박스 */
+    .discuss { margin-top:1.8rem; background:linear-gradient(135deg, #0F172A, #1E293B); color:white; border-radius:14px; padding:1.5rem 1.7rem; }
+    .discuss-title { font-size:1.05rem; font-weight:900; display:flex; align-items:center; gap:0.5rem; margin-bottom:1rem; color:#fcd34d; }
+    .discuss-q { display:flex; gap:0.7rem; padding:0.7rem 0; border-bottom:1px solid rgba(255,255,255,0.12); }
+    .discuss-q:last-child { border-bottom:none; }
+    .discuss-q .qn { flex-shrink:0; font-weight:900; color:#fcd34d; font-family:'JetBrains Mono',monospace; }
+    .discuss-q .qt { font-size:0.95rem; line-height:1.6; }
+
+    /* 인사이트 */
+    .insight { display:flex; gap:0.75rem; padding:0.9rem 1.1rem; border-radius:10px; align-items:flex-start; margin-top:1.4rem; background:var(--color-warning-light); border-left:3px solid var(--color-warning); }
+    .insight-icon { font-size:1.15rem; flex-shrink:0; }
+    .insight-content { font-size:0.92rem; line-height:1.6; }
+    .insight-content strong { color:var(--color-warning); }
+
+    /* 출처 */
+    .srcs { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1.2rem; }
+    .src { display:inline-flex; align-items:center; gap:0.4rem; text-decoration:none; font-size:0.78rem; font-weight:500; padding:0.4rem 0.75rem; border-radius:8px; background:var(--color-surface); border:1px solid var(--color-border); color:var(--color-text); }
+    .src:hover { background:color-mix(in srgb, var(--cc) 12%, white); }
+    .src .stt { font-size:0.64rem; font-weight:700; text-transform:uppercase; padding:0.1rem 0.4rem; border-radius:5px; background:var(--cc); color:white; }
+
+    /* 종합 토의 */
+    .final { background:linear-gradient(135deg, #4C1D95, #7C3AED); color:white; border-radius:18px; padding:2rem; }
+    .final h3 { font-size:1.4rem; margin-bottom:0.5rem; }
+    .final p.fsub { opacity:0.9; margin-bottom:1.3rem; font-size:0.95rem; }
+    .final-q { background:rgba(255,255,255,0.13); border-radius:10px; padding:1rem 1.2rem; margin-bottom:0.8rem; display:flex; gap:0.8rem; }
+    .final-q .fqn { flex-shrink:0; font-weight:900; font-size:1.1rem; }
+    .final-q .fqt { line-height:1.6; }
+
+    .footer { text-align:center; padding:2.5rem 0; color:var(--color-muted); font-size:0.85rem; }
+
+    @media (max-width:768px) {
+      .hero h1 { font-size:1.9rem; }
+      .guide-steps { flex-direction:column; }
+    }
+    @media print {
+      .hero, .discuss, .final { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .case { break-inside:avoid; }
+      .how-figure svg { background:#0f172a !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 히어로 -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-badge">집중 토의 · 1조 (사례 1~5)</div>
+      <h1>YOLO 산업 적용 사례 심층 토의<br>① 추적 ② 분할 ③ 라벨링 ④ 안전 ⑤ 폐기물</h1>
+      <p class="hero-subtitle">
+        각 사례를 <strong>"어느 분야에 / 어떻게 적용했고 / 무슨 효과가 있었는지"</strong> 실제 도입 사례로 살펴보고,
+        조별로 깊이 토의합니다. 숫자와 출처가 있는 진짜 사례로 이야기를 나눠보세요.
+      </p>
+      <div class="hero-how">
+        <span class="hh-icon">🗣️</span>
+        <span>토의 방식: 사례별 ① <strong>설명 읽기</strong> → ② <strong>분야별 적용·효과 확인</strong> → ③ <strong>토의 질문으로 의견 나누기</strong> → ④ 다음 사례로.</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 토의 진행 안내 -->
+  <section class="guide-bar">
+    <div class="container">
+      <div class="guide-steps">
+        <div class="guide-step"><div class="guide-step-num">STEP 1</div><div class="guide-step-txt">🎯 사례 01<br>실시간 객체 추적</div></div>
+        <div class="guide-step"><div class="guide-step-num">STEP 2</div><div class="guide-step-txt">✂️ 사례 02<br>정밀 분할</div></div>
+        <div class="guide-step"><div class="guide-step-num">STEP 3</div><div class="guide-step-txt">🔤 사례 03<br>제로샷 라벨링</div></div>
+        <div class="guide-step"><div class="guide-step-num">STEP 4</div><div class="guide-step-txt">🦺 사례 04<br>건설 안전</div></div>
+        <div class="guide-step"><div class="guide-step-num">STEP 5</div><div class="guide-step-txt">♻️ 사례 05<br>폐기물 로봇</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+
+      <!-- ============ 사례 1 ============ -->
+      <div class="case" style="--cc:#2563EB">
+        <div class="case-head">
+          <div class="case-head-top">
+            <div class="case-no">01</div>
+            <div><h2>실시간 다중 객체 추적: 교통 · 보안 · 스포츠</h2></div>
+          </div>
+          <p class="case-tagline">YOLO가 객체를 찾고(박스), ByteTrack이 프레임을 이어 "같은 객체엔 같은 ID"를 유지합니다. 움직이는 대상을 끝까지 따라가는 것이 핵심입니다.</p>
+          <div class="case-models"><span class="chip">YOLOv11 / YOLOv8</span><span class="chip">ByteTrack</span><span class="chip">StrongSORT</span></div>
+        </div>
+        <div class="case-body">
+
+          <div class="how-figure">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="300" fill="#0f172a"/>
+              <polygon points="0,300 320,90 480,90 800,300" fill="#1e293b"/>
+              <line x1="120" y1="210" x2="680" y2="210" stroke="#fbbf24" stroke-width="4"/>
+              <text x="690" y="206" fill="#fbbf24" font-size="13" font-family="monospace">COUNT</text>
+              <g font-family="monospace" font-weight="bold">
+                <rect x="250" y="160" width="84" height="56" fill="none" stroke="#22d3ee" stroke-width="3"/>
+                <rect x="248" y="142" width="64" height="18" fill="#22d3ee"/><text x="252" y="156" fill="#0f172a" font-size="12">car #14</text>
+                <rect x="430" y="135" width="66" height="44" fill="none" stroke="#34d399" stroke-width="3"/>
+                <rect x="428" y="117" width="72" height="18" fill="#34d399"/><text x="432" y="131" fill="#0f172a" font-size="12">truck #7</text>
+                <rect x="175" y="235" width="96" height="58" fill="none" stroke="#22d3ee" stroke-width="3"/>
+                <rect x="173" y="217" width="64" height="18" fill="#22d3ee"/><text x="177" y="231" fill="#0f172a" font-size="12">car #14</text>
+              </g>
+              <rect x="20" y="20" width="180" height="64" rx="8" fill="#1e293b" stroke="#334155"/>
+              <text x="34" y="44" fill="#94a3b8" font-size="12" font-family="monospace">VEHICLE COUNT</text>
+              <text x="34" y="72" fill="#22d3ee" font-size="22" font-family="monospace" font-weight="bold">IN 128 · OUT 94</text>
+            </svg>
+            <div class="how-cap"><strong>동작 화면:</strong> 차량마다 박스+ID(car #14)가 붙고, 같은 차는 화면을 가로질러도 ID가 유지됩니다. 라인 통과 시 카운트.</div>
+          </div>
+
+          <!-- 교통 -->
+          <div class="field-title"><span class="ft-tag">분야 1</span>🚦 교통</div>
+          <div class="app-card">
+            <div class="app-where">미국 피츠버그 — AI 적응형 신호 제어</div>
+            <p class="app-what">도로 카메라 영상을 YOLO로 분석해 차량 흐름을 실시간 파악하고, <strong>신호등 타이밍을 교통량에 맞춰 자동 조절</strong>했습니다. 고정 타이머 대신 "차가 많은 방향에 초록불을 더 길게" 주는 방식입니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>실시간 흐름 최적화로 <strong>이동 시간 25% 단축</strong>. AI가 교통 패턴을 읽어 더 똑똑하게 신호를 제어.</span></div>
+          </div>
+          <div class="app-card">
+            <div class="app-where">말레이시아 셀랑오르 사이버밸리 — 스마트시티 교통 모니터링</div>
+            <p class="app-what">도로변 CCTV 영상을 원격 서버로 보내 <strong>YOLOv7으로 차종 식별·차량 카운팅·제조사 분류</strong>까지 수행했습니다. 시스템 중단 없이 모델을 업데이트하는 구조로 설계되어 실제 파일럿으로 운영됐습니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>교통 흐름 관리와 대형차량 운행 스케줄링, 인프라 개선 판단의 <strong>데이터 기반 의사결정</strong> 가능.</span></div>
+          </div>
+
+          <!-- 보안 -->
+          <div class="field-title"><span class="ft-tag">분야 2</span>🛡️ 보안 · 항공 감시</div>
+          <div class="app-card">
+            <div class="app-where">소형 무인기(드론) 광역 감시 — YOLOv11 + StrongSORT + ByteTrack</div>
+            <p class="app-what">고정 CCTV로는 넓은 지역을 한 번에 못 봅니다. <strong>드론에 YOLOv11과 추적기를 실어</strong> 고속도로처럼 넓은 구역을 공중에서 감시하며 차량을 추적했습니다. 확장성 문제(넓은 면적)를 항공 시점으로 해결한 사례입니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>고정 카메라의 한계를 넘어 <strong>광역 실시간 감시</strong> 실현. 사고·이상행동 탐지에 활용.</span></div>
+          </div>
+
+          <!-- 스포츠 -->
+          <div class="field-title"><span class="ft-tag">분야 3</span>⚽ 스포츠 분석</div>
+          <div class="app-card">
+            <div class="app-where">축구 경기 자동 분석 — YOLOv8 + ByteTrack + 원근 변환</div>
+            <p class="app-what">중계 영상에서 <strong>선수·심판·공을 탐지하고 ByteTrack으로 ID를 유지</strong>한 뒤, 카메라 움직임 보정과 원근 변환으로 실제 경기장 좌표를 계산합니다. 여기에 팀 색상 분류를 더해 <strong>볼 점유율·이동거리·속도</strong>를 자동 산출합니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>선수 탐지 정확도 90% 이상, 추적·동작 인식 90%, 속도 분석 92% 달성. 코칭·전술 분석·중계에 활용.</span></div>
+          </div>
+
+          <div class="nums">
+            <div class="num-card"><div class="num-v">25%↓</div><div class="num-l">피츠버그 이동시간</div></div>
+            <div class="num-card"><div class="num-v">80.3</div><div class="num-l">ByteTrack MOTA</div></div>
+            <div class="num-card"><div class="num-v">30 FPS</div><div class="num-l">실시간 처리</div></div>
+            <div class="num-card"><div class="num-v">90%+</div><div class="num-l">스포츠 추적 정확도</div></div>
+          </div>
+
+          <div class="insight">
+            <span class="insight-icon">💡</span>
+            <span class="insight-content"><strong>왜 추적이 따로 필요할까?</strong> YOLO는 "한 장면"만 봅니다. "같은 차가 라인을 넘었다", "이 선수가 몇 m 뛰었다"를 알려면 프레임을 이어주는 추적기(ByteTrack)가 반드시 필요합니다. 탐지 ≠ 추적.</span>
+          </div>
+
+          <div class="discuss">
+            <div class="discuss-title">🗣️ 토의 질문</div>
+            <div class="discuss-q"><span class="qn">Q</span><span class="qt">교통·보안·스포츠는 모두 "추적"을 씁니다. 세 분야에서 ID가 끊기면(같은 차/사람/선수를 다른 객체로 착각) 각각 어떤 문제가 생길까요? 그리고 우리 동네/도시의 어떤 곳에 이 기술을 적용하면 가장 효과가 클까요?</span></div>
+          </div>
+
+          <div class="srcs">
+            <a class="src" href="https://www.ultralytics.com/blog/optimizingtraffic-management-with-ultralytics-yolo11" target="_blank"><span class="stt">사례</span>피츠버그 25% 단축 (Ultralytics)</a>
+            <a class="src" href="https://link.springer.com/article/10.1007/s12652-024-04861-4" target="_blank"><span class="stt">논문</span>셀랑오르 스마트시티 (Springer)</a>
+            <a class="src" href="https://github.com/Ayan-OP/Soccer-Analytics" target="_blank"><span class="stt">GitHub</span>축구 분석 YOLOv8+ByteTrack</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 사례 2 ============ -->
+      <div class="case" style="--cc:#059669">
+        <div class="case-head">
+          <div class="case-head-top">
+            <div class="case-no">02</div>
+            <div><h2>탐지 → 정밀 분할: 영상 편집 · 정밀 검사</h2></div>
+          </div>
+          <p class="case-tagline">YOLO의 네모 박스를 SAM2에 넘기면 물체의 실제 윤곽을 픽셀 단위 마스크로 따냅니다. "대충 어디" → "정확한 경계"로 정밀도를 끌어올립니다.</p>
+          <div class="case-models"><span class="chip">YOLOv8-seg</span><span class="chip">SAM 2.1 (Hiera)</span><span class="chip">MobileSAM</span></div>
+        </div>
+        <div class="case-body">
+
+          <div class="how-figure">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="300" fill="#0f172a"/>
+              <text x="40" y="34" fill="#94a3b8" font-size="13" font-family="monospace">① YOLO 박스 (네모)</text>
+              <rect x="60" y="55" width="260" height="210" rx="6" fill="#1e293b"/>
+              <ellipse cx="190" cy="165" rx="85" ry="62" fill="#334155"/>
+              <rect x="105" y="105" width="170" height="130" fill="none" stroke="#a78bfa" stroke-width="3"/>
+              <rect x="103" y="87" width="92" height="18" fill="#a78bfa"/><text x="107" y="100" fill="#0f172a" font-size="12" font-family="monospace">object 0.94</text>
+              <path d="M340 165 h60 m-12 -9 l12 9 -12 9" stroke="#34d399" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <text x="350" y="156" fill="#34d399" font-size="12" font-family="monospace">prompt</text>
+              <text x="460" y="34" fill="#94a3b8" font-size="13" font-family="monospace">② SAM2 마스크 (픽셀)</text>
+              <rect x="460" y="55" width="280" height="210" rx="6" fill="#1e293b"/>
+              <ellipse cx="600" cy="165" rx="85" ry="62" fill="#10b981" opacity="0.55"/>
+              <ellipse cx="600" cy="165" rx="85" ry="62" fill="none" stroke="#34d399" stroke-width="3"/>
+              <text x="558" y="170" fill="#ecfdf5" font-size="12" font-family="monospace">ID:3 mask</text>
+            </svg>
+            <div class="how-cap"><strong>동작 화면:</strong> 왼쪽 YOLO 네모 박스를 prompt로 넘기면, 오른쪽처럼 SAM2가 실제 윤곽을 픽셀 마스크로 따냅니다.</div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 1</span>🎬 영상 편집 · 방송</div>
+          <div class="app-card">
+            <div class="app-where">방송·콘텐츠 — 객체별 마스킹/배경 분리</div>
+            <p class="app-what">YOLO로 특정 인물·물체를 탐지하고 SAM2로 픽셀 마스크를 만들면, <strong>배경만 흐리거나(블러), 특정 객체만 색을 바꾸거나, 자동 누끼(배경 제거)</strong>가 가능합니다. SAM2의 메모리 구조로 영상 내내 같은 객체의 마스크가 유지됩니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>프레임마다 수작업으로 따던 마스크를 <strong>자동화</strong>. 추적 ID로 같은 객체를 영상 끝까지 일관 처리.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 2</span>🏭 정밀 검사 · 면적 측정</div>
+          <div class="app-card">
+            <div class="app-where">제조·품질 — 결함 면적의 정확한 측정</div>
+            <p class="app-what">박스만으로는 "결함이 대략 이 근처"까지만 압니다. SAM2 마스크를 쓰면 <strong>결함의 정확한 픽셀 면적·모양</strong>을 잴 수 있어, "스크래치 길이 12mm", "오염 면적 3%" 같은 정량 판정이 가능합니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>박스 면적(과대평가) 대신 <strong>실제 결함 픽셀</strong>만 계산 → 합격/불합격 기준이 정밀해짐.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 3</span>🩺 의료 영상</div>
+          <div class="app-card">
+            <div class="app-where">의료 — 병변 경계의 픽셀 단위 분할</div>
+            <p class="app-what">종양·장기의 <strong>정확한 경계</strong>가 진단·수술 계획에 중요합니다. YOLO가 빠르게 위치를 잡고 SAM2가 경계를 픽셀로 분할하면, 면적·부피 변화를 추적할 수 있습니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>"빠른 위치 탐지 + 정밀 경계 분할" 조합으로 <strong>진단 보조 정확도</strong> 향상.</span></div>
+          </div>
+
+          <div class="insight">
+            <span class="insight-icon">💡</span>
+            <span class="insight-content"><strong>박스 vs 마스크.</strong> 박스는 "어디에 있나"(빠름), 마스크는 "정확히 어떤 모양인가"(정밀). 둘을 조합하면 빠르면서도 정밀합니다. 엣지 디바이스에선 가벼운 MobileSAM/EfficientSAM으로 대체합니다.</span>
+          </div>
+
+          <div class="discuss">
+            <div class="discuss-title">🗣️ 토의 질문</div>
+            <div class="discuss-q"><span class="qn">Q</span><span class="qt">SAM2는 정밀하지만 무겁습니다. 실시간이 중요한 현장(예: 컨베이어 고속 검사)에서 정밀도와 속도 중 무엇을 우선해야 할까요? 빅맨님의 게이트 설계 패턴(YOLO 상시 + 무거운 모델은 필요할 때만)과 어떻게 연결되나요?</span></div>
+          </div>
+
+          <div class="srcs">
+            <a class="src" href="https://blog.roboflow.com/what-is-segment-anything-model-2/" target="_blank"><span class="stt">데모</span>SAM 2 영상 분할 가이드</a>
+            <a class="src" href="https://github.com/AbelAbeb/object-detection-using-yolo-and-sam2" target="_blank"><span class="stt">GitHub</span>YOLO+SAM2 파이프라인</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 사례 3 ============ -->
+      <div class="case" style="--cc:#7C3AED">
+        <div class="case-head">
+          <div class="case-head-top">
+            <div class="case-no">03</div>
+            <div><h2>제로샷 언어 탐지 + 자동 라벨링</h2></div>
+          </div>
+          <p class="case-tagline">"bird ." 같은 텍스트만으로 Grounding DINO가 객체를 찾고 SAM이 마스크를 만듭니다. 라벨 데이터 없이도 데이터셋을 자동 생성하는 것이 핵심입니다.</p>
+          <div class="case-models"><span class="chip">Grounding DINO 1.5</span><span class="chip">SAM 2.1</span><span class="chip">Autodistill → YOLOv8</span></div>
+        </div>
+        <div class="case-body">
+
+          <div class="how-figure">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="300" fill="#0f172a"/>
+              <rect x="40" y="25" width="720" height="42" rx="21" fill="#1e293b" stroke="#7c3aed" stroke-width="2"/>
+              <text x="62" y="52" fill="#c4b5fd" font-size="16" font-family="monospace">🔤 text prompt:  "forklift . person ."</text>
+              <rect x="40" y="90" width="720" height="180" rx="8" fill="#1e293b"/>
+              <g font-family="monospace">
+                <rect x="120" y="150" width="90" height="90" fill="#8b5cf6" opacity="0.4"/>
+                <rect x="118" y="148" width="94" height="94" fill="none" stroke="#f472b6" stroke-width="3"/>
+                <rect x="116" y="130" width="110" height="18" fill="#f472b6"/><text x="120" y="143" fill="#0f172a" font-size="11">forklift 0.92</text>
+                <ellipse cx="480" cy="200" rx="28" ry="55" fill="#8b5cf6" opacity="0.4"/>
+                <rect x="450" y="140" width="60" height="115" fill="none" stroke="#f472b6" stroke-width="3"/>
+                <rect x="448" y="122" width="80" height="18" fill="#f472b6"/><text x="452" y="135" fill="#0f172a" font-size="11">person 0.89</text>
+              </g>
+              <text x="56" y="262" fill="#94a3b8" font-size="12" font-family="monospace">라벨 0개 → 텍스트만으로 자동 라벨링 → 소형 YOLO 학습</text>
+            </svg>
+            <div class="how-cap"><strong>동작 화면:</strong> "forklift . person ." 텍스트만 주면 박스+마스크가 자동 생성됩니다. 이 결과로 가벼운 YOLO를 학습시킵니다.</div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 1</span>📦 데이터셋 자동 구축 (산업 전반)</div>
+          <div class="app-card">
+            <div class="app-where">Roboflow Autodistill — 라벨링 시간 혁신</div>
+            <p class="app-what">AI 모델을 만들 때 가장 비싸고 지루한 일이 <strong>수작업 라벨링</strong>입니다. Grounding DINO + SAM에 텍스트 프롬프트(예: "병", "병뚜껑")만 주면 이미지를 <strong>자동으로 라벨링</strong>하고, 그 결과로 가벼운 YOLOv8을 학습시킵니다. Roboflow의 이 방식(Autodistill)은 <strong>수백만 장 라벨링</strong>에 실제 사용됐습니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>컨베이어 위 병 탐지 모델을 <strong>라벨링 0시간</strong>으로 제작한 데모 공개. 모델 제작을 20분 내로 단축한 사례도.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 2</span>🐦 생태 · 연구</div>
+          <div class="app-card">
+            <div class="app-where">조류 분할 연구 — 제로샷 vs 지도학습 듀얼 모드</div>
+            <p class="app-what">희귀하거나 새로운 종은 학습 데이터가 없습니다. <strong>① 제로샷</strong>: "bird" 텍스트만으로 즉시 탐지·분할. <strong>② 지도학습</strong>: 데이터가 쌓이면 YOLOv11을 미세조정해 정밀도를 높임. 상황에 따라 골라 씁니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>"데이터 없이 빠르게" vs "데이터로 정밀하게"를 <strong>한 시스템에서 전환</strong>. 연구 초기 진입장벽 대폭 완화.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 3</span>🏭 산업 안전 자동 라벨링</div>
+          <div class="app-card">
+            <div class="app-where">물류 창고 — 사람·지게차 자동 라벨링 (Grounded EdgeSAM)</div>
+            <p class="app-what">창고 안전 모델을 만들 때 "사람", "지게차(forklift)"를 텍스트로 주면 자동 라벨링됩니다. Grounding DINO는 느리지만, 라벨링 후 <strong>가벼운 엣지 모델(YOLO)을 학습</strong>시켜 현장에선 빠르게 돌립니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>"느린 큰 모델로 라벨링 → 빠른 작은 모델로 배포"라는 <strong>지식 증류(distillation)</strong> 패턴 확립.</span></div>
+          </div>
+
+          <div class="insight">
+            <span class="insight-icon">💡</span>
+            <span class="insight-content"><strong>빅맨님 연결점.</strong> 이 구조는 app.py 속 <code>grounding-dino-tiny</code> 통합과 정확히 같은 발상입니다. 다만 Roboflow도 경고하듯, 미세한 결함 구분 등 <strong>특수 객체는 사람 검수가 여전히 필수</strong>입니다.</span>
+          </div>
+
+          <div class="discuss">
+            <div class="discuss-title">🗣️ 토의 질문</div>
+            <div class="discuss-q"><span class="qn">Q</span><span class="qt">"라벨링 0시간"은 매력적이지만, 자동 라벨이 틀리면 그 위에 학습한 모델도 틀립니다. 어떤 작업에 자동 라벨링을 믿고 쓰고, 어떤 작업에 사람 검수를 꼭 넣어야 할까요? 우리 LeKiwi/공장 검사 프로젝트라면 어떻게 적용하면 좋을까요?</span></div>
+          </div>
+
+          <div class="srcs">
+            <a class="src" href="https://blog.roboflow.com/enhance-image-annotation-with-grounding-dino-and-sam/" target="_blank"><span class="stt">데모</span>Grounding DINO+SAM 자동 라벨링</a>
+            <a class="src" href="https://github.com/autodistill/autodistill" target="_blank"><span class="stt">GitHub</span>Autodistill (라벨링 0시간)</a>
+            <a class="src" href="https://blog.roboflow.com/how-to-use-grounded-edgesam/" target="_blank"><span class="stt">사례</span>창고 사람·지게차 라벨링</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 사례 4 ============ -->
+      <div class="case" style="--cc:#D97706">
+        <div class="case-head">
+          <div class="case-head-top">
+            <div class="case-no">04</div>
+            <div><h2>건설 현장 안전 모니터링 (PPE 감지)</h2></div>
+          </div>
+          <p class="case-tagline">YOLO가 안전모·안전조끼 착용 여부를 실시간 감지하고, 미착용 시 즉시 경고합니다. 사람의 생명을 지키는 가장 직접적인 적용입니다.</p>
+          <div class="case-models"><span class="chip">YOLOv4 / v8</span><span class="chip">YOLOv10 + Swin</span><span class="chip">CCTV + 알림</span></div>
+        </div>
+        <div class="case-body">
+
+          <div class="how-figure">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="300" fill="#0f172a"/>
+              <rect x="0" y="235" width="800" height="65" fill="#1e293b"/>
+              <g>
+                <circle cx="180" cy="120" r="24" fill="#fcd34d"/><path d="M152 120 a28 16 0 0 1 56 0 z" fill="#f59e0b"/>
+                <rect x="160" y="146" width="40" height="72" rx="7" fill="#10b981"/>
+                <rect x="134" y="84" width="92" height="150" fill="none" stroke="#34d399" stroke-width="3"/>
+                <rect x="132" y="66" width="140" height="18" fill="#34d399"/><text x="136" y="79" fill="#0f172a" font-size="11" font-family="monospace">helmet+vest OK</text>
+              </g>
+              <g>
+                <circle cx="430" cy="120" r="24" fill="#fca5a5"/>
+                <rect x="410" y="146" width="40" height="72" rx="7" fill="#64748b"/>
+                <rect x="384" y="84" width="92" height="150" fill="none" stroke="#f87171" stroke-width="3"/>
+                <rect x="382" y="66" width="170" height="18" fill="#f87171"/><text x="386" y="79" fill="#0f172a" font-size="11" font-family="monospace">NO HELMET ⚠ alert</text>
+              </g>
+              <rect x="590" y="40" width="170" height="68" rx="8" fill="#7f1d1d" stroke="#f87171"/>
+              <text x="604" y="68" fill="#fecaca" font-size="13" font-family="monospace">⚠ SAFETY ALERT</text>
+              <text x="604" y="92" fill="#fff" font-size="14" font-family="monospace">관리자 전송 30초</text>
+            </svg>
+            <div class="how-cap"><strong>동작 화면:</strong> 착용자=녹색, 미착용자=빨강 박스. 미착용 감지 시 30초 내 관리자에게 경고가 갑니다.</div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 1</span>🏗️ 소규모 건설현장 (한국)</div>
+          <div class="app-card">
+            <div class="app-where">국토교통부 지원 — 13개 소규모 현장 AI CCTV</div>
+            <p class="app-what">사고가 집중되는 소규모 현장에 <strong>YOLOv4 기반 AI CCTV</strong>를 설치해 추락·미착용 위험을 감시했습니다. 소규모 현장은 전체 건설현장의 91.5%이면서 사망사고의 72.3%를 차지하는 가장 위험한 곳입니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>설치 현장 <strong>재해율 0.0%</strong> 기록 (같은 규모 평균 0.461% 대비). 사실상 사고를 완전 차단.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 2</span>🏙️ 대도시 공사현장 (서울시)</div>
+          <div class="app-card">
+            <div class="app-where">서울시 — 100개 이상 민간 공사현장 지능형 CCTV</div>
+            <p class="app-what">25개 자치구의 <strong>100개 이상 민간 공사현장</strong>에 지능형 CCTV+AI를 배치했습니다. 위험 상황을 감지하면 관리자 스마트폰으로 즉시 알립니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>위험 감지 시 <strong>30초 이내 경고 전송</strong> 체계 운영. 사고를 "사후 조사"가 아닌 "사전 예방"으로 전환.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 3</span>🌍 글로벌 표준 성능</div>
+          <div class="app-card">
+            <div class="app-where">컴퓨터비전 안전 플랫폼 — 글로벌 벤치마크</div>
+            <p class="app-what">YOLO 기반 PPE 감지는 안전모 mAP@0.5 <strong>0.922</strong>(YOLOv8), 평균 <strong>92% mAP</strong>를 기록합니다. 최신 YOLOv10+Swin Transformer는 정확도·실시간성 균형을 더 높였습니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>건설현장 도입 후 <strong>6개월 내 사고율 35% 감소</strong>가 글로벌 평균 효과로 보고됨.</span></div>
+          </div>
+
+          <div class="nums">
+            <div class="num-card"><div class="num-v">0.0%</div><div class="num-l">13개 현장 재해율</div></div>
+            <div class="num-card"><div class="num-v">100+</div><div class="num-l">서울시 적용 현장</div></div>
+            <div class="num-card"><div class="num-v">35%↓</div><div class="num-l">6개월 내 사고율</div></div>
+            <div class="num-card"><div class="num-v">30초</div><div class="num-l">경고 전송</div></div>
+          </div>
+
+          <div class="insight">
+            <span class="insight-icon">💡</span>
+            <span class="insight-content"><strong>제도와 기술의 만남.</strong> 중대재해처벌법이 5인 이상 전 사업장으로 확대되며 PPE 감지 수요가 폭증했습니다. 단, 건설사 67%가 아직 AI 미적용 — 비용·인프라가 장벽입니다. 기술은 준비됐지만 보급이 과제입니다.</span>
+          </div>
+
+          <div class="discuss">
+            <div class="discuss-title">🗣️ 토의 질문</div>
+            <div class="discuss-q"><span class="qn">Q</span><span class="qt">13개 현장 재해율 0%는 놀라운 수치지만, "카메라가 보고 있으니 조심한다"는 심리 효과도 섞여 있습니다. 순수 AI 효과와 감시 심리 효과를 어떻게 구분할 수 있을까요? 그리고 건설사 67%가 아직 AI를 안 쓰는 이유는 무엇일까요?</span></div>
+          </div>
+
+          <div class="srcs">
+            <a class="src" href="https://blog.roboflow.com/ppe-detection/" target="_blank"><span class="stt">데모</span>PPE 안전장비 감지</a>
+            <a class="src" href="https://universe.roboflow.com/roboflow-universe-projects/construction-site-safety" target="_blank"><span class="stt">데이터셋</span>건설현장 안전</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 사례 5 ============ -->
+      <div class="case" style="--cc:#0891B2">
+        <div class="case-head">
+          <div class="case-head-top">
+            <div class="case-no">05</div>
+            <div><h2>AI 폐기물 분류 로봇 (에이트테크 '에이트론')</h2></div>
+          </div>
+          <p class="case-tagline">비전(YOLO+CNN)이 폐기물을 인식하고 로봇 팔이 집어 분류합니다. "탐지 → 분류 → 물리적 집기"로 이어지는 완전한 피지컬 AI 루프입니다.</p>
+          <div class="case-models"><span class="chip">YOLO (탐지)</span><span class="chip">CNN 분류 (ResNet)</span><span class="chip">진공 흡착 로봇팔</span></div>
+        </div>
+        <div class="case-body">
+
+          <div class="how-figure">
+            <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+              <rect width="800" height="300" fill="#0f172a"/>
+              <rect x="0" y="210" width="800" height="45" fill="#334155"/>
+              <line x1="0" y1="232" x2="800" y2="232" stroke="#475569" stroke-width="2" stroke-dasharray="18 10"/>
+              <text x="20" y="285" fill="#94a3b8" font-size="12" font-family="monospace">→ 컨베이어 이동</text>
+              <g font-family="monospace">
+                <rect x="110" y="192" width="46" height="36" rx="5" fill="#3b82f6"/><rect x="105" y="170" width="58" height="16" fill="#22d3ee"/><text x="109" y="182" fill="#0f172a" font-size="10">PET 0.99</text>
+                <rect x="280" y="194" width="40" height="34" rx="4" fill="#94a3b8"/><rect x="275" y="172" width="54" height="16" fill="#34d399"/><text x="279" y="184" fill="#0f172a" font-size="10">CAN 0.97</text>
+                <rect x="440" y="192" width="44" height="36" rx="5" fill="#a78bfa"/><rect x="435" y="170" width="64" height="16" fill="#f472b6"/><text x="439" y="182" fill="#0f172a" font-size="10">GLASS 0.96</text>
+              </g>
+              <g>
+                <rect x="360" y="25" width="36" height="100" rx="7" fill="#1e293b" stroke="#64748b" stroke-width="2"/>
+                <line x1="378" y1="125" x2="460" y2="185" stroke="#64748b" stroke-width="9" stroke-linecap="round"/>
+                <circle cx="463" cy="190" r="9" fill="none" stroke="#22d3ee" stroke-width="4"/>
+                <text x="322" y="20" fill="#94a3b8" font-size="12" font-family="monospace">🦾 진공 흡착 로봇팔</text>
+              </g>
+              <rect x="600" y="25" width="170" height="68" rx="8" fill="#1e293b" stroke="#334155"/>
+              <text x="614" y="50" fill="#94a3b8" font-size="11" font-family="monospace">THROUGHPUT</text>
+              <text x="614" y="80" fill="#22d3ee" font-size="24" font-family="monospace" font-weight="bold">96 /min</text>
+            </svg>
+            <div class="how-cap"><strong>동작 화면:</strong> 컨베이어 위 폐기물을 재질별(PET/CAN/GLASS)로 인식하고, 진공 흡착 로봇팔이 집어 분류합니다.</div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 1</span>♻️ 공공·민간 재활용 선별장</div>
+          <div class="app-card">
+            <div class="app-where">인천·남양주·청도 등 — 국내 13대 실제 운영</div>
+            <p class="app-what">서울대 기계공학부 출신 연구진이 2020년 설립한 에이트테크는, <strong>실제 선별장 데이터 260만~430만 건</strong>을 학습한 AI로 폐기물을 인식하고 <strong>진공 흡착 로봇팔</strong>로 집어냅니다. 현재 국내 7곳에 <strong>13대가 설치·운영</strong> 중입니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>분당 <strong>96개</strong>(사람 40개의 2.4배), 정확도 <strong>99.3%</strong>, 7종을 색상·재질로 <strong>43~50종 세분류</strong>.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 2</span>🏭 무인 자원회수센터 (airo-MRF)</div>
+          <div class="app-card">
+            <div class="app-where">인천 경서동 — 로봇만으로 운영되는 선별 공장</div>
+            <p class="app-what">에이트론 <strong>30대 이상 + 순환형 컨베이어</strong>로 사람 없이 폐기물 선별 전 과정을 로봇이 수행하는 스마트 팩토리입니다. 악취·분진·위험에 노출되는 열악한 작업 환경의 산업재해를 근본적으로 없앱니다.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>기존 선별장 재활용률 <strong>40% → 70%</strong> 목표. 선별 속도 140~240% 증가, 선별 비용 <strong>266% 감소</strong>.</span></div>
+          </div>
+
+          <div class="field-title"><span class="ft-tag">분야 3</span>🌏 사업 확장 · 글로벌</div>
+          <div class="app-card">
+            <div class="app-where">수출·신사업 — 동남아 + 공동주택</div>
+            <p class="app-what">베트남·싱가포르·홍콩·대만 등 자원순환이 중요한 아시아 국가를 1차 수출 타깃으로, SK에코플랜트와 MOU를 맺고 <strong>아파트용 소형 에이트론</strong>도 개발 중입니다. 2024년 매출 125억+, 2025 에디슨 어워드 최종 후보.</p>
+            <div class="app-effect"><span class="ae-icon">▲</span><span>2024년 <strong>WIPO 글로벌 어워드</strong> 국내 기업 최초 수상. 로봇 공급사 → 플랜트 운영사로 사업 확장.</span></div>
+          </div>
+
+          <div class="nums">
+            <div class="num-card"><div class="num-v">99.3%</div><div class="num-l">인식 정확도</div></div>
+            <div class="num-card"><div class="num-v">96개/분</div><div class="num-l">분류 속도(2.4배)</div></div>
+            <div class="num-card"><div class="num-v">266%↓</div><div class="num-l">선별 비용</div></div>
+            <div class="num-card"><div class="num-v">40→70%</div><div class="num-l">재활용률 목표</div></div>
+          </div>
+
+          <div class="insight">
+            <span class="insight-icon">💡</span>
+            <span class="insight-content"><strong>완전한 피지컬 AI 루프.</strong> 앞의 1~4번은 "인식·판단"에서 끝났지만, 에이트론은 <strong>로봇이 실제로 물체를 집습니다</strong>. 인식(YOLO) → 분류(CNN) → 행동(로봇팔)으로 이어지는 이 구조가 빅맨님 LeKiwi/SO-ARM 프로젝트의 본질과 같습니다.</span>
+          </div>
+
+          <div class="discuss">
+            <div class="discuss-title">🗣️ 토의 질문</div>
+            <div class="discuss-q"><span class="qn">Q</span><span class="qt">에이트론은 "인식"을 넘어 "집기"까지 합니다. 인식만 하는 시스템(1~4번)과 비교해, 물리적 행동이 추가되면 어떤 새로운 어려움(실패 모드)이 생길까요? 그리고 열악한 환경을 로봇이 대체하는 것과 일자리 감소를 어떻게 봐야 할까요?</span></div>
+          </div>
+
+          <div class="srcs">
+            <a class="src" href="https://www.aetech.co.kr/" target="_blank"><span class="stt">기업</span>에이트테크 공식</a>
+            <a class="src" href="https://www.etnews.com/20241107000113" target="_blank"><span class="stt">기사</span>99% 정확도 상용화 (전자신문)</a>
+            <a class="src" href="https://www.asiae.co.kr/article/2024042611282901420" target="_blank"><span class="stt">기사</span>선별 2.4배·비용 266%↓ (아시아경제)</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사례 5 종료 -->
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      제타위성로보틱스 — Physical AI Education<br>
+      YOLO 산업 적용 사례 심층 토의 (사례 1~5) · 집중 토의용 교육 자료<br>
+      <span style="font-size:0.78rem; color:#94a3b8;">※ 상단 그림은 동작 화면을 재현한 교육용 시각 자료이며, 수치·사례는 하단 출처를 근거로 합니다.</span>
+    </div>
+  </footer>
+</body>
+</html>
