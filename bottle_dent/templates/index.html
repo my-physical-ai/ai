@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생수병 3D 정밀 검사</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0F172A; color: #E2E8F0; padding: 1.5rem; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+  .sub { color: #64748B; font-size: 0.9rem; margin-bottom: 1.2rem; }
+
+  /* 상태 배지 */
+  .status { display: flex; gap: 0.6rem; margin-bottom: 1rem; font-size: 0.78rem; flex-wrap: wrap; }
+  .badge { padding: 0.3rem 0.7rem; border-radius: 999px; background: #334155; }
+  .badge.on { background: #059669; }
+  .badge.off { background: #7F1D1D; }
+
+  /* 단계 표시 */
+  .steps { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .step { flex: 1; min-width: 130px; background: #1E293B; border: 1px solid #334155; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.8rem; text-align: center; opacity: 0.5; }
+  .step.active { opacity: 1; border-color: #2563EB; background: #1E3A5F; }
+  .step.done { opacity: 1; border-color: #059669; background: #064E3B; }
+  .step b { display: block; font-size: 0.72rem; color: #94A3B8; margin-bottom: 0.15rem; }
+
+  /* 라이브 프리뷰 */
+  .live-box { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 1rem; margin-bottom: 1.2rem; }
+  .live-box h2 { font-size: 0.9rem; color: #94A3B8; margin-bottom: 0.6rem; }
+  .live { width: 100%; max-height: 280px; object-fit: contain; border-radius: 8px; background: #0F172A; display: block; }
+
+  /* 양품/현재 비교 그리드 */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+  @media (max-width: 700px) { .compare-grid { grid-template-columns: 1fr; } }
+  .img-card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 1rem; }
+  .img-card h2 { font-size: 0.9rem; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+  .img-card.golden h2 { color: #6EE7B7; }
+  .img-card.current h2 { color: #93C5FD; }
+  /* 비어있는 이미지 placeholder */
+  .img-slot { width: 100%; aspect-ratio: 16/9; border-radius: 8px; background: #0F172A; border: 2px dashed #334155; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0.5rem; color: #475569; overflow: hidden; }
+  .img-slot.filled { border-style: solid; border-color: #334155; }
+  .img-slot img { width: 100%; height: 100%; object-fit: contain; }
+  .img-slot .empty-icon { font-size: 2.5rem; }
+  .img-slot .empty-text { font-size: 0.82rem; }
+  .img-meta { font-size: 0.75rem; color: #64748B; margin-top: 0.5rem; min-height: 1.1em; text-align: center; }
+
+  /* 버튼 */
+  .btns { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  button { flex: 1; min-width: 100px; padding: 0.7rem; border: none; border-radius: 8px; font-size: 0.86rem; font-weight: 700; cursor: pointer; color: white; transition: opacity 0.2s; }
+  button:hover:not(:disabled) { opacity: 0.88; }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-shot { background: #0891B2; }
+  .btn-burst { background: #059669; }
+  .btn-reset { background: #475569; flex: 0 0 auto; min-width: 70px; }
+  .btn-current { background: #2563EB; }
+  .btn-compare { background: #D97706; width: 100%; padding: 0.9rem; font-size: 1rem; }
+
+  /* 진행 바 */
+  .progress { background: #0F172A; border-radius: 999px; height: 22px; overflow: hidden; margin-top: 0.6rem; position: relative; }
+  .progress-fill { background: linear-gradient(90deg, #0891B2, #059669); height: 100%; width: 0%; transition: width 0.2s; }
+  .progress-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.74rem; font-weight: 700; }
+
+  /* 결과 카드 */
+  .result-card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 1.2rem; margin-top: 1.2rem; }
+  .result-card h2 { font-size: 0.95rem; color: #94A3B8; margin-bottom: 0.8rem; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 700px) { .result-grid { grid-template-columns: 1fr; } }
+  .verdict { font-size: 2rem; font-weight: 900; text-align: center; padding: 1rem; border-radius: 10px; margin-bottom: 0.75rem; }
+  .verdict.PASS { background: #064E3B; color: #6EE7B7; }
+  .verdict.BLOCK { background: #7F1D1D; color: #FCA5A5; }
+  .metric { display: flex; justify-content: space-between; background: #0F172A; border-radius: 6px; padding: 0.55rem 0.8rem; margin-bottom: 0.35rem; font-size: 0.84rem; }
+  .metric .m-label { color: #94A3B8; } .metric .m-value { font-weight: 700; color: #22D3EE; }
+  .quality-warn { display: none; background: #7C2D12; color: #FDBA74; padding: 0.6rem 0.8rem; border-radius: 8px; font-size: 0.8rem; margin-bottom: 0.6rem; }
+  .result-img { width: 100%; border-radius: 8px; margin-top: 0.5rem; }
+  .res-label { font-size: 0.76rem; color: #94A3B8; margin: 0.6rem 0 0.3rem; }
+  .msg { font-size: 0.82rem; color: #FCD34D; margin-top: 0.6rem; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🍶 생수병 3D 정밀 검사</h1>
+  <p class="sub">① 양품 3D 5장 등록(평균) → ② 검사 대상 3D 촬영 → ③ 비교 → 결과 (depth 기반 정밀 검사)</p>
+
+  <!-- 상태 -->
+  <div class="status">
+    <span class="badge" id="cam-badge">📷 카메라</span>
+    <span class="badge" id="golden-badge">📌 양품</span>
+    <span class="badge" id="current-badge">📸 현재</span>
+    <span class="badge" id="device-badge">⚙️ 장치</span>
+  </div>
+
+  <!-- 단계 표시 -->
+  <div class="steps">
+    <div class="step" id="step1"><b>STEP 1</b>양품 등록 (5장)</div>
+    <div class="step" id="step2"><b>STEP 2</b>검사 대상 촬영</div>
+    <div class="step" id="step3"><b>STEP 3</b>비교 실행</div>
+  </div>
+
+  <!-- 라이브 프리뷰 -->
+  <div class="live-box">
+    <h2>📹 라이브 프리뷰 (촬영 위치 확인용)</h2>
+    <img class="live" src="/live_feed" alt="라이브">
+  </div>
+
+  <!-- 양품 / 현재 이미지 -->
+  <div class="compare-grid">
+    <!-- 양품 -->
+    <div class="img-card golden">
+      <h2>✅ 양품 기준 (평균 이미지)</h2>
+      <div class="img-slot" id="golden-slot">
+        <div class="empty-icon">📌</div>
+        <div class="empty-text">아직 등록되지 않음</div>
+      </div>
+      <div class="img-meta" id="golden-meta">5장을 촬영해 평균을 등록하세요</div>
+      <div class="progress" id="golden-progress" style="display:none;">
+        <div class="progress-fill" id="golden-fill"></div>
+        <div class="progress-text" id="golden-ptext">0 / 5</div>
+      </div>
+      <div class="btns">
+        <button class="btn-shot" onclick="goldenShot()">📷 한장 3D 촬영</button>
+        <button class="btn-burst" onclick="goldenBurst()">⚡ 연속 5장 3D 촬영</button>
+        <button class="btn-reset" onclick="goldenReset()">↺ 초기화</button>
+      </div>
+    </div>
+
+    <!-- 현재 -->
+    <div class="img-card current">
+      <h2>🔍 검사 대상 (현재 3D 촬영)</h2>
+      <div class="img-slot" id="current-slot">
+        <div class="empty-icon">📸</div>
+        <div class="empty-text">아직 촬영되지 않음</div>
+      </div>
+      <div class="img-meta" id="current-meta">검사할 병을 놓고 촬영하세요</div>
+      <div class="btns">
+        <button class="btn-current" onclick="captureCurrent()">📸 현재 3D 촬영</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비교 버튼 -->
+  <button class="btn-compare" id="compare-btn" onclick="runCompare()" disabled>🔎 비교 실행 (양품 등록 + 현재 촬영 필요)</button>
+  <p class="msg" id="msg"></p>
+
+  <!-- 결과 -->
+  <div class="result-card" id="result-card" style="display:none;">
+    <h2>📋 검사 결과</h2>
+    <div class="result-grid">
+      <div>
+        <div class="verdict" id="verdict">-</div>
+        <div class="quality-warn" id="quality-warn">⚠️ 측정 품질 낮음 — 투명병/거리/조명 문제일 수 있습니다</div>
+        <div class="metric"><span class="m-label">최대 찌그러짐 깊이</span><span class="m-value" id="max-depth">-</span></div>
+        <div class="metric"><span class="m-label">찌그러짐 면적</span><span class="m-value" id="area">-</span></div>
+        <div class="metric"><span class="m-label">측정 유효 비율</span><span class="m-value" id="valid-ratio">-</span></div>
+        <div id="dents"></div>
+      </div>
+      <div>
+        <div class="res-label">검출 결과 (찌그러짐 위치)</div>
+        <img class="result-img" id="annotated" alt="결과">
+        <div class="res-label">편차 히트맵 (파랑=정상, 빨강=찌그러짐)</div>
+        <img class="result-img" id="heatmap" alt="히트맵">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 상태 갱신 =====
+  async function updateStatus() {
+    try {
+      const r = await fetch('/status'); const d = await r.json();
+      setBadge('cam-badge', d.camera, '📷 카메라 연결됨', '📷 카메라 없음');
+      setBadge('golden-badge', d.golden_ready, '📌 양품 등록됨', '📌 양품 없음');
+      setBadge('current-badge', d.current_ready, '📸 현재 촬영됨', '📸 현재 없음');
+      document.getElementById('device-badge').textContent = '⚙️ ' + (d.device === 'cuda' ? 'GPU' : 'CPU');
+      document.getElementById('device-badge').className = 'badge on';
+      updateSteps(d.golden_ready, d.current_ready);
+      updateCompareBtn(d.golden_ready, d.current_ready);
+    } catch (e) {}
+  }
+  function setBadge(id, on, onText, offText) {
+    const el = document.getElementById(id);
+    el.textContent = on ? onText : offText;
+    el.className = 'badge ' + (on ? 'on' : 'off');
+  }
+  // 단계 표시 갱신
+  function updateSteps(golden, current) {
+    const s1 = document.getElementById('step1');
+    const s2 = document.getElementById('step2');
+    const s3 = document.getElementById('step3');
+    s1.className = 'step ' + (golden ? 'done' : 'active');
+    s2.className = 'step ' + (current ? 'done' : (golden ? 'active' : ''));
+    s3.className = 'step ' + ((golden && current) ? 'active' : '');
+  }
+  // 비교 버튼 활성화 (둘 다 준비됐을 때만)
+  function updateCompareBtn(golden, current) {
+    const btn = document.getElementById('compare-btn');
+    if (golden && current) {
+      btn.disabled = false;
+      btn.textContent = '🔎 비교 실행';
+    } else {
+      btn.disabled = true;
+      btn.textContent = '🔎 비교 실행 (양품 등록 + 현재 촬영 필요)';
+    }
+  }
+  setInterval(updateStatus, 1500);
+  updateStatus();
+
+  // ===== 양품: 한 장씩 촬영 =====
+  async function goldenShot() {
+    const r = await fetch('/golden/shot', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { showMsg(d.msg); return; }
+    // 진행 바 표시
+    document.getElementById('golden-progress').style.display = 'block';
+    const pct = (d.count / d.total) * 100;
+    document.getElementById('golden-fill').style.width = pct + '%';
+    document.getElementById('golden-ptext').textContent = `${d.count} / ${d.total}`;
+    document.getElementById('golden-meta').textContent = `${d.count}장 촬영됨`;
+    // 목표 장수 다 모이면 자동으로 평균 확정
+    if (d.done) {
+      showMsg(`${d.total}장 완료 — 평균 등록 중...`);
+      await finalizeGolden();
+    }
+  }
+  // ===== 양품: 연속 5장 =====
+  async function goldenBurst() {
+    showMsg('연속 5장 3D 촬영 중...');
+    document.getElementById('golden-progress').style.display = 'block';
+    document.getElementById('golden-fill').style.width = '100%';
+    document.getElementById('golden-ptext').textContent = '촬영 중...';
+    const r = await fetch('/golden/burst', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { showMsg(d.msg); return; }
+    fillGolden(d);  // 결과 이미지 채우기
+  }
+  // ===== 양품: 평균 확정 =====
+  async function finalizeGolden() {
+    const r = await fetch('/golden/finalize', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { showMsg(d.msg); return; }
+    fillGolden(d);
+  }
+  // 양품 이미지 슬롯 채우기
+  function fillGolden(d) {
+    const slot = document.getElementById('golden-slot');
+    slot.className = 'img-slot filled';
+    slot.innerHTML = `<img src="data:image/jpeg;base64,${d.image}" alt="양품">`;
+    document.getElementById('golden-meta').textContent = d.msg;
+    document.getElementById('golden-ptext').textContent = `${d.count}장 등록 완료`;
+    showMsg('');
+    updateStatus();
+  }
+  // ===== 양품: 초기화 =====
+  async function goldenReset() {
+    await fetch('/golden/reset', { method: 'POST' });
+    const slot = document.getElementById('golden-slot');
+    slot.className = 'img-slot';
+    slot.innerHTML = '<div class="empty-icon">📌</div><div class="empty-text">아직 등록되지 않음</div>';
+    document.getElementById('golden-meta').textContent = '5장을 촬영해 평균을 등록하세요';
+    document.getElementById('golden-progress').style.display = 'none';
+    document.getElementById('golden-fill').style.width = '0%';
+    showMsg('양품 등록을 초기화했습니다');
+    updateStatus();
+  }
+
+  // ===== 현재 촬영 =====
+  async function captureCurrent() {
+    const r = await fetch('/capture_current', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { showMsg(d.msg); return; }
+    const slot = document.getElementById('current-slot');
+    slot.className = 'img-slot filled';
+    slot.innerHTML = `<img src="data:image/jpeg;base64,${d.image}" alt="현재">`;
+    document.getElementById('current-meta').textContent = d.msg;
+    showMsg('');
+    updateStatus();
+  }
+
+  // ===== 비교 실행 =====
+  async function runCompare() {
+    showMsg('비교 중...');
+    const r = await fetch('/compare', { method: 'POST' });
+    const d = await r.json();
+    if (!d.ok) { showMsg(d.msg); return; }
+    showMsg('');
+
+    document.getElementById('result-card').style.display = 'block';
+    const v = document.getElementById('verdict');
+    v.textContent = d.verdict === 'PASS' ? '✅ 합격 (PASS)' : '⛔ 불합격 (BLOCK)';
+    v.className = 'verdict ' + d.verdict;
+
+    document.getElementById('max-depth').textContent = d.max_depth_mm + ' mm';
+    document.getElementById('area').textContent = d.dent_area_px + ' px';
+    document.getElementById('valid-ratio').textContent = Math.round(d.valid_ratio * 100) + ' %';
+    document.getElementById('quality-warn').style.display = d.low_quality ? 'block' : 'none';
+
+    const box = document.getElementById('dents');
+    box.innerHTML = '';
+    if (d.boxes.length === 0) {
+      box.innerHTML = '<div class="metric"><span class="m-label">찌그러짐 없음</span></div>';
+    } else {
+      d.boxes.forEach((b, i) => {
+        const div = document.createElement('div');
+        div.className = 'metric';
+        div.innerHTML = `<span class="m-label">찌그러짐 ${i+1} (${b.x},${b.y})</span><span class="m-value">${b.depth_mm}mm</span>`;
+        box.appendChild(div);
+      });
+    }
+    document.getElementById('annotated').src = 'data:image/jpeg;base64,' + d.annotated;
+    document.getElementById('heatmap').src = 'data:image/jpeg;base64,' + d.heatmap;
+    document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function showMsg(t) { document.getElementById('msg').textContent = t; }
+</script>
+</body>
+</html>

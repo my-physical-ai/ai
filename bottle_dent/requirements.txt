@@ -1,0 +1,7 @@
+# requirements.txt — 생수병 찌그러짐 검사 시스템 의존성
+# 설치: pip install -r requirements.txt --break-system-packages
+pyrealsense2        # RealSense SDK (D435i 제어)
+torch               # PyTorch (텐서 연산, GPU 가속)
+flask               # 웹서버
+opencv-python       # 영상 처리
+numpy               # 수치 배열

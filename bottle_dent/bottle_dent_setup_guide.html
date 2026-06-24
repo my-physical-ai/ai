@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생수병 3D 정밀검사 — 단계별 설치 문서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --color-primary: #2563EB; --color-primary-light: #DBEAFE;
+    --color-success: #059669; --color-success-light: #D1FAE5;
+    --color-warning: #D97706; --color-warning-light: #FEF3C7;
+    --color-danger: #DC2626; --color-danger-light: #FEE2E2;
+    --color-teal: #0891B2; --color-teal-light: #CFFAFE;
+    --color-secondary: #7C3AED; --color-secondary-light: #EDE9FE;
+    --color-surface: #F8FAFC; --color-card: #FFFFFF;
+    --color-text: #1E293B; --color-muted: #64748B; --color-border: #E2E8F0;
+  }
+  body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.75; }
+  code, pre { font-family: 'JetBrains Mono', monospace; }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+  section { padding: 2.5rem 0; }
+
+  .hero { background: linear-gradient(135deg, #5B21B6, #2563EB 55%, #0891B2); color: white; padding: 3.5rem 0 3rem; }
+  .hero-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .pill { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: white; padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; }
+  .hero h1 { font-size: 2.2rem; font-weight: 900; line-height: 1.25; margin-bottom: 1rem; }
+  .hero-subtitle { font-size: 1.08rem; opacity: 0.94; max-width: 700px; }
+  .hero-env { margin-top: 1.5rem; display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .hero-env span { background: rgba(255,255,255,0.12); border-radius: 8px; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
+
+  .section-tag { display: inline-block; font-size: 0.78rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .section-title { font-size: 1.7rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.75rem; }
+  .section-intro { color: var(--color-muted); font-size: 1rem; margin-bottom: 1.5rem; }
+  p { margin-bottom: 1rem; } strong { font-weight: 700; }
+
+  .steps-bar { display: flex; gap: 0.5rem; margin: 1.5rem 0; flex-wrap: wrap; }
+  .step-chip { flex: 1; min-width: 100px; background: var(--color-card); border: 1px solid var(--color-border); border-top: 3px solid var(--sc-color, var(--color-primary)); border-radius: 10px; padding: 0.85rem 0.6rem; text-align: center; }
+  .step-chip .sc-num { font-size: 0.68rem; font-weight: 700; color: var(--sc-color); }
+  .step-chip .sc-t { font-weight: 700; font-size: 0.8rem; margin-top: 0.2rem; }
+
+  .step-block { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; padding: 1.75rem; margin: 1.5rem 0; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+  .step-block .sb-head { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1rem; }
+  .step-block .sb-num { width: 42px; height: 42px; border-radius: 11px; background: var(--sb-color, var(--color-primary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; flex-shrink: 0; }
+  .step-block h3 { font-size: 1.2rem; font-weight: 700; }
+  .step-block .sb-sub { font-size: 0.82rem; color: var(--color-muted); }
+  .step-block h4 { font-size: 0.98rem; font-weight: 700; margin: 1.25rem 0 0.5rem; }
+
+  .cmd-explain { font-size: 0.88rem; color: var(--color-text); margin: 1rem 0 0.3rem; padding-left: 0.8rem; border-left: 3px solid var(--color-primary); }
+
+  .code-card { background: #1E293B; border-radius: 10px; overflow: hidden; margin: 0.85rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+  .code-head { background: #0F172A; padding: 0.55rem 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .code-dot.r { background: #EF4444; } .code-dot.y { background: #F59E0B; } .code-dot.g { background: #10B981; }
+  .code-title { color: #94A3B8; font-size: 0.74rem; margin-left: 0.5rem; }
+  .code-card pre { padding: 1rem 1.1rem; overflow-x: auto; }
+  .code-card code { color: #E2E8F0; font-size: 0.81rem; line-height: 1.7; white-space: pre; }
+  .c-com { color: #64748B; font-style: italic; } .c-cmd { color: #86EFAC; } .c-flag { color: #FCD34D; } .c-path { color: #93C5FD; } .c-prompt { color: #C084FC; }
+
+  .callout { display: flex; gap: 0.7rem; padding: 0.9rem 1.1rem; border-radius: 10px; align-items: flex-start; margin: 1rem 0; }
+  .callout-icon { font-size: 1.15rem; flex-shrink: 0; padding-top: 0.1rem; }
+  .callout-content { font-size: 0.9rem; line-height: 1.6; }
+  .callout-tip { background: var(--color-success-light); border-left: 3px solid var(--color-success); }
+  .callout-warning { background: var(--color-warning-light); border-left: 3px solid var(--color-warning); }
+  .callout-info { background: var(--color-primary-light); border-left: 3px solid var(--color-primary); }
+
+  .file-tree { background: #1E293B; border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1rem 0; }
+  .file-tree pre { color: #E2E8F0; font-size: 0.81rem; line-height: 1.7; }
+  .ft-dir { color: #93C5FD; font-weight: 700; } .ft-file { color: #E2E8F0; } .ft-com { color: #64748B; }
+
+  .expect-box { background: #0F172A; border-radius: 8px; padding: 0.85rem 1.1rem; margin: 0.6rem 0; }
+  .expect-box .eb-label { font-size: 0.72rem; color: #10B981; font-weight: 700; margin-bottom: 0.4rem; }
+  .expect-box pre { color: #94A3B8; font-size: 0.77rem; line-height: 1.6; white-space: pre-wrap; }
+
+  .data-table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.86rem; background: var(--color-card); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .data-table th { background: var(--color-text); color: white; padding: 0.75rem 0.9rem; text-align: left; font-weight: 700; font-size: 0.82rem; }
+  .data-table td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:nth-child(even) td { background: var(--color-surface); }
+  .data-table code { background: var(--color-primary-light); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.8rem; color: var(--color-primary); }
+
+  /* 사용 흐름 카드 */
+  .flow-step { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem 1.2rem; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 10px; margin: 0.7rem 0; }
+  .flow-step .fs-badge { width: 32px; height: 32px; border-radius: 8px; background: var(--fs-color, var(--color-teal)); color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; flex-shrink: 0; }
+  .flow-step .fs-body { font-size: 0.9rem; }
+  .flow-step .fs-body b { display: block; margin-bottom: 0.2rem; }
+
+  .trouble { background: var(--color-card); border: 1px solid var(--color-border); border-left: 4px solid var(--color-danger); border-radius: 10px; padding: 1.1rem 1.3rem; margin: 0.85rem 0; }
+  .trouble .tr-q { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.4rem; color: var(--color-danger); }
+  .trouble .tr-a { font-size: 0.88rem; margin: 0; }
+
+  .divider { height: 1px; background: var(--color-border); margin: 2rem 0; border: none; }
+  .footer { background: #1E293B; color: #94A3B8; padding: 2rem 0; text-align: center; font-size: 0.84rem; }
+  .footer strong { color: #E2E8F0; }
+
+  @media (max-width: 768px) {
+    .hero h1 { font-size: 1.7rem; }
+    .section-title { font-size: 1.4rem; }
+  }
+  @media print { .hero { background: white !important; color: black !important; } .pill { color: black !important; border-color: #999 !important; } section { padding: 1.5rem 0; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="pill">🛠️ 단계별 설치 문서</span>
+      <span class="pill">생수병 3D 정밀검사</span>
+      <span class="pill">NUC + D435i</span>
+    </div>
+    <h1>생수병 3D 정밀검사<br>단계별 설치 문서</h1>
+    <p class="hero-subtitle">
+      RealSense D435i의 Depth로 양품과 비교해 찌그러짐을 검출하는 시스템을 NUC에 설치합니다.
+      환경 준비부터 실행, 사용법, 문제 해결까지 모든 명령어에 설명을 붙였습니다.
+    </p>
+    <div class="hero-env">
+      <span>💻 NUC (Ubuntu, RealSense 설치됨)</span>
+      <span>🐍 conda: lerobot 재활용</span>
+      <span>📷 D435i USB3 연결</span>
+      <span>🎯 룰 기반 depth 비교</span>
+    </div>
+  </div>
+</header>
+
+<!-- 전체 흐름 -->
+<section>
+  <div class="container">
+    <span class="section-tag">Overview · 전체 흐름</span>
+    <h2 class="section-title">설치 5단계</h2>
+    <p class="section-intro">순서대로 진행하면 약 15분 안에 웹에서 3D 검사를 시작할 수 있습니다.</p>
+
+    <div class="steps-bar">
+      <div class="step-chip" style="--sc-color: var(--color-teal);"><div class="sc-num">STEP 1</div><div class="sc-t">환경 준비</div></div>
+      <div class="step-chip" style="--sc-color: var(--color-primary);"><div class="sc-num">STEP 2</div><div class="sc-t">패키지 설치</div></div>
+      <div class="step-chip" style="--sc-color: var(--color-warning);"><div class="sc-num">STEP 3</div><div class="sc-t">파일 배치</div></div>
+      <div class="step-chip" style="--sc-color: var(--color-success);"><div class="sc-num">STEP 4</div><div class="sc-t">카메라 점검</div></div>
+      <div class="step-chip" style="--sc-color: var(--color-secondary);"><div class="sc-num">STEP 5</div><div class="sc-t">실행</div></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">💡</div>
+      <div class="callout-content">
+        <strong>전제 조건:</strong> NUC에 RealSense SDK(<code>librealsense</code>)와 conda가 이미 설치되어 있다고 가정합니다.
+        RealSense 실습을 해오셨다면 <code>lerobot</code> 환경을 그대로 재활용합니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider container" style="max-width:900px;">
+
+<!-- STEP 1 -->
+<section>
+  <div class="container">
+    <div class="step-block" style="--sb-color: var(--color-teal);">
+      <div class="sb-head"><div class="sb-num">1</div><div><h3>환경 준비 — conda 활성화</h3><div class="sb-sub">기존 lerobot 가상환경 재활용</div></div></div>
+
+      <div class="cmd-explain">① conda 환경 목록 확인</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">$</span> <span class="c-cmd">conda env list</span>          <span class="c-com"># 설치된 conda 환경 목록</span></code></pre>
+      </div>
+
+      <div class="cmd-explain">② lerobot 환경 활성화 (프롬프트가 (lerobot)으로 바뀜)</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">$</span> <span class="c-cmd">conda activate lerobot</span>   <span class="c-com"># 가상환경 켜기</span></code></pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content"><strong>conda 명령을 못 찾으면</strong> (command not found) 아래로 PATH 등록:</div>
+      </div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC) — 오류 시에만</span></div>
+        <pre><code><span class="c-prompt">$</span> <span class="c-cmd">~/miniconda3/bin/conda init bash</span>  <span class="c-com"># conda PATH 등록</span>
+<span class="c-prompt">$</span> <span class="c-cmd">source ~/.bashrc</span>                 <span class="c-com"># 설정 다시 읽기</span></code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 2 -->
+<section>
+  <div class="container">
+    <div class="step-block" style="--sb-color: var(--color-primary);">
+      <div class="sb-head"><div class="sb-num">2</div><div><h3>패키지 설치</h3><div class="sb-sub">3D 검사에 필요한 라이브러리</div></div></div>
+
+      <div class="cmd-explain">① 필요한 패키지를 한 번에 설치 (PyTorch 포함)</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC, lerobot 환경)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">pip install pyrealsense2 torch flask opencv-python numpy</span> <span class="c-flag">--break-system-packages</span>
+<span class="c-com"># pyrealsense2 : RealSense 카메라 제어</span>
+<span class="c-com"># torch        : PyTorch (depth 텐서 연산, GPU 가속)</span>
+<span class="c-com"># flask        : 웹서버</span>
+<span class="c-com"># opencv-python: 영상 처리·컬러맵</span>
+<span class="c-com"># numpy        : 수치 배열 처리</span></code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">이미 설치된 패키지는 "already satisfied"로 건너뜁니다. <code>--break-system-packages</code>는 conda 환경 안에서 무해합니다.</div>
+      </div>
+
+      <div class="cmd-explain">② 설치 확인 (import 테스트)</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">python3 -c "import pyrealsense2, torch, flask, cv2; print('OK')"</span></code></pre>
+      </div>
+      <div class="expect-box"><div class="eb-label">✅ 정상 출력</div><pre>OK</pre></div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">⚙️</div>
+        <div class="callout-content"><strong>GPU 자동 감지:</strong> 코드가 <code>torch.cuda.is_available()</code>로 GPU를 자동 확인합니다. NUC는 GPU가 없어 CPU로 동작하며, depth 비교는 가벼워서 CPU로 충분합니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 3 -->
+<section>
+  <div class="container">
+    <div class="step-block" style="--sb-color: var(--color-warning);">
+      <div class="sb-head"><div class="sb-num">3</div><div><h3>파일 배치</h3><div class="sb-sub">소스를 NUC 작업 폴더에 배치</div></div></div>
+
+      <div class="cmd-explain">① 작업 폴더 생성 및 이동</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">mkdir -p ~/bottle_dent</span>      <span class="c-com"># 작업 폴더 생성</span>
+<span class="c-prompt">(lerobot)$</span> <span class="c-cmd">cd ~/bottle_dent</span>           <span class="c-com"># 폴더로 이동</span>
+<span class="c-com"># 다운로드한 파일들을 이 폴더에 복사 (USB/scp 등)</span></code></pre>
+      </div>
+
+      <div class="cmd-explain">② 폴더 구조 확인 (templates 안에 index.html, golden 폴더 필수)</div>
+      <div class="file-tree">
+        <pre><span class="ft-dir">bottle_dent/</span>
+├── <span class="ft-file">app.py</span>                <span class="ft-com"># Flask 웹서버 (메인 실행)</span>
+├── <span class="ft-file">realsense_camera.py</span>   <span class="ft-com"># RealSense RGB+Depth 캡처</span>
+├── <span class="ft-file">dent_detector.py</span>      <span class="ft-com"># 찌그러짐 검출 (PyTorch depth 비교)</span>
+├── <span class="ft-file">test_camera.py</span>        <span class="ft-com"># 카메라 연결 테스트</span>
+├── <span class="ft-file">requirements.txt</span>      <span class="ft-com"># 패키지 목록</span>
+├── <span class="ft-dir">templates/</span>
+│   └── <span class="ft-file">index.html</span>        <span class="ft-com"># 웹 화면</span>
+└── <span class="ft-dir">golden/</span>               <span class="ft-com"># 양품 기준 depth 저장 폴더</span></pre>
+      </div>
+
+      <div class="cmd-explain">③ 파일 확인</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">ls -R ~/bottle_dent</span>       <span class="c-com"># 폴더 내용 확인</span></code></pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚙️</div>
+        <div class="callout-content"><strong>설정값 확인:</strong> <code>app.py</code> 상단의 설정값을 환경에 맞게 조정하세요. (다음 표 참고)</div>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>설정값</th><th>기본값</th><th>설명·조정</th></tr></thead>
+        <tbody>
+          <tr><td><code>DENT_THR_MM</code></td><td>5.0</td><td>찌그러짐 판정 깊이(mm). 30cm 거리 기준. 멀면 ↑</td></tr>
+          <tr><td><code>MIN_AREA_PX</code></td><td>80</td><td>찌그러짐 최소 면적. 작은 노이즈 무시 기준</td></tr>
+          <tr><td><code>GOLDEN_FRAMES</code></td><td>5</td><td>양품 등록 시 평균낼 장수</td></tr>
+          <tr><td><code>FLASK_PORT</code></td><td>5000</td><td>웹서버 포트</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 4 -->
+<section>
+  <div class="container">
+    <div class="step-block" style="--sb-color: var(--color-success);">
+      <div class="sb-head"><div class="sb-num">4</div><div><h3>카메라 점검</h3><div class="sb-sub">실행 전 D435i 정상 확인</div></div></div>
+
+      <div class="cmd-explain">① OS가 카메라를 인식하는지 확인</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">rs-enumerate-devices | head</span>  <span class="c-com"># 연결된 RealSense 목록</span></code></pre>
+      </div>
+      <div class="callout callout-warning">
+        <div class="callout-icon">🔌</div>
+        <div class="callout-content"><strong>장치가 안 보이면</strong> USB3 포트(파란색)에 직접 연결됐는지 확인. USB2나 허브는 대역폭 부족으로 불안정합니다.</div>
+      </div>
+
+      <div class="cmd-explain">② 테스트 스크립트로 프레임 수신 확인</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">python3 test_camera.py</span>      <span class="c-com"># 카메라 연결·프레임 테스트</span></code></pre>
+      </div>
+      <div class="expect-box">
+        <div class="eb-label">✅ 정상 출력 예시</div>
+        <pre>🔍 RealSense 연결 테스트 시작...
+✅ 카메라 연결 성공 | depth_scale = 0.001
+  프레임1: 컬러 (480, 848, 3), 중앙거리 0.312m
+  ...
+✅ 테스트 완료 — 카메라 정상! app.py를 실행하세요.</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STEP 5 -->
+<section>
+  <div class="container">
+    <div class="step-block" style="--sb-color: var(--color-secondary);">
+      <div class="sb-head"><div class="sb-num">5</div><div><h3>실행</h3><div class="sb-sub">서버 실행 후 웹 접속</div></div></div>
+
+      <div class="cmd-explain">① 웹서버 실행</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">python3 app.py</span>             <span class="c-com"># 3D 검사 서버 시작</span></code></pre>
+      </div>
+      <div class="expect-box">
+        <div class="eb-label">✅ 정상 출력 예시</div>
+        <pre>========================================================
+🍶 생수병 찌그러짐 검사 — NUC + D435i (룰 기반 depth 비교)
+========================================================
+✅ RealSense 시작 | depth_scale=0.001
+⚙️ 검출기 준비 완료 | device=cpu
+🌐 웹 접속: http://&lt;NUC_IP&gt;:5000
+========================================================</pre>
+      </div>
+
+      <div class="cmd-explain">② NUC IP 확인 (새 터미널)</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">터미널 (NUC, 새 창)</span></div>
+        <pre><code><span class="c-prompt">(lerobot)$</span> <span class="c-cmd">hostname -I</span>                <span class="c-com"># NUC IP 확인 (예: 192.168.0.65)</span></code></pre>
+      </div>
+
+      <div class="cmd-explain">③ 브라우저에서 접속</div>
+      <div class="code-card">
+        <div class="code-head"><span class="code-dot r"></span><span class="code-dot y"></span><span class="code-dot g"></span><span class="code-title">브라우저 주소창</span></div>
+        <pre><code><span class="c-path">http://192.168.0.65:5000</span>     <span class="c-com"># NUC IP + 포트</span>
+<span class="c-com"># NUC 본체에서 직접 열면 http://localhost:5000 도 가능</span></code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">🛑</div>
+        <div class="callout-content"><strong>종료:</strong> 터미널에서 <code>Ctrl + C</code>를 누르면 서버와 카메라가 함께 정리됩니다.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider container" style="max-width:900px;">
+
+<!-- 사용법 -->
+<section style="background: var(--color-teal-light);">
+  <div class="container">
+    <span class="section-tag" style="color: var(--color-teal);">Usage · 검사 사용법</span>
+    <h2 class="section-title">🖥️ 웹 화면에서 검사하는 순서</h2>
+    <p class="section-intro">화면은 ① 양품 등록 → ② 검사 대상 촬영 → ③ 비교 흐름입니다. 처음엔 두 이미지가 비어있고, 단계대로 채워집니다.</p>
+
+    <div class="flow-step" style="--fs-color: var(--color-success);">
+      <div class="fs-badge">1</div>
+      <div class="fs-body"><b>양품 5장 등록 (STEP 1)</b>
+        정상 생수병을 카메라 앞 30cm에 놓고 <code>한장 3D 촬영</code>을 5번 누르거나(진행바 5/5), <code>연속 5장 3D 촬영</code> 1번. 5장 평균이 왼쪽에 채워집니다.</div>
+    </div>
+    <div class="flow-step" style="--fs-color: var(--color-primary);">
+      <div class="fs-badge">2</div>
+      <div class="fs-body"><b>검사 대상 촬영 (STEP 2)</b>
+        검사할 병으로 바꿔 같은 위치에 놓고 <code>현재 3D 촬영</code>. 오른쪽에 검사 대상이 채워집니다.</div>
+    </div>
+    <div class="flow-step" style="--fs-color: var(--color-warning);">
+      <div class="fs-badge">3</div>
+      <div class="fs-body"><b>비교 실행 (STEP 3)</b>
+        양품·현재가 둘 다 채워지면 <code>비교 실행</code> 버튼이 활성화됩니다. 누르면 판정(PASS/BLOCK)·찌그러짐 깊이(mm)·위치·히트맵이 나옵니다.</div>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-icon">📌</div>
+      <div class="callout-content">
+        <strong>핵심:</strong> 양품 등록이 먼저입니다. 3D 검사는 "양품 대비 차이"로 판정하므로,
+        양품을 등록하지 않으면 비교가 안 됩니다. 양품·검사품의 <strong>위치·각도를 같게</strong> 해야 정확합니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 정확도 팁 -->
+<section>
+  <div class="container">
+    <span class="section-tag" style="color: var(--color-warning);">Accuracy · 정확도 팁</span>
+    <h2 class="section-title">🎯 정확한 검사를 위한 핵심 수칙</h2>
+    <table class="data-table">
+      <thead><tr><th>항목</th><th>권장</th></tr></thead>
+      <tbody>
+        <tr><td>카메라-병 거리</td><td>30~40cm (최소 28cm 이상)</td></tr>
+        <tr><td>검출 가능 찌그러짐</td><td>5mm 이상 (30cm 기준 오차 고려)</td></tr>
+        <tr><td>카메라 워밍업</td><td>전원 후 5~10분</td></tr>
+        <tr><td>카메라 고정</td><td>삼각대로 완전 고정, 등록 후 이동 금지</td></tr>
+        <tr><td>병 종류</td><td>불투명 또는 라벨 부위 (투명 페트병 주의)</td></tr>
+        <tr><td>조명</td><td>균일 실내광, 직사광선 금지</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <div class="callout-icon">💧</div>
+      <div class="callout-content">
+        <strong>투명병 주의:</strong> 적외선 depth 센서는 투명 페트병을 통과·산란시켜 측정이 군데군데 빕니다.
+        코드에 "유효 비율" 경고를 넣어 50% 미만이면 자동 알림이 뜹니다. 교육 첫 실습은 <strong>불투명 병</strong>이나 <strong>라벨 부위</strong>를 권장합니다.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 트러블슈팅 -->
+<section style="background: var(--color-surface);">
+  <div class="container">
+    <span class="section-tag" style="color: var(--color-danger);">Troubleshooting · 문제 해결</span>
+    <h2 class="section-title">🔧 자주 발생하는 문제</h2>
+
+    <div class="trouble"><div class="tr-q">Q. conda: command not found</div><p class="tr-a">PATH 미등록. <code>~/miniconda3/bin/conda init bash</code> 후 <code>source ~/.bashrc</code>.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 카메라가 rs-enumerate-devices에 안 보임</div><p class="tr-a">USB3 포트(파란색) 직결 확인. 허브·연장선 제거.</p></div>
+    <div class="trouble"><div class="tr-q">Q. RuntimeError: Frame didn't arrive / Device busy</div><p class="tr-a">realsense-viewer 등 다른 프로그램이 카메라 점유 중. 종료 후 재실행.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 라이브 화면이 "Waiting for camera..."에서 안 바뀜</div><p class="tr-a">프레임 미수신. test_camera.py로 먼저 점검, USB3 연결 확인.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 비교 버튼이 회색(비활성)</div><p class="tr-a">양품 등록 + 현재 촬영이 둘 다 완료돼야 활성화됩니다. 상단 단계 표시(STEP) 확인.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 정상 병인데 자꾸 BLOCK</div><p class="tr-a">① 양품·검사품 위치가 다름 → 같은 자리에 ② 임계값이 낮음 → <code>DENT_THR_MM</code>을 6~7로 ③ 카메라가 움직임 → 재고정 후 양품 재등록.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 측정 품질 낮음 경고가 뜸</div><p class="tr-a">투명병이거나 거리·조명 문제. 불투명 병/라벨 부위로 바꾸고 거리 30~40cm 확인.</p></div>
+    <div class="trouble"><div class="tr-q">Q. 브라우저에서 NUC IP 접속 안 됨</div><p class="tr-a">방화벽이 포트 막을 수 있음. <code>sudo ufw allow 5000</code> 또는 NUC 본체에서 localhost:5000 접속.</p></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <p><strong>생수병 3D 정밀검사 — 단계별 설치 문서</strong></p>
+    <p style="margin-top:0.5rem;">NUC + RealSense D435i · 양품 5장 등록 → 현재 촬영 → 비교 · Physical AI Education</p>
+    <p style="margin-top:0.7rem; font-size:0.76rem; opacity:0.7;">
+      환경준비 → 패키지설치 → 파일배치 → 카메라점검 → 실행
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
