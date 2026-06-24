@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAM 3 활용 사례 10가지 (실제 동작 이미지·영상 포함) - Physical AI Education</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-primary: #7C3AED; --color-primary-light: #EDE9FE;
+      --color-secondary: #2563EB; --color-secondary-light: #DBEAFE;
+      --color-success: #059669; --color-success-light: #D1FAE5;
+      --color-warning: #D97706; --color-warning-light: #FEF3C7;
+      --color-danger: #DC2626; --color-danger-light: #FEE2E2;
+      --color-teal: #0891B2;
+      --color-surface: #F8FAFC; --color-card: #FFFFFF;
+      --color-text: #1E293B; --color-muted: #64748B; --color-border: #E2E8F0;
+    }
+    body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.75; }
+    .container { max-width: 940px; margin: 0 auto; padding: 0 1.5rem; }
+    section { padding: 3rem 0; }
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    .hero { background: linear-gradient(135deg, #4C1D95, #8B5CF6); color: white; padding: 4rem 0 3.5rem; position: relative; overflow: hidden; }
+    .hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.1) 0, transparent 45%); pointer-events: none; }
+    .hero .container { position: relative; z-index: 1; }
+    .hero-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .pill { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); padding: 0.35rem 0.9rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; backdrop-filter: blur(4px); }
+    .hero h1 { font-size: 2.5rem; font-weight: 900; line-height: 1.2; margin-bottom: 1rem; }
+    .hero-subtitle { font-size: 1.1rem; opacity: 0.95; max-width: 690px; }
+    .hero-meta { margin-top: 1.5rem; font-size: 0.85rem; opacity: 0.85; display: flex; gap: 1.25rem; flex-wrap: wrap; }
+
+    .section-title { font-size: 1.85rem; font-weight: 900; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .section-lead { color: var(--color-muted); margin-bottom: 2rem; font-size: 1rem; }
+
+    /* 실제 동작 자료 — figure */
+    figure.demo { margin: 1.25rem 0; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+    figure.demo img { width: 100%; display: block; background: #0F172A; }
+    figure.demo figcaption { padding: 0.85rem 1.1rem; font-size: 0.85rem; color: var(--color-muted); border-top: 1px solid var(--color-border); }
+    figure.demo figcaption strong { color: var(--color-text); }
+    .demo-badge { display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px; margin-right: 0.4rem; vertical-align: middle; }
+    .badge-video { background: var(--color-danger-light); color: var(--color-danger); }
+    .badge-image { background: var(--color-secondary-light); color: var(--color-secondary); }
+    .badge-3d { background: var(--color-warning-light); color: var(--color-warning); }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; }
+    .stat-card { background: var(--color-card); border-radius: 14px; padding: 1.5rem 1rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid var(--color-border); }
+    .stat-number { font-size: 2.1rem; font-weight: 900; color: var(--color-primary); line-height: 1; }
+    .stat-label { font-weight: 700; font-size: 0.86rem; margin-top: 0.5rem; }
+    .stat-desc { font-size: 0.76rem; color: var(--color-muted); margin-top: 0.25rem; }
+
+    .model-spec { background: linear-gradient(135deg, #0F172A, #1E293B); color: #E2E8F0; border-radius: 14px; padding: 1.5rem; margin: 1.25rem 0; border: 1px solid #334155; }
+    .model-spec h4 { color: #A5B4FC; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .spec-row { display: flex; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #334155; font-size: 0.88rem; align-items: baseline; }
+    .spec-row:last-child { border-bottom: none; }
+    .spec-key { color: #94A3B8; min-width: 130px; flex-shrink: 0; font-weight: 500; }
+    .spec-val { color: #F1F5F9; }
+    .spec-val .mono { color: #6EE7B7; }
+
+    .case { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 18px; padding: 1.75rem; margin-bottom: 1.75rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border-top: 5px solid var(--case-color, var(--color-primary)); }
+    .case-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    .case-num { width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; background: var(--case-color, var(--color-primary)); color: white; font-weight: 900; font-size: 1.4rem; display: flex; align-items: center; justify-content: center; }
+    .case-title { font-size: 1.26rem; font-weight: 700; line-height: 1.3; }
+    .case-domain { font-size: 0.74rem; font-weight: 700; color: var(--case-color, var(--color-primary)); text-transform: uppercase; letter-spacing: 0.04em; }
+    .case-body p { margin-bottom: 0.85rem; }
+    .case-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; }
+    .case-tag { font-size: 0.72rem; background: var(--color-surface); border: 1px solid var(--color-border); padding: 0.25rem 0.7rem; border-radius: 999px; color: var(--color-muted); }
+    .case-fact { display: flex; gap: 0.6rem; align-items: center; background: color-mix(in srgb, var(--case-color) 8%, white); border-radius: 10px; padding: 0.75rem 1rem; margin-top: 0.5rem; font-size: 0.9rem; }
+    .case-fact strong { color: var(--case-color, var(--color-primary)); }
+
+    .used-models { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.85rem 0 0.25rem; align-items: center; }
+    .used-model { font-size: 0.78rem; font-weight: 600; background: var(--color-primary-light); color: var(--color-primary); padding: 0.35rem 0.7rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; border: 1px solid color-mix(in srgb, var(--color-primary) 25%, white); }
+    .used-model.blue { background: var(--color-secondary-light); color: var(--color-secondary); border-color: color-mix(in srgb, var(--color-secondary) 25%, white); }
+    .used-model.green { background: var(--color-success-light); color: var(--color-success); border-color: color-mix(in srgb, var(--color-success) 25%, white); }
+    .used-model.orange { background: var(--color-warning-light); color: var(--color-warning); border-color: color-mix(in srgb, var(--color-warning) 25%, white); }
+    .used-model.red { background: var(--color-danger-light); color: var(--color-danger); border-color: #fca5a5; }
+    .um-label { font-size: 0.72rem; color: var(--color-muted); font-weight: 700; margin-right: 0.2rem; }
+
+    .analogy-box { display: flex; gap: 1rem; padding: 1.25rem; background: var(--color-primary-light); border-radius: 12px; border-left: 4px solid var(--color-primary); margin: 1.5rem 0; }
+    .analogy-icon { font-size: 2.2rem; flex-shrink: 0; }
+    .analogy-title { font-weight: 700; font-size: 0.8rem; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+    .analogy-text { line-height: 1.7; }
+
+    .callout { display: flex; gap: 0.75rem; padding: 1rem 1.25rem; border-radius: 10px; align-items: flex-start; margin: 1.25rem 0; }
+    .callout-icon { font-size: 1.25rem; flex-shrink: 0; }
+    .callout-content { font-size: 0.92rem; line-height: 1.65; }
+    .callout-tip { background: var(--color-success-light); border-left: 3px solid var(--color-success); }
+    .callout-warning { background: var(--color-warning-light); border-left: 3px solid var(--color-warning); }
+
+    .codebox { background: #0F172A; color: #E2E8F0; border-radius: 12px; padding: 1.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.7; overflow-x: auto; margin: 1.25rem 0; }
+    .codebox .cmt { color: #94A3B8; } .codebox .kw { color: #C4B5FD; } .codebox .str { color: #6EE7B7; } .codebox .fn { color: #93C5FD; }
+
+    .table-wrap { overflow-x: auto; margin: 1.25rem 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: var(--color-card); border-radius: 12px; overflow: hidden; }
+    th, td { padding: 0.7rem 0.9rem; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+    th { background: var(--color-primary); color: white; font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    td:first-child { font-weight: 600; }
+    td .mono { font-size: 0.8rem; color: var(--color-secondary); }
+
+    .links-box { background: var(--color-surface); border: 1px dashed var(--color-border); border-radius: 10px; padding: 0.85rem 1.1rem; margin-top: 0.85rem; }
+    .links-box .lb-label { font-size: 0.72rem; font-weight: 700; color: var(--color-muted); display: block; margin-bottom: 0.3rem; }
+    .links-box .lb-url { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--color-secondary); word-break: break-all; line-height: 1.7; display: block; }
+
+    .footer { background: #1E293B; color: #CBD5E1; padding: 2.5rem 0; font-size: 0.85rem; }
+    .footer h4 { color: white; margin-bottom: 0.75rem; }
+    .footer ul { list-style: none; }
+    .footer li { margin-bottom: 0.35rem; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 1.8rem; }
+      .case-head { flex-wrap: wrap; }
+      .spec-row { flex-direction: column; gap: 0.15rem; }
+      .spec-key { min-width: auto; }
+    }
+    @media print {
+      .hero { background: white !important; color: black !important; }
+      .hero::after { display: none; }
+      .pill { color: black; border-color: #ccc; }
+      .model-spec { background: white !important; color: black !important; border: 1px solid #ccc; }
+      .model-spec h4, .spec-val { color: black !important; }
+      .spec-val .mono { color: #047857 !important; }
+      .spec-key { color: #475569 !important; }
+      .codebox { background: #f1f5f9 !important; color: #1e293b !important; }
+      .case { break-inside: avoid; }
+      figure.demo { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="container">
+      <div class="hero-tags">
+        <span class="pill">SAM 3</span>
+        <span class="pill">실제 동작 영상·이미지</span>
+        <span class="pill">848M params</span>
+        <span class="pill">Perception Encoder</span>
+        <span class="pill">DETR + SAM 2 Tracker</span>
+      </div>
+      <h1>SAM 3 활용 사례 10선<br><span style="font-size:1.4rem; font-weight:700; opacity:0.9;">— 실제로 돌아가는 영상·이미지로 보기</span></h1>
+      <p class="hero-subtitle">
+        각 사례에서 SAM 3가 <strong>실제로 분할·추적하는 장면</strong>(Meta 공식 데모 영상·이미지)을 직접 보면서,
+        어떤 AI 모델(Perception Encoder · DETR · SAM 2 Tracker · SAM 3D 등)이 동작하는지 이해합니다.
+      </p>
+      <div class="hero-meta">
+        <span>📅 2025.11.19 공개</span>
+        <span>🏢 Meta FAIR</span>
+        <span>🎬 공식 데모 GIF 포함</span>
+        <span>🤗 facebook/sam3</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SAM 3 동작 원리 (실제 다이어그램) -->
+  <section class="overview">
+    <div class="container">
+      <h2 class="section-title">🧩 먼저, SAM 3가 실제로 어떻게 도는가</h2>
+      <p class="section-lead">Meta 공식 모델 다이어그램으로 처리 흐름을 봅니다. 펭귄 영상에 "a penguin" + 예시 박스를 주는 실제 예시입니다.</p>
+
+      <figure class="demo">
+        <img src="sam3_images/sam3_model_diagram.png" alt="SAM 3 공식 모델 아키텍처 다이어그램">
+        <figcaption>
+          <span class="demo-badge badge-image">공식 다이어그램</span>
+          <strong>"a penguin"</strong> 텍스트 + 예시 박스(exemplar) → <strong>Text/Image Encoder(PE, 청록)</strong> →
+          <strong>Detector(노랑=SAM 3 신규)</strong>가 프레임의 펭귄을 탐지하고, <strong>Tracker(파랑=SAM 2)</strong>가 이전 프레임 마스크를 전파 →
+          둘을 합쳐 프레임별 펭귄 마스크 출력. 우측 Memory Bank가 영상 일관성을 유지합니다.
+          <br><span style="font-size:0.78rem;">출처: facebookresearch/sam3 (assets/model_diagram.png)</span>
+        </figcaption>
+      </figure>
+
+      <div class="model-spec">
+        <h4>🔬 SAM 3 핵심 모델 명세</h4>
+        <div class="spec-row"><span class="spec-key">총 파라미터</span><span class="spec-val"><span class="mono">848M</span> · 가중치 약 <span class="mono">3.5GB</span> (GPU 추론 전제)</span></div>
+        <div class="spec-row"><span class="spec-key">① 비전 인코더</span><span class="spec-val"><strong>Perception Encoder</strong> 기반 ViT — 약 <span class="mono">450M</span></span></div>
+        <div class="spec-row"><span class="spec-key">② 텍스트 인코더</span><span class="spec-val">Perception Encoder 텍스트부 (BPE) — 약 <span class="mono">300M</span></span></div>
+        <div class="spec-row"><span class="spec-key">③ 탐지기</span><span class="spec-val"><strong>DETR</strong> 기반 + <strong>Presence Head</strong> — 탐지+추적 약 <span class="mono">100M</span></span></div>
+        <div class="spec-row"><span class="spec-key">④ 추적기</span><span class="spec-val"><strong>SAM 2 Tracker</strong> (메모리 뱅크)</span></div>
+        <div class="spec-row"><span class="spec-key">추론 속도</span><span class="spec-val"><span class="mono">~30ms</span>/이미지 (100객체, H200) · HF <span class="mono">facebook/sam3</span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 활용 사례 10가지 -->
+  <section>
+    <div class="container">
+      <h2 class="section-title">🌍 활용 사례 10선 — 실제 동작 자료와 함께</h2>
+      <p class="section-lead">🎬 = 영상 데모 · 🖼️ = 이미지 결과 · 🧊 = 3D 복원. 일부는 라이선스상 공식 링크로 안내합니다.</p>
+
+      <!-- 1 -->
+      <div class="case" style="--case-color:#059669">
+        <div class="case-head"><div class="case-num">1</div><div><div class="case-domain">야생동물 보호 · 영상 추적</div><div class="case-title">SA-FARI — 카메라 트랩 동물 추적</div></div></div>
+        <div class="case-body">
+          <p>SAM 3 <strong>영상 추적 모델</strong>이 여러 동물을 동시에 분할·추적하는 능력을 가장 잘 보여주는 게 아래 강아지 데모입니다.
+          뛰어다니는 여러 마리를 <strong>각각 다른 색 마스크로 구분</strong>하고 프레임 내내 ID를 유지합니다.
+          SA-FARI는 이 능력을 1만+ 카메라 트랩 영상에 적용한 사례입니다.</p>
+
+          <figure class="demo">
+            <img src="sam3_images/sam3_dog.gif" alt="SAM 3가 영상에서 여러 강아지를 분할 추적하는 데모">
+            <figcaption>
+              <span class="demo-badge badge-video">🎬 공식 영상 데모</span>
+              <strong>달리는 강아지 여러 마리</strong>를 SAM 3가 실시간 분할·추적. 각 개체가 다른 색 마스크로 구분되며 가려져도 ID 유지.
+              SA-FARI의 "동물별 추적"이 바로 이 원리입니다.
+              <br><span style="font-size:0.78rem;">출처: facebookresearch/sam3 (assets/dog.gif)</span>
+            </figcaption>
+          </figure>
+
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model green">SAM 3 (Video)</span><span class="used-model green">DETR Detector</span><span class="used-model green">SAM 2 Tracker</span></div>
+          <div class="case-fact">🔢 <span><strong>10,000+</strong> 영상 · <strong>100+</strong> 종 · 프레임별 마스크 + 추적 ID</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 SA-FARI 동물 영상 보기 (프레임별 마스크 스크럽)</span>
+            <span class="lb-url">jianingnz.github.io/sa-fari-explorer</span>
+            <span class="lb-url">conservationxlabs.com/sa-fari · 🤗 huggingface.co/datasets/facebook/SA-FARI</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#영상추적</span><span class="case-tag">#다중객체</span><span class="case-tag">#생태학</span></div>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="case" style="--case-color:#0891B2">
+        <div class="case-head"><div class="case-num">2</div><div><div class="case-domain">해양 탐사 · 인스턴스 분할</div><div class="case-title">FathomNet — 수중 생물 분할</div></div></div>
+        <div class="case-body">
+          <p>FathomNet(MBARI)은 <strong>SAM 3 이미지 분할 모델</strong>로 수중 생물 마스크를 생성합니다.
+          아래 SA-Co 데이터셋 예시처럼, SAM 3는 <strong>다양한 텍스트 개념</strong>(고양이, 자동차, 과일, 전자기기 등)을 픽셀 단위로 분할합니다.
+          같은 방식이 탁한 물속 심해 생물에도 적용됩니다.</p>
+
+          <figure class="demo">
+            <img src="sam3_images/sam3_dataset.jpg" alt="SAM 3 SA-Co 데이터셋 다양한 개념 분할 예시">
+            <figcaption>
+              <span class="demo-badge badge-image">🖼️ 실제 분할 결과</span>
+              SAM 3가 분할한 <strong>다양한 개념</strong> — 시장 과일·박스, "white Persian cat", "1973 Plymouth Barracuda", "MacBook/iPhone" 등.
+              번호가 각 인스턴스 ID입니다. 수중 생물도 같은 방식으로 분할됩니다.
+              <br><span style="font-size:0.78rem;">출처: facebookresearch/sam3 (assets/sa_co_dataset.jpg)</span>
+            </figcaption>
+          </figure>
+
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model">SAM 3 (Image)</span><span class="used-model">Perception Encoder</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 수중 분할 결과 보기</span>
+            <span class="lb-url">database.fathomnet.org/fathomnet · fathomnet.org</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#수중영상</span><span class="case-tag">#인스턴스분할</span><span class="case-tag">#해양생물학</span></div>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="case" style="--case-color:#DC2626">
+        <div class="case-head"><div class="case-num">3</div><div><div class="case-domain">콘텐츠 제작 · 영상 효과</div><div class="case-title">Instagram Edits — 특정 객체에 효과</div></div></div>
+        <div class="case-body">
+          <p>Edits 앱은 SAM 3 추적으로 <strong>"특정 인물·사물만 골라" 효과</strong>를 입힙니다.
+          아래 축구 영상 데모처럼, "흰 유니폼 선수"만 분할·추적할 수 있어서 그 선수에게만 스포트라이트·아웃라인을 줄 수 있습니다.</p>
+
+          <figure class="demo">
+            <img src="sam3_images/sam3_player.gif" alt="SAM 3가 축구 영상에서 흰 유니폼 선수를 추적하는 데모">
+            <figcaption>
+              <span class="demo-badge badge-video">🎬 공식 영상 데모</span>
+              축구 영상에서 <strong>"player in white"(흰 유니폼 선수)</strong>만 골라 분할·추적.
+              움직임이 빨라도 마스크가 따라붙습니다. Edits의 "특정 객체 효과"가 이 원리입니다.
+              <br><span style="font-size:0.78rem;">출처: facebookresearch/sam3 (assets/player.gif)</span>
+            </figcaption>
+          </figure>
+
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model red">SAM 3 (Video Tracker)</span><span class="used-model red">← SAM 2.1 (이전 Cutouts)</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 Edits 효과 영상 보기</span>
+            <span class="lb-url">about.fb.com/news/2025/04/introducing-edits-streamlined-video-creation-app</span>
+            <span class="lb-url">aidemos.meta.com/segment-anything/gallery (스포트라이트·모션트레일 템플릿)</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#영상편집</span><span class="case-tag">#객체추적</span><span class="case-tag">#크리에이터</span></div>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="case" style="--case-color:#D97706">
+        <div class="case-head"><div class="case-num">4</div><div><div class="case-domain">전자상거래 · AR · 3D</div><div class="case-title">Marketplace "View in Room" (SAM 3D)</div></div></div>
+        <div class="case-body">
+          <p>SAM 3가 사진에서 물체를 분할하면, <strong>SAM 3D</strong>가 3D로 복원합니다.
+          아래는 SAM 3D <strong>Body</strong>(인체 복원) 모델 구조로, 단일 사진에서 사람의 3D 자세·체형을 복원하는 실제 모델입니다.
+          가구는 SAM 3D <strong>Objects</strong>가 같은 방식으로 3D 메시를 만듭니다.</p>
+
+          <figure class="demo">
+            <img src="sam3_images/sam3d_body_diagram.png" alt="SAM 3D Body 모델 다이어그램">
+            <figcaption>
+              <span class="demo-badge badge-3d">🧊 SAM 3D 모델 구조</span>
+              <strong>SAM 3D Body (3DB)</strong> — 단일 이미지 → encoder-decoder → 3D 인체 메시(MHR 포맷).
+              가구용 <strong>SAM 3D Objects</strong>도 동일 원리로 "View in Room"을 구동합니다.
+              <br><span style="font-size:0.78rem;">출처: facebookresearch/sam-3d-body (assets/model_diagram.png)</span>
+            </figcaption>
+          </figure>
+
+          <div class="model-spec">
+            <h4>🧊 SAM 3D 모델 명세</h4>
+            <div class="spec-row"><span class="spec-key">SAM 3D Objects</span><span class="spec-val">단일 이미지 → 3D 객체/장면 (형태+텍스처+배치)</span></div>
+            <div class="spec-row"><span class="spec-key">SAM 3D Body (3DB)</span><span class="spec-val">단일 이미지 → 인체 자세·체형, <span class="mono">MHR</span> 포맷</span></div>
+            <div class="spec-row"><span class="spec-key">GitHub</span><span class="spec-val"><span class="mono">facebookresearch/sam-3d-body · sam-3d-objects</span></span></div>
+          </div>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model orange">SAM 3</span><span class="used-model orange">SAM 3D Objects</span><span class="used-model orange">SAM 3D Body</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 사진→3D 변환 직접 해보기</span>
+            <span class="lb-url">aidemos.meta.com/segment-anything (3D 변환 데모) · ai.meta.com/blog/sam-3d</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#3D복원</span><span class="case-tag">#AR</span><span class="case-tag">#SAM3D</span></div>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="case" style="--case-color:#7C3AED">
+        <div class="case-head"><div class="case-num">5</div><div><div class="case-domain">데이터 라벨링 · MLOps</div><div class="case-title">Roboflow Auto-Label — 텍스트로 라벨링</div></div></div>
+        <div class="case-body">
+          <p>가장 강력한 실무 활용. <code>"solar panel"</code> 텍스트 하나로 항공 사진의 패널을 전부 분할합니다.
+          이렇게 만든 라벨로 경량 <strong>YOLO/RF-DETR</strong>을 학습시켜 GPU 없는 현장에 배포합니다.
+          (실제 결과 이미지는 Roboflow 블로그 링크 참고 — 보라=정상 패널, 빨강=눈 덮인 패널처럼 표시됩니다.)</p>
+
+          <div class="analogy-box">
+            <div class="analogy-icon">👨‍🏫</div>
+            <div class="analogy-content">
+              <div class="analogy-title">선생님 → 학생 (지식 증류)</div>
+              <p class="analogy-text"><strong>SAM 3</strong>(무겁지만 똑똑한 선생님)가 라벨을 만들고, <strong>YOLO</strong>(가볍고 빠른 학생)가 현장에서 실시간 추론. NUC에서도 돌아갑니다.</p>
+            </div>
+          </div>
+
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model">SAM 3 (라벨러)</span><span class="used-model blue">YOLOv8/11-seg</span><span class="used-model blue">RF-DETR</span></div>
+          <div class="codebox"><span class="cmt"># SAM 3로 세그멘테이션 데이터 자동 라벨링 — PyTorch / transformers</span>
+<span class="kw">from</span> transformers <span class="kw">import</span> Sam3Model, Sam3Processor  <span class="cmt"># SAM 3 모델·프로세서</span>
+<span class="kw">import</span> torch  <span class="cmt"># 추론용</span>
+
+model = Sam3Model.<span class="fn">from_pretrained</span>(<span class="str">"facebook/sam3"</span>).to(<span class="str">"cuda"</span>).<span class="fn">eval</span>()  <span class="cmt"># 모델 로드(3.5GB)</span>
+processor = Sam3Processor.<span class="fn">from_pretrained</span>(<span class="str">"facebook/sam3"</span>)  <span class="cmt"># 전처리기</span>
+
+inputs = processor(images=image, text=<span class="str">"solar panel"</span>, return_tensors=<span class="str">"pt"</span>).to(<span class="str">"cuda"</span>)  <span class="cmt"># 이미지+텍스트</span>
+<span class="kw">with</span> torch.no_grad():  <span class="cmt"># 추론 모드</span>
+    outputs = model(**inputs)  <span class="cmt"># SAM 3 추론</span>
+results = processor.<span class="fn">post_process_instance_segmentation</span>(outputs, threshold=<span class="str">0.5</span>)[<span class="str">0</span>]  <span class="cmt"># 마스크 후처리</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 "solar panel"·"vehicle"·"box" 분할 결과 이미지</span>
+            <span class="lb-url">blog.roboflow.com/what-is-sam3 (solar/vehicle/warehouse box 예시)</span>
+            <span class="lb-url">blog.roboflow.com/detect-solar-panel-failure (눈 덮인 패널 탐지)</span>
+            <span class="lb-url">playground.roboflow.com (직접 이미지 올려보기)</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#오토라벨링</span><span class="case-tag">#Roboflow</span><span class="case-tag">#지식증류</span></div>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="case" style="--case-color:#2563EB">
+        <div class="case-head"><div class="case-num">6</div><div><div class="case-domain">클라우드 · 엔터프라이즈</div><div class="case-title">Azure AI Foundry — 인원/익명화</div></div></div>
+        <div class="case-body">
+          <p>Microsoft가 <strong>facebook-sam3</strong>를 Azure AI Foundry에 추가했습니다.
+          "person"·"backpack" 같은 프롬프트로 거리 인원을 분할하거나, 얼굴·번호판을 자동 픽셀화합니다.
+          (people-walking 이미지 분할 결과는 Roboflow Docs 예시 참고.)</p>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model blue">facebook/sam3 (Azure 호스팅)</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 인원 분할 / 익명화 결과</span>
+            <span class="lb-url">docs.roboflow.com/deploy/supported-models/sam3 (people-walking)</span>
+            <span class="lb-url">aidemos.meta.com/segment-anything (얼굴·번호판 픽셀화 템플릿)</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#Azure</span><span class="case-tag">#클라우드</span><span class="case-tag">#익명화</span></div>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="case" style="--case-color:#059669">
+        <div class="case-head"><div class="case-num">7</div><div><div class="case-domain">로보틱스 · 피지컬 AI</div><div class="case-title">자연어 물체 인식 → 매니퓰레이션</div></div></div>
+        <div class="case-body">
+          <p>로봇은 SAM 3의 오픈 보캐뷸러리로 <code>"파란 컵을 집어"</code>처럼 말로 물체를 지정합니다.
+          특히 Meta는 <strong>Aria Gen 2 스마트글래스</strong>의 1인칭 영상에서 <code>"hands"</code>로 손을 분할·추적하는 실제 데모를 공개했는데,
+          이는 <strong>로봇 시점(egocentric) 인식</strong>에 직결됩니다. <strong>Llama MLLM</strong>과 결합한 <strong>SAM 3 Agent</strong>는
+          "사람이 손 뻗는 물체 찾아" 같은 복합 추론도 처리합니다.</p>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model green">SAM 3</span><span class="used-model green">SAM 3D Objects</span><span class="used-model green">Llama (SAM 3 Agent)</span></div>
+          <div class="analogy-box">
+            <div class="analogy-icon">🦾</div>
+            <div class="analogy-content">
+              <div class="analogy-title">LeKiwi / SO-ARM 맥락</div>
+              <p class="analogy-text">기존 <strong>YOLO26</strong>은 학습한 클래스만 인식했지만, SAM 3는 학습에 없던 물체도 말로 지정 가능. 인식 단계가 유연해집니다.</p>
+            </div>
+          </div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 1인칭 "hands" 분할 영상 (로봇 시점)</span>
+            <span class="lb-url">ai.meta.com/blog/segment-anything-model-3 ("hands" Aria Gen 2 영상)</span>
+            <span class="lb-url">projectaria.com/datasets/gen2pilot</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#오픈보캐뷸러리</span><span class="case-tag">#1인칭시점</span><span class="case-tag">#SAM3Agent</span></div>
+        </div>
+      </div>
+
+      <!-- 8 -->
+      <div class="case" style="--case-color:#D97706">
+        <div class="case-head"><div class="case-num">8</div><div><div class="case-domain">자율주행</div><div class="case-title">희귀 객체 인식 — "vehicle" 분할</div></div></div>
+        <div class="case-body">
+          <p>자율주행은 고정 라벨에 없는 물체가 위험합니다. SAM 3는 <code>"vehicle"</code> 하나로
+          거리의 차·오토바이를 전부 분할합니다(아래 위 1번 데이터셋 이미지에서도 자동차가 분할됨).
+          실제 차량엔 SAM 3로 라벨을 만들고 <strong>경량 모델을 증류</strong>해 올립니다.</p>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model orange">SAM 3 (라벨/검증)</span><span class="used-model blue">경량 탐지기 (차량 탑재)</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 "vehicle" 거리 분할 결과</span>
+            <span class="lb-url">blog.roboflow.com/what-is-sam3 (vehicle 거리 예시)</span>
+            <span class="lb-url">roboflow.com/model/segment-anything-3</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#자율주행</span><span class="case-tag">#희귀객체</span><span class="case-tag">#엣지배포</span></div>
+        </div>
+      </div>
+
+      <!-- 9 -->
+      <div class="case" style="--case-color:#DC2626">
+        <div class="case-head"><div class="case-num">9</div><div><div class="case-domain">의료 영상</div><div class="case-title">병변 분할 (파인튜닝 필수)</div></div></div>
+        <div class="case-body">
+          <p>SAM 3는 "platelet(혈소판)" 같은 <strong>세밀한 의료 개념</strong>은 기본 상태로 약합니다.
+          Meta도 이를 명시하며, <strong>소량 데이터로 파인튜닝</strong>하면 빠르게 적응한다고 밝혔습니다.
+          (Roboflow 파인튜닝 가이드의 "cardboard/trash" 예시로 파인튜닝 후 분할 흐름을 볼 수 있습니다.)</p>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model red">SAM 3 (파인튜닝)</span><span class="used-model red">MedSAM 계열</span></div>
+          <div class="callout callout-warning"><div class="callout-icon">⚠️</div><div class="callout-content"><strong>한계 인지:</strong> 의료·과학 전문 개념은 zero-shot으로 약함. <strong>반드시 도메인 파인튜닝 + 전문가 검수</strong> 전제.</div></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 실제 파인튜닝 후 분할 결과</span>
+            <span class="lb-url">blog.roboflow.com/fine-tune-sam3 (파인튜닝 결과 이미지)</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#의료영상</span><span class="case-tag">#파인튜닝</span><span class="case-tag">#MedSAM</span></div>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="case" style="--case-color:#0891B2">
+        <div class="case-head"><div class="case-num">10</div><div><div class="case-domain">VFX · GIS · 노코드</div><div class="case-title">Playground — 누구나 직접 시연</div></div></div>
+        <div class="case-body">
+          <p>Meta 공식 <strong>Segment Anything Playground</strong>에 스포트라이트·모션트레일·매그니파이 등
+          <strong>바로 재생되는 예시 영상</strong>이 모여 있습니다. 학생이 직접 사진/영상을 올려 텍스트로 분할하는
+          장면을 보여주기 가장 좋은 곳입니다. VFX(로토), GIS(위성 피처 추출)에도 같은 마스크가 쓰입니다.</p>
+          <div class="used-models"><span class="um-label">🤖 사용 모델</span><span class="used-model">SAM 3</span><span class="used-model blue">Stable Diffusion / ControlNet</span><span class="used-model green">Sam3Tracker (PVS)</span></div>
+          <div class="links-box">
+            <span class="lb-label">🔗 ⭐ 가장 추천하는 실시간 시연 (코딩 불필요)</span>
+            <span class="lb-url">aidemos.meta.com/segment-anything/gallery ⭐</span>
+            <span class="lb-url">playground.roboflow.com (이미지 드래그&드롭)</span>
+          </div>
+          <div class="case-tags"><span class="case-tag">#Playground</span><span class="case-tag">#노코드</span><span class="case-tag">#VFX</span><span class="case-tag">#GIS</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 정리표 -->
+  <section style="background:var(--color-card); border-top:1px solid var(--color-border);">
+    <div class="container">
+      <h2 class="section-title">📋 사례 × 모델 × 실제 자료 정리</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>사례</th><th>핵심 모델</th><th>실제 동작 자료</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>SA-FARI 야생동물</td><td><span class="mono">SAM 3 Video</span></td><td>🎬 강아지 추적 GIF (본문)</td></tr>
+            <tr><td>2</td><td>FathomNet 수중</td><td><span class="mono">SAM 3 Image</span></td><td>🖼️ SA-Co 분할 이미지 (본문)</td></tr>
+            <tr><td>3</td><td>Instagram Edits</td><td><span class="mono">SAM 3 Tracker</span></td><td>🎬 축구 선수 추적 GIF (본문)</td></tr>
+            <tr><td>4</td><td>View in Room</td><td><span class="mono">SAM 3 + SAM 3D</span></td><td>🧊 SAM 3D Body 구조 (본문)</td></tr>
+            <tr><td>5</td><td>Roboflow 라벨링</td><td><span class="mono">SAM 3 → YOLO</span></td><td>🔗 solar/vehicle 결과 링크</td></tr>
+            <tr><td>6</td><td>Azure Foundry</td><td><span class="mono">facebook/sam3</span></td><td>🔗 people-walking 링크</td></tr>
+            <tr><td>7</td><td>로보틱스</td><td><span class="mono">SAM 3 + Llama</span></td><td>🔗 Aria "hands" 영상 링크</td></tr>
+            <tr><td>8</td><td>자율주행</td><td><span class="mono">SAM 3 → 경량</span></td><td>🔗 vehicle 거리 링크</td></tr>
+            <tr><td>9</td><td>의료</td><td><span class="mono">SAM 3 파인튜닝</span></td><td>🔗 파인튜닝 결과 링크</td></tr>
+            <tr><td>10</td><td>Playground</td><td><span class="mono">SAM 3 + SD</span></td><td>🔗 공식 갤러리 ⭐</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-icon">🖐️</div>
+        <div class="callout-content">
+          <strong>수업 진행 팁:</strong> 본문에 임베드된 <strong>GIF 4종</strong>(강아지·축구선수·모델구조·데이터셋·SAM3D)은 파일로 함께 제공되어
+          인터넷 없이도 재생됩니다. 추가 영상이 필요하면 <span class="mono">aidemos.meta.com/segment-anything/gallery</span>를
+          교실 화면에 띄워 학생이 직접 사진을 올려 시연하게 하세요.
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <strong>저작권:</strong> 임베드된 영상·이미지는 Meta(facebookresearch/sam3·sam-3d-body)의 공식 자료로
+          <span class="mono">SAM License</span>를 따릅니다. 교육 목적 사용 시 출처(Meta/SAM 3)를 표기하고,
+          상업적 재배포 전에는 라이선스를 확인하세요. SA-FARI는 <span class="mono">CC-BY-NC 4.0</span>입니다.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <h4>📚 임베드 자료 출처 & 더 보기</h4>
+      <ul>
+        <li>• 🎬 강아지·축구선수 영상, 모델 다이어그램, SA-Co 이미지 — github.com/facebookresearch/sam3 (assets/)</li>
+        <li>• 🧊 SAM 3D Body 구조 — github.com/facebookresearch/sam-3d-body (assets/)</li>
+        <li>• Meta 공식 블로그 — ai.meta.com/blog/segment-anything-model-3 (Aria "hands" 영상 포함)</li>
+        <li>• SA-FARI Explorer — jianingnz.github.io/sa-fari-explorer (동물 영상 프레임별 마스크)</li>
+        <li>• Roboflow — blog.roboflow.com/what-is-sam3 (solar/vehicle/box 결과 이미지)</li>
+        <li>• 공식 Playground — aidemos.meta.com/segment-anything/gallery ⭐</li>
+        <li>• 논문 — arXiv 2511.16719 · 모델 — 🤗 facebook/sam3</li>
+      </ul>
+      <p style="margin-top:1.25rem; color:#94A3B8; font-size:0.8rem;">
+        제타위성로보틱스 피지컬 AI 교육자료 · SAM 3 활용 사례 10선 (실제 동작 영상·이미지 포함) · 2025.11 공개 기준
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
