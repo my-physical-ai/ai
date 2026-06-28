@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<!-- 실습 가이드 cup inventory 통합 — 누크 카메라 설정부터 컵 재고조사 5단계까지 한 번에 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실습 가이드 cup inventory 통합편</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --color-primary:#2563EB; --color-primary-light:#DBEAFE;
+  --color-secondary:#7C3AED; --color-secondary-light:#EDE9FE;
+  --color-success:#059669; --color-success-light:#D1FAE5;
+  --color-warning:#D97706; --color-warning-light:#FEF3C7;
+  --color-danger:#DC2626; --color-danger-light:#FEE2E2;
+  --color-surface:#F8FAFC; --color-card:#FFFFFF;
+  --color-text:#1E293B; --color-muted:#64748B; --color-border:#E2E8F0;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:'Noto Sans KR',sans-serif; color:var(--color-text);
+  background:var(--color-surface); line-height:1.75; }
+code,pre { font-family:'JetBrains Mono',monospace; }
+.container { max-width:900px; margin:0 auto; padding:0 1.5rem; }
+section { padding:3rem 0; }
+.section-title { font-size:1.85rem; font-weight:700; margin-bottom:0.5rem; }
+.section-lead { color:var(--color-muted); margin-bottom:2rem; }
+
+/* 히어로 */
+.hero { background:linear-gradient(135deg, #064E3B, #4C1D95); color:white; padding:3.5rem 0 3rem; }
+.hero h1 { font-size:2.6rem; font-weight:900; line-height:1.2; }
+.hero-subtitle { font-size:1.1rem; margin-top:0.85rem; opacity:0.95; }
+.hero-tags { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+.pill { background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35);
+  padding:0.3rem 0.85rem; border-radius:999px; font-size:0.8rem; font-weight:500; }
+
+/* 목차 네비 */
+.toc { background:var(--color-card); border:1px solid var(--color-border); border-radius:16px;
+  padding:1.5rem; margin-top:-1.5rem; position:relative; z-index:2; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+.toc-title { font-weight:700; font-size:0.9rem; color:var(--color-muted); margin-bottom:1rem;
+  text-transform:uppercase; letter-spacing:0.05em; }
+.toc-parts { display:flex; gap:1rem; flex-wrap:wrap; }
+.toc-part { flex:1; min-width:260px; border-radius:12px; padding:1.1rem 1.25rem; text-decoration:none;
+  color:var(--color-text); transition:transform 0.15s, box-shadow 0.15s; display:block; }
+.toc-part:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.1); }
+.toc-part.p1 { background:var(--color-success-light); border:2px solid var(--color-success); }
+.toc-part.p2 { background:var(--color-secondary-light); border:2px solid var(--color-secondary); }
+.toc-part .pn { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.toc-part.p1 .pn { color:var(--color-success); } .toc-part.p2 .pn { color:var(--color-secondary); }
+.toc-part .pt { font-size:1.15rem; font-weight:700; margin:0.25rem 0; }
+.toc-part .pd { font-size:0.82rem; color:var(--color-muted); }
+
+/* 파트 구분 배너 */
+.part-banner { padding:2.5rem 0 1rem; }
+.part-banner .part-label { display:inline-block; padding:0.35rem 1rem; border-radius:999px;
+  font-size:0.85rem; font-weight:700; color:white; margin-bottom:0.75rem; }
+.part-banner.p1 .part-label { background:var(--color-success); }
+.part-banner.p2 .part-label { background:var(--color-secondary); }
+.part-banner h2 { font-size:2.1rem; font-weight:900; }
+.part-banner p { color:var(--color-muted); margin-top:0.5rem; font-size:1.02rem; }
+
+.flow-diagram { display:flex; align-items:center; justify-content:center; gap:0.5rem;
+  padding:2rem; background:var(--color-card); border:1px solid var(--color-border);
+  border-radius:16px; overflow-x:auto; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.flow-node { background:var(--color-card); border:2px solid var(--node-color,var(--color-primary));
+  border-radius:12px; padding:1.1rem; text-align:center; min-width:108px; transition:transform 0.2s,box-shadow 0.2s; }
+.flow-node:hover { transform:translateY(-4px); box-shadow:0 8px 25px rgba(0,0,0,0.12); }
+.flow-node-icon { font-size:1.8rem; margin-bottom:0.4rem; }
+.flow-node-title { font-weight:700; font-size:0.85rem; }
+.flow-node-desc { font-size:0.72rem; color:var(--color-muted); margin-top:0.2rem; }
+.flow-arrow { flex-shrink:0; }
+
+.cmd-card { background:var(--color-card); border:1px solid var(--color-border);
+  border-radius:16px; overflow:hidden; margin-bottom:2rem; box-shadow:0 4px 6px -1px rgba(0,0,0,0.08); }
+.cmd-head { display:flex; align-items:center; gap:0.85rem; padding:1.1rem 1.5rem; color:white;
+  background:var(--accent,var(--color-primary)); }
+.cmd-badge { flex-shrink:0; width:2.1rem; height:2.1rem; border-radius:50%;
+  background:rgba(255,255,255,0.25); border:2px solid rgba(255,255,255,0.6);
+  display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.05rem; }
+.cmd-emoji { font-size:1.7rem; }
+.cmd-name { font-weight:700; font-size:1.15rem; }
+.cmd-name small { display:block; font-weight:400; font-size:0.8rem; opacity:0.85; margin-top:0.1rem; }
+.cmd-terminal { background:#0F172A; color:#E2E8F0; padding:1.1rem 1.5rem; font-size:0.95rem;
+  display:flex; align-items:center; gap:0.6rem; overflow-x:auto; font-family:'JetBrains Mono',monospace; }
+.cmd-terminal .prompt { color:#4ADE80; user-select:none; }
+.cmd-terminal code { white-space:nowrap; flex:1; }
+.copy-btn { flex-shrink:0; margin-left:auto; background:rgba(255,255,255,0.12);
+  border:1px solid rgba(255,255,255,0.25); color:#E2E8F0; border-radius:8px;
+  padding:0.35rem 0.75rem; font-size:0.8rem; font-family:'Noto Sans KR',sans-serif;
+  font-weight:500; cursor:pointer; display:inline-flex; align-items:center; gap:0.35rem; transition:background 0.15s; }
+.copy-btn:hover { background:rgba(255,255,255,0.22); }
+.copy-btn.copied { background:var(--color-success); border-color:var(--color-success); color:white; }
+.cmd-body { padding:1.5rem; }
+.cmd-result-label { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.78rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.05em; color:var(--accent,var(--color-primary)); margin-bottom:0.6rem; }
+.big-easy { font-size:1.05rem; font-weight:500; }
+.mini-steps { display:flex; flex-direction:column; gap:0.6rem; margin-top:1rem; }
+.mini-step { display:flex; gap:0.75rem; align-items:flex-start; background:var(--color-surface);
+  border-radius:10px; padding:0.75rem 1rem; }
+.mini-step-num { flex-shrink:0; width:1.6rem; height:1.6rem; border-radius:50%;
+  background:var(--accent,var(--color-primary)); color:white; display:flex; align-items:center;
+  justify-content:center; font-size:0.85rem; font-weight:700; }
+.mini-step-text { font-size:0.92rem; }
+
+.analogy-box { display:flex; gap:1.1rem; padding:1.25rem; background:var(--color-secondary-light);
+  border-radius:12px; border-left:4px solid var(--color-secondary); margin-top:1rem; }
+.analogy-icon { font-size:2rem; flex-shrink:0; }
+.analogy-title { font-weight:700; font-size:0.8rem; color:var(--color-secondary);
+  text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.35rem; }
+.analogy-text { line-height:1.65; font-size:0.95rem; }
+.callout { display:flex; gap:0.75rem; padding:1rem 1.25rem; border-radius:10px; align-items:flex-start; margin-top:1.5rem; }
+.callout-icon { font-size:1.25rem; flex-shrink:0; }
+.callout-content { font-size:0.95rem; line-height:1.6; }
+.callout-tip { background:var(--color-success-light); border-left:3px solid var(--color-success); }
+.callout-warning { background:var(--color-warning-light); border-left:3px solid var(--color-warning); }
+.callout-danger { background:var(--color-danger-light); border-left:3px solid var(--color-danger); }
+
+.cmp-table { width:100%; border-collapse:collapse; margin-top:1rem; background:var(--color-card);
+  border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.05); font-size:0.9rem; }
+.cmp-table th,.cmp-table td { padding:0.85rem 1rem; text-align:left; border-bottom:1px solid var(--color-border); }
+.cmp-table th { background:var(--color-secondary-light); color:var(--color-secondary); font-weight:700; font-size:0.82rem; }
+.cmp-table tr:last-child td { border-bottom:none; }
+.cmp-table .good { color:var(--color-success); font-weight:700; }
+.cmp-table .bad { color:var(--color-danger); font-weight:700; }
+
+.divider { height:3px; background:linear-gradient(90deg, var(--color-success), var(--color-secondary)); border:none; margin:1rem 0; border-radius:2px; }
+
+@media (max-width:768px) { .hero h1 { font-size:2rem; } .flow-diagram { flex-direction:column; } .flow-arrow svg { transform:rotate(90deg); } .part-banner h2 { font-size:1.6rem; } }
+@media print { .hero { background:white !important; color:black !important; }
+  .cmd-head { color:black !important; -webkit-print-color-adjust:exact; }
+  .flow-node:hover { transform:none; } .copy-btn { display:none; } }
+</style>
+</head>
+<body>
+
+<!-- 히어로 -->
+<div class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="pill">NUC</span><span class="pill">웹카메라</span><span class="pill">YOLO</span>
+      <span class="pill">GDINO</span><span class="pill">SAM3</span><span class="pill">CountGD</span><span class="pill">VLM</span>
+    </div>
+    <h1>실습 가이드 cup inventory 통합편</h1>
+    <p class="hero-subtitle">카메라를 누크에 연결하는 것부터, 포개진 컵을 AI 5단계로 세는 것까지 — 처음부터 끝까지 한 번에 따라 하는 통합 실습입니다.</p>
+  </div>
+</div>
+
+<!-- 목차 -->
+<div class="container">
+  <div class="toc">
+    <div class="toc-title">📚 이 실습은 2부로 이어집니다</div>
+    <div class="toc-parts">
+      <a href="#part1" class="toc-part p1">
+        <div class="pn">PART 1 · 준비</div>
+        <div class="pt">📷 누크 카메라 설정</div>
+        <div class="pd">카메라를 인식시키고 웹으로 영상이 나오게 만들기 (6단계)</div>
+      </a>
+      <a href="#part2" class="toc-part p2">
+        <div class="pn">PART 2 · 본 시스템</div>
+        <div class="pt">📦 컵 재고조사 5단계</div>
+        <div class="pd">YOLO→GDINO→SAM3→카운팅→저장으로 컵 세기</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 전체 로드맵 -->
+<section>
+  <div class="container">
+    <h2 class="section-title">🗺️ 전체 로드맵</h2>
+    <p class="section-lead">왼쪽 초록(카메라 준비)이 끝나야 오른쪽 보라(AI 카운팅)를 할 수 있어요. 카메라가 안 나오면 AI도 볼 게 없으니까요.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">📷</div><div class="flow-node-title">카메라 설정</div><div class="flow-node-desc">PART 1</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">📦</div><div class="flow-node-title">AI 카운팅</div><div class="flow-node-desc">PART 2</div></div>
+    </div>
+    <div class="analogy-box">
+      <div class="analogy-icon">🍳</div>
+      <div class="analogy-content">
+        <div class="analogy-title">쉽게 말하면</div>
+        <p class="analogy-text">요리에 비유하면, PART 1은 "재료 손질과 불 켜기"이고 PART 2는 "실제 요리"예요. 불이 안 켜지면 요리를 시작할 수 없죠. 카메라가 준비돼야 AI가 컵을 볼 수 있습니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 1 ============ -->
+<div class="container"><hr class="divider" id="part1"></div>
+<div class="part-banner p1">
+  <div class="container">
+    <span class="part-label">PART 1 · 준비</span>
+    <h2>📷 누크 카메라 설정</h2>
+    <p>재고조사 AI 시스템의 첫 단추 — 카메라를 인식시키고, 해상도를 맞추고, 웹으로 보이게 합니다.</p>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">한눈에 보기 (PART 1)</h2>
+    <p class="section-lead">카메라는 그냥 꽂는다고 바로 쓰이지 않아요. 다섯 단계를 거칩니다.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">🔌</div><div class="flow-node-title">1. 장치확인</div><div class="flow-node-desc">/dev/video</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">🔑</div><div class="flow-node-title">2. 권한</div><div class="flow-node-desc">video 그룹</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">🔍</div><div class="flow-node-title">3. 검색·테스트</div><div class="flow-node-desc">camera_check</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">📐</div><div class="flow-node-title">4. 해상도</div><div class="flow-node-desc">1280x720</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">📷</div><div class="flow-node-title">5. 미리보기</div><div class="flow-node-desc">웹 확인</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title">🔧 단계별 따라하기 (PART 1)</h2>
+    <p class="section-lead">누크 터미널에서 순서대로 입력하세요.</p>
+
+    <div class="cmd-card" style="--accent:#64748B;">
+      <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">🔌</span>
+        <div class="cmd-name">카메라 장치 확인<small>USB 카메라가 누크에 잡혔는지 보기</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>ls /dev/video*</code>
+        <button class="copy-btn" data-cmd="ls /dev/video*">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy"><code>/dev/video0</code> 같은 글자가 보이면 <strong>카메라가 인식된 거예요.</strong></p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">누크는 카메라를 <code>/dev/video0</code> 같은 번호로 불러요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">아무것도 안 나오면 USB가 안 꽂혔거나 인식 실패예요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>주의:</strong> 카메라 1대인데 video0과 video1이 같이 보일 수 있어요. 보통 짝수(0)가 진짜 영상이에요. 3단계에서 자동으로 찾아줍니다.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#2563EB;">
+      <div class="cmd-head"><span class="cmd-badge">2</span><span class="cmd-emoji">🔑</span>
+        <div class="cmd-name">카메라 권한 주기<small>내 계정이 카메라를 쓸 수 있게</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>sudo usermod -aG video $USER</code>
+        <button class="copy-btn" data-cmd="sudo usermod -aG video $USER">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">내 계정을 <strong>카메라를 쓸 수 있는 그룹(video)</strong>에 넣어줘요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">권한이 없으면 "Permission denied"가 나요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">이 명령 후 <strong>로그아웃했다 다시 로그인</strong>해야 적용돼요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> 대부분 우분투는 이미 권한이 있어요. 3단계에서 안 열릴 때만 돌아와서 실행하세요.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#7C3AED;">
+      <div class="cmd-head"><span class="cmd-badge">3</span><span class="cmd-emoji">🔍</span>
+        <div class="cmd-name">카메라 검색 (자동)<small>어느 번호가 진짜 카메라인지 찾기</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 camera_check.py --scan</code>
+        <button class="copy-btn" data-cmd="python3 camera_check.py --scan">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">0~5번을 하나씩 열어보고, <strong>진짜 영상이 나오는 번호</strong>를 알려줘요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">✅ 표시된 번호가 쓸 수 있는 카메라예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">그 번호를 기억해서 나중에 CAM_INDEX에 넣어요.</span></div>
+        </div>
+        <div class="analogy-box"><div class="analogy-icon">🚪</div>
+          <div class="analogy-content"><div class="analogy-title">쉽게 말하면</div>
+          <p class="analogy-text">문이 여러 개일 때 하나씩 열어보고 "이 문 뒤에 진짜 방이 있네!" 하고 찾는 거예요. 빈 문과 진짜 방을 구분해줍니다.</p></div></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#7C3AED;">
+      <div class="cmd-head"><span class="cmd-badge">4</span><span class="cmd-emoji">⏱️</span>
+        <div class="cmd-name">속도(FPS) 테스트<small>카메라가 부드럽게 도는지 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 camera_check.py --test 0</code>
+        <button class="copy-btn" data-cmd="python3 camera_check.py --test 0">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">5초간 찍어보고 <strong>1초에 몇 장 찍는지(FPS)</strong> 알려줘요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">10 FPS 이상이면 실시간 사용에 충분해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">느리면 USB 포트를 바꾸거나 해상도를 낮춰요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> <code>--test</code> 뒤 숫자는 3단계에서 찾은 번호로 바꾸세요.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#D97706;">
+      <div class="cmd-head"><span class="cmd-badge">5</span><span class="cmd-emoji">📐</span>
+        <div class="cmd-name">해상도 지원 확인<small>원하는 화질이 되는지 보기</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 camera_check.py --resolution 0 --width 1280 --height 720</code>
+        <button class="copy-btn" data-cmd="python3 camera_check.py --resolution 0 --width 1280 --height 720">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">카메라가 <strong>1280x720(HD)을 지원하는지</strong> 확인해요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">요청한 해상도 그대로 나오면 ✅예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">다른 크기로 조정되면, 알려준 실제 크기를 설정에 쓰세요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>중요:</strong> 재고조사 rim 카운팅은 줄무늬를 세야 해서 <strong>해상도가 높을수록 정확</strong>합니다. 720p 이상을 권장해요.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#059669;">
+      <div class="cmd-head"><span class="cmd-badge">6</span><span class="cmd-emoji">📷</span>
+        <div class="cmd-name">웹 미리보기<small>브라우저로 카메라 영상 직접 보기</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 camera_preview.py</code>
+        <button class="copy-btn" data-cmd="python3 camera_preview.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">카메라 영상이 <strong>웹브라우저에 실시간</strong>으로 나와요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">실행 후 <code>http://누크IP:5000</code>으로 접속해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">영상이 부드럽게 나오면 카메라 설정 끝! PART 2로 넘어가요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">CAM_INDEX·해상도는 파일 위쪽에서 본인 값으로 고쳐요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> 누크 IP는 <code>hostname -I</code>로 확인해요.</span></div>
+      </div>
+    </div>
+
+    <div class="callout callout-danger"><span class="callout-icon">🔌</span><span class="callout-content"><strong>PART 2로 가기 전에:</strong> 미리보기 서버를 켠 채로 두면 카메라가 점유돼서 PART 2가 안 돌아가요. <code>Ctrl+C</code>로 미리보기를 끄고 넘어가세요.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🛠️ 막혔을 때 (PART 1)</h2>
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">⬛</span>
+        <div class="cmd-name">화면이 검은색<small>프레임이 안 들어옴</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>sudo fuser /dev/video0</code>
+        <button class="copy-btn" data-cmd="sudo fuser /dev/video0">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">다른 프로그램이 <strong>카메라를 이미 쓰고 있어요.</strong> 그걸 끄면 돼요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">번호(PID)가 나오면 <code>sudo kill 번호</code>로 끄세요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">또는 CAM_INDEX를 1로 바꿔보세요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>자주 발생:</strong> 터미널을 Ctrl+C 없이 닫으면 카메라가 점유된 채 남아요.</span></div>
+      </div>
+    </div>
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">🚫</span>
+        <div class="cmd-name">Permission denied<small>권한 부족</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">위 <strong>2단계(권한 주기)</strong>를 실행하고, 로그아웃 후 다시 로그인하세요.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 2 ============ -->
+<div class="container"><hr class="divider" id="part2"></div>
+<div class="part-banner p2">
+  <div class="container">
+    <span class="part-label">PART 2 · 본 시스템</span>
+    <h2>📦 컵 재고조사 5단계</h2>
+    <p>카메라가 준비됐으니, 이제 포개진 컵을 5개의 AI가 차례로 세는 시스템을 돌립니다.</p>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">한눈에 보기 (PART 2)</h2>
+    <p class="section-lead">카메라로 찍은 컵 더미를 5개의 AI가 차례로 다룹니다. 각 단계는 앞 단계 결과를 받아 다음으로 넘깁니다.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">📸</div><div class="flow-node-title">1. YOLO</div><div class="flow-node-desc">컵 1차 탐지</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">🔍</div><div class="flow-node-title">2. GDINO</div><div class="flow-node-desc">재확인</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">🎨</div><div class="flow-node-title">3. SAM3</div><div class="flow-node-desc">컵만 분할</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">🔢</div><div class="flow-node-title">4. 카운팅</div><div class="flow-node-desc">3방식 비교</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">💾</div><div class="flow-node-title">5. 저장</div><div class="flow-node-desc">보고서</div></div>
+    </div>
+    <div class="analogy-box"><div class="analogy-icon">🏭</div>
+      <div class="analogy-content"><div class="analogy-title">쉽게 말하면</div>
+      <p class="analogy-text">공장 조립 라인과 같아요. YOLO는 "컵이 저기 있다"만 외치고, GDINO가 "정말 컵 맞네" 확인하고, SAM3가 "컵만 오려내고", 마지막에 세 계수원이 각자 세어 비교합니다.</p></div></div>
+  </div>
+</section>
+
+<section style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title">⚙️ 준비 — 서버 점검부터 (PART 2)</h2>
+    <p class="section-lead">이 시스템은 누크 + 4090 + VLM PC가 협력합니다. 시작 전에 AI 서버가 모두 켜져 있는지 확인합니다.</p>
+
+    <div class="cmd-card" style="--accent:#64748B;">
+      <div class="cmd-head"><span class="cmd-badge">0</span><span class="cmd-emoji">🔍</span>
+        <div class="cmd-name">서버 연결 점검<small>4개 AI 서버가 살아있는지 한 번에 확인</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 check_servers.py</code>
+        <button class="copy-btn" data-cmd="python3 check_servers.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">GDINO·SAM3·CountGD·VLM 네 서버가 <strong>모두 정상인지 한눈에</strong> 보여줘요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">각 서버에 "살아있니?"라고 물어봐요 (health 확인).</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">하나라도 ❌면 그 PC에서 서버를 켜고 다시 실행해요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>주의:</strong> 4090에 GDINO(5004)·SAM3(5001)·CountGD(5005), 별도 PC에 VLM(192.168.0.36:5002)이 떠 있어야 해요.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#64748B;">
+      <div class="cmd-head"><span class="cmd-badge">0</span><span class="cmd-emoji">📦</span>
+        <div class="cmd-name">필요한 도구 설치<small>누크에 가벼운 패키지만</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>pip install flask opencv-python numpy requests scipy --break-system-packages</code>
+        <button class="copy-btn" data-cmd="pip install flask opencv-python numpy requests scipy --break-system-packages">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">누크가 카메라를 다루고 4090을 부르는 <strong>가벼운 도구</strong>만 깔려요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">flask=웹서버, requests=서버호출, scipy=줄무늬 세기.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">무거운 torch는 누크에 필요 없어요. 4090이 다 하니까요.</span></div>
+        </div>
+        <div class="analogy-box"><div class="analogy-icon">📞</div>
+          <div class="analogy-content"><div class="analogy-title">쉽게 말하면</div>
+          <p class="analogy-text">누크는 "전화 거는 사람"이에요. 직접 계산은 안 하고, 힘센 4090에게 전화로 일을 시키고 답만 받아요.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🚀 실행 — 서버 켜기 (PART 2)</h2>
+    <div class="cmd-card" style="--accent:#2563EB;">
+      <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">▶️</span>
+        <div class="cmd-name">재고조사 서버 실행<small>카메라 + 웹화면 + 5단계 파이프라인 시작</small></div></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python3 app_step.py</code>
+        <button class="copy-btn" data-cmd="python3 app_step.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">누크 카메라가 켜지고, <strong>웹브라우저로 볼 수 있는 조사 화면</strong>이 열려요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">시작 메시지에 <code>[v2026-06-28 YOLO+GDINO 2단검증판]</code>이 뜨면 최신 버전이에요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><code>✅ YOLO 준비 완료</code>가 보이면 누크 모델도 로드된 거예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">브라우저에서 <code>http://누크IP:5000</code>으로 접속해요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>팁:</strong> 화면이 안 바뀌면 <strong>Ctrl+Shift+R</strong>로 강력 새로고침하세요. PART 1의 CAM_INDEX·해상도를 여기에도 똑같이 맞춰야 해요.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title">🔬 5단계 파이프라인 — 화면에서 버튼 누르기 (PART 2)</h2>
+    <p class="section-lead">웹 화면에서 단계 버튼을 차례로 누르면, 각 AI가 자기 일을 합니다.</p>
+
+    <div class="cmd-card" style="--accent:#64748B;">
+      <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">📸</span>
+        <div class="cmd-name">YOLO 1차 탐지<small>"컵이 저기 있다"를 빠르게 찾기</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">카메라 사진에서 <strong>컵을 초록 네모</strong>로 빠르게 찾아요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">누크 안의 YOLO가 직접 돌아요 (빠르고 가벼움).</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">"컵이 대략 어디 있는지"만 알면 돼요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>한계:</strong> YOLO는 옆으로 포개진 컵 스택을 <strong>"컵 1개"로 잡아요.</strong> 그래서 다음 단계들이 필요합니다.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#2563EB;">
+      <div class="cmd-head"><span class="cmd-badge">2</span><span class="cmd-emoji">🔍</span>
+        <div class="cmd-name">GDINO 재확인<small>"정말 컵 맞아?" 두 번째 검증</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">4090의 GDINO가 <strong>"cup"이라는 글자</strong>로 다시 찾아, YOLO와 겹치는 것만 믿어요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">YOLO와 GDINO가 찾은 자리를 겹쳐봐요 (IoU 비교).</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">둘 다 "컵"이라고 한 곳만 통과 = 오탐이 줄어요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">가장 큰 컵(=스택)을 골라 다음으로 넘겨요.</span></div>
+        </div>
+        <div class="analogy-box"><div class="analogy-icon">✅</div>
+          <div class="analogy-content"><div class="analogy-title">쉽게 말하면</div>
+          <p class="analogy-text">시험 채점을 두 선생님이 따로 하고, 둘 다 동그라미 친 답만 정답으로 인정하는 것과 같아요.</p></div></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#7C3AED;">
+      <div class="cmd-head"><span class="cmd-badge">3</span><span class="cmd-emoji">🎨</span>
+        <div class="cmd-name">SAM3 분할<small>컵만 오려내고 배경은 검게 지우기</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">SAM3가 컵 모양을 <strong>정밀하게 오려내고</strong>, 배경을 검게 지워요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">GDINO가 고른 박스를 SAM3에 줘요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">SAM3가 컵 경계를 픽셀 단위로 따내요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">배경을 지우면 다음 카운팅이 배경 무늬에 안 속아요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>핵심 노하우:</strong> 이 단계가 정확도의 열쇠예요. 배경을 안 지우면 옷 주름·그림자까지 세서 7개를 11개로 셉니다. SAM3로 지우니 정확히 7개가 됐어요.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#D97706;">
+      <div class="cmd-head"><span class="cmd-badge">4</span><span class="cmd-emoji">🔢</span>
+        <div class="cmd-name">3방식 카운팅 비교<small>rim · CountGD · VLM이 각자 세기</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">세 가지 다른 방법이 <strong>각자 컵을 세고 숫자를 나란히</strong> 보여줘요.</p>
+        <table class="cmp-table">
+          <thead><tr><th>방식</th><th>원리</th><th>강한 컵</th><th>약한 컵</th></tr></thead>
+          <tbody>
+            <tr><td><strong>🟢 rim</strong></td><td>줄무늬(테두리) 세기</td><td class="good">민무늬 흰컵</td><td class="bad">디자인 무늬 컵</td></tr>
+            <tr><td><strong>🟣 CountGD</strong></td><td>객체 탐지로 세기</td><td class="good">흩어진 컵</td><td class="bad">포개진 스택</td></tr>
+            <tr><td><strong>🔵 VLM</strong></td><td>맥락으로 추론</td><td class="good">무늬 있는 컵</td><td class="bad">느림(수 초)</td></tr>
+          </tbody>
+        </table>
+        <div class="analogy-box"><div class="analogy-icon">🌳</div>
+          <div class="analogy-content"><div class="analogy-title">rim 카운팅을 쉽게 말하면</div>
+          <p class="analogy-text">나무 그루터기의 나이테를 세는 것과 같아요. 포개진 컵은 각 테두리가 가로 줄무늬를 만들고, 그 개수 = 컵 개수예요.</p></div></div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>왜 비교하나요?</strong> 단일 모델이 모든 컵에 완벽할 수 없어요(No Free Lunch). 흰컵은 rim이, 꽃무늬 컵은 VLM이 정확합니다.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#059669;">
+      <div class="cmd-head"><span class="cmd-badge">5</span><span class="cmd-emoji">💾</span>
+        <div class="cmd-name">저장 + 보고서<small>최종 개수와 위치를 기록</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">최종 개수·위치를 입력해 저장하면, <strong>보고서에 자동으로 쌓여요.</strong></p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">세 방식 숫자를 보고 최종 개수를 정해요 (직접 수정 가능).</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">창고 위치를 적고 저장하면 기록돼요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">오른쪽 위 <strong>"📊 재고 보고서"</strong>를 누르면 표로 모아 봐요.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🛠️ 막혔을 때 (PART 2) — 실제로 겪은 문제들</h2>
+    <p class="section-lead">시스템 구축 중 직접 겪은 오류와 해결법입니다.</p>
+
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">🔌</span>
+        <div class="cmd-name">Connection refused (포트 5004 등)<small>4090 서버가 안 켜짐</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">그 단계가 부르는 <strong>서버가 꺼져 있어요.</strong> 4090에서 켜세요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><code>check_servers.py</code>로 어느 서버가 ❌인지 확인해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">5004=GDINO, 5001=SAM3, 5005=CountGD, 5002=VLM.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">🧊</span>
+        <div class="cmd-name">ms_deform_attn ... BFloat16<small>CountGD가 추론 중 멈춤</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">CountGD의 특수 연산은 <strong>bfloat16을 못 써요.</strong> float32로 돌려야 해요.</p>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>중요한 노하우:</strong> SAM3는 bfloat16이 <strong>필수</strong>, CountGD는 bfloat16이 <strong>금지</strong>예요. 같은 4090이라도 모델마다 dtype 규칙이 정반대입니다.</span></div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">🎭</span>
+        <div class="cmd-name">"박스 폴백 (SAM3 실패)"<small>SAM3 마스크를 못 읽음</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">SAM3 서버 응답의 <strong>키 이름</strong>을 맞춰야 해요. 이 서버는 <code>mask_binary</code>로 마스크를 줍니다.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">서버마다 응답 형식이 달라요. <code>masks</code>가 아니라 <code>mask_binary</code>였어요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">키를 맞추니 폴백이 사라지고 컵을 깨끗이 분할했어요.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmd-card" style="--accent:#DC2626;">
+      <div class="cmd-head"><span class="cmd-badge">!</span><span class="cmd-emoji">📏</span>
+        <div class="cmd-name">rim이 컵 바닥까지 셈<small>줄무늬 개수가 실제보다 많음</small></div></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 해결</div>
+        <p class="big-easy">컵 몸통의 그림자를 줄무늬로 오인한 거예요. <strong>간격 규칙성 필터</strong>로 걸러요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">진짜 rim은 위쪽에 일정 간격으로 촘촘해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">간격이 갑자기 3배 넘게 벌어지면 거기서 끊어요.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>솔직한 한계:</strong> 컵 옆면에 가로 디자인 줄무늬가 있으면 rim 카운팅이 어려워요. 이럴 땐 VLM 결과를 믿는 게 낫습니다.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 전체 추천 순서 -->
+<section style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title">✅ 전체 추천 실행 순서</h2>
+    <p class="section-lead">PART 1(카메라)부터 PART 2(카운팅)까지, 이 순서로 하면 막힘없이 끝나요.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">🔍</div><div class="flow-node-title">1. 카메라검색</div><div class="flow-node-desc">--scan</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">📷</div><div class="flow-node-title">2. 미리보기</div><div class="flow-node-desc">preview</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">🔍</div><div class="flow-node-title">3. 서버점검</div><div class="flow-node-desc">check_servers</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">▶️</div><div class="flow-node-title">4. 서버실행</div><div class="flow-node-desc">app_step</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">🔢</div><div class="flow-node-title">5. 1~5단계</div><div class="flow-node-desc">버튼 차례로</div></div>
+      <div class="flow-arrow"><svg width="34" height="24" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">📊</div><div class="flow-node-title">6. 보고서</div><div class="flow-node-desc">기록 확인</div></div>
+    </div>
+    <div class="callout callout-tip" style="margin-top:2rem;"><span class="callout-icon">💡</span><span class="callout-content"><strong>학습 팁:</strong> 흰색 민무늬 컵으로 먼저 연습하세요. rim 카운팅이 가장 정확해서 결과가 깔끔합니다. 익숙해지면 꽃무늬·줄무늬 컵으로 바꿔 VLM의 강점을 체험해 보세요.</span></div>
+  </div>
+</section>
+
+<footer style="background:#1E293B; color:#94A3B8; padding:2rem 0; text-align:center; font-size:0.85rem;">
+  <div class="container">
+    제타위성로보틱스 · Physical AI 교육 — 누크 카메라 설정 + 컵 재고조사 5단계 통합 실습<br>
+    <span style="opacity:0.7;">PART 1: 카메라 셋업 · PART 2: NUC(카메라·웹) + 4090(GDINO·SAM3·CountGD) + VLM PC</span>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var cmd = btn.getAttribute('data-cmd');
+      var done = function () {
+        var original = btn.innerHTML;
+        btn.innerHTML = '✅ 복사됨';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.innerHTML = original; btn.classList.remove('copied'); }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).then(done).catch(function () { fallbackCopy(cmd, done); });
+      } else { fallbackCopy(cmd, done); }
+    });
+  });
+  function fallbackCopy(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); done();
+  }
+</script>
+</body>
+</html>
