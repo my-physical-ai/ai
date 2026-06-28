@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실습 가이드 SAM3 열화상 사람 윤곽</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{
+  --color-primary:#2563EB;--color-secondary:#7C3AED;--color-secondary-light:#EDE9FE;
+  --color-success:#059669;--color-success-light:#D1FAE5;
+  --color-warning:#D97706;--color-warning-light:#FEF3C7;
+  --color-danger:#DC2626;--color-danger-light:#FEE2E2;
+  --color-surface:#F8FAFC;--color-card:#FFFFFF;
+  --color-text:#1E293B;--color-muted:#64748B;--color-border:#E2E8F0;
+  --nuc:#2563EB;--gpu:#EC4899;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;color:var(--color-text);background:var(--color-surface);line-height:1.75}
+code,pre{font-family:'JetBrains Mono',monospace}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem}
+section{padding:2.75rem 0}
+.section-title{font-size:1.85rem;font-weight:700;margin-bottom:0.5rem}
+.section-lead{color:var(--color-muted);margin-bottom:2rem}
+.hero{background:linear-gradient(135deg,#4C1D95,#8B5CF6);color:white;padding:3.5rem 0 3rem}
+.hero h1{font-size:2.5rem;font-weight:900;line-height:1.2}
+.hero-subtitle{font-size:1.1rem;margin-top:0.85rem;opacity:0.95}
+.hero-tags{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.pill{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);padding:0.3rem 0.85rem;border-radius:999px;font-size:0.8rem;font-weight:500}
+.loc{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:999px}
+.loc.nuc{background:rgba(37,99,235,0.18);color:#1D4ED8;border:1px solid rgba(37,99,235,0.4)}
+.loc.gpu{background:rgba(236,72,153,0.18);color:#BE185D;border:1px solid rgba(236,72,153,0.4)}
+.tree{background:#0F172A;color:#E2E8F0;border-radius:14px;padding:1.75rem;font-family:'JetBrains Mono',monospace;font-size:0.9rem;overflow-x:auto}
+.tree-row{display:flex;align-items:baseline;padding:0.32rem 0;white-space:nowrap}
+.tree-branch{color:#475569;flex-shrink:0;white-space:pre}
+.tree-name{color:#E2E8F0}
+.tree-name.folder{color:#7DD3FC;font-weight:500}
+.tree-name.star{color:#FCD34D;font-weight:500}
+.tree-note{color:#64748B;margin-left:0.6rem;font-size:0.82rem}
+.flow-diagram{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:2rem;background:var(--color-card);border:1px solid var(--color-border);border-radius:16px;overflow-x:auto;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.flow-node{background:var(--color-card);border:2px solid var(--node-color,var(--color-primary));border-radius:12px;padding:1.1rem;text-align:center;min-width:108px}
+.flow-node-icon{font-size:1.6rem;margin-bottom:0.4rem}
+.flow-node-title{font-weight:700;font-size:0.86rem}
+.flow-node-loc{font-size:0.68rem;margin-top:0.3rem;font-weight:700}
+.flow-node-loc.nuc{color:var(--nuc)}.flow-node-loc.gpu{color:var(--gpu)}
+.flow-arrow{flex-shrink:0}
+.cmd-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:16px;overflow:hidden;margin-bottom:2rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.08)}
+.cmd-head{display:flex;align-items:center;gap:0.85rem;padding:1.1rem 1.5rem;color:white;background:var(--accent,var(--color-primary));flex-wrap:wrap}
+.cmd-badge{flex-shrink:0;width:2.1rem;height:2.1rem;border-radius:50%;background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.05rem}
+.cmd-emoji{font-size:1.6rem}
+.cmd-name{font-weight:700;font-size:1.12rem;flex:1;min-width:0}
+.cmd-name small{display:block;font-weight:400;font-size:0.8rem;opacity:0.85;margin-top:0.1rem}
+.cmd-loc{flex-shrink:0;font-size:0.74rem;font-weight:700;padding:0.25rem 0.7rem;border-radius:999px;background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.45)}
+.cmd-terminal{background:#0F172A;color:#E2E8F0;padding:1rem 1.5rem;font-size:0.88rem;display:flex;align-items:center;gap:0.6rem;overflow-x:auto;font-family:'JetBrains Mono',monospace;border-top:1px solid rgba(255,255,255,0.05)}
+.cmd-terminal .prompt{color:#4ADE80;user-select:none}
+.cmd-terminal code{white-space:nowrap;flex:1}
+.copy-btn{flex-shrink:0;margin-left:auto;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#E2E8F0;border-radius:8px;padding:0.35rem 0.75rem;font-size:0.8rem;font-family:'Noto Sans KR',sans-serif;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;transition:background 0.15s}
+.copy-btn:hover{background:rgba(255,255,255,0.22)}
+.copy-btn.copied{background:var(--color-success);border-color:var(--color-success);color:white}
+.cmd-body{padding:1.5rem}
+.cmd-result-label{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--accent,var(--color-primary));margin-bottom:0.6rem}
+.big-easy{font-size:1.05rem;font-weight:500}
+.mini-steps{display:flex;flex-direction:column;gap:0.6rem;margin-top:1rem}
+.mini-step{display:flex;gap:0.75rem;align-items:flex-start;background:var(--color-surface);border-radius:10px;padding:0.75rem 1rem}
+.mini-step-num{flex-shrink:0;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--accent,var(--color-primary));color:white;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700}
+.mini-step-text{font-size:0.92rem}
+.phase-label{margin-top:1.5rem;font-weight:700;color:#475569;font-size:0.92rem}
+.sub-terminal{background:#0F172A;color:#E2E8F0;border-radius:10px;padding:0.95rem 1.15rem;font-family:'JetBrains Mono',monospace;font-size:0.84rem;margin-top:0.7rem;overflow-x:auto;line-height:1.85;white-space:pre}
+.sub-terminal .c{color:#64748B}
+.sub-terminal .g{color:#4ADE80}
+.sub-terminal .y{color:#FCD34D}
+.callout{display:flex;gap:0.75rem;padding:1rem 1.25rem;border-radius:10px;align-items:flex-start;margin-top:1.5rem}
+.callout-icon{font-size:1.25rem;flex-shrink:0}
+.callout-content{font-size:0.95rem;line-height:1.6}
+.callout-tip{background:var(--color-success-light);border-left:3px solid var(--color-success)}
+.callout-warning{background:var(--color-warning-light);border-left:3px solid var(--color-warning)}
+.callout-danger{background:var(--color-danger-light);border-left:3px solid var(--color-danger)}
+.concept-box{background:var(--color-card);border:1px solid var(--color-border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.concept-box h3{font-size:1.2rem;font-weight:700;margin-bottom:0.75rem;color:var(--color-secondary)}
+@media(max-width:768px){.hero h1{font-size:1.9rem}.flow-diagram{flex-direction:column}.flow-arrow svg{transform:rotate(90deg)}}
+@media print{.hero{background:white!important;color:black!important}.cmd-head{color:black!important;-webkit-print-color-adjust:exact}.copy-btn{display:none}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="pill">Physical AI</span><span class="pill">SAM3</span><span class="pill">FLIR ONE</span><span class="pill">InternVL</span>
+    </div>
+    <h1>실습 가이드 SAM3 열화상 사람 윤곽</h1>
+    <p class="hero-subtitle">박스로 안 되던 사람 윤곽을, 텍스트 한 단어("person")로 정확히 따내기</p>
+  </div>
+</div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🖥️ 두 대의 컴퓨터로 나눠 실행</h2>
+    <p class="section-lead">이 시스템은 두 대를 함께 씁니다. 각 단계가 어느 컴퓨터인지 배지로 표시했어요.</p>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;background:var(--color-card);border:1px solid var(--color-border);border-left:4px solid var(--nuc);border-radius:12px;padding:1.1rem 1.3rem">
+        <span class="loc nuc">🖥️ NUC</span>
+        <p style="margin-top:0.6rem;font-size:0.92rem">메인 컴퓨터 (192.168.0.65). FLIR 카메라가 꽂혀 있고, YOLO·측정·웹서버를 돌려요. <strong>대부분의 작업이 여기</strong>.</p>
+      </div>
+      <div style="flex:1;min-width:240px;background:var(--color-card);border:1px solid var(--color-border);border-left:4px solid var(--gpu);border-radius:12px;padding:1.1rem 1.3rem">
+        <span class="loc gpu">🎯 4090</span>
+        <p style="margin-top:0.6rem;font-size:0.92rem">GPU 서버 (192.168.0.75). SAM3 윤곽 분할만 담당해요. <strong>1단계에서 한 번 켜두면</strong> 끝.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--color-card)">
+  <div class="container">
+    <h2 class="section-title">📂 NUC 폴더 구조</h2>
+    <p class="section-lead">NUC의 02_nuc_pipeline 폴더 안 배치입니다. 모든 .py는 같은 위치에 평평하게 둡니다.</p>
+    <div class="tree">
+      <div class="tree-row"><span class="tree-name folder">02_nuc_pipeline/</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">app.py</span><span class="tree-note"># 메인 실행 파일</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">sam3_client.py</span><span class="tree-note"># 4090 SAM3 호출</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">vlm_judge.py</span><span class="tree-note"># InternVL 판정 호출</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">zone_measure.py</span><span class="tree-note"># 3등분 측정</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">thermal_level.py</span><span class="tree-note"># 컬러→지수 변환</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">requirements.txt</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name">setup_nuc.sh</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name folder">config/</span></div>
+      <div class="tree-row"><span class="tree-branch">│   └── </span><span class="tree-name star">config.yaml</span><span class="tree-note"># ★ 이 폴더 없으면 에러!</span></div>
+      <div class="tree-row"><span class="tree-branch">├── </span><span class="tree-name folder">templates/</span></div>
+      <div class="tree-row"><span class="tree-branch">│   └── </span><span class="tree-name">index.html</span><span class="tree-note"># 4단계 UI</span></div>
+      <div class="tree-row"><span class="tree-branch">└── </span><span class="tree-name folder">services/</span><span class="tree-note"># 보조 모듈</span></div>
+    </div>
+    <div class="callout callout-danger"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>가장 흔한 함정:</strong> app.py는 <code>config/config.yaml</code>을 찾습니다. config 폴더가 없으면 "config.yaml을 찾을 수 없습니다" 에러로 시작도 못 해요.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🗺️ 한눈에 보기</h2>
+    <p class="section-lead">색으로 컴퓨터를 구분했어요. 분홍=4090, 보라=InternVL서버, 파랑=NUC. <strong>1·2단계는 GPU 서버, 나머지는 NUC</strong>입니다.</p>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#EC4899"><div class="flow-node-icon">🎯</div><div class="flow-node-title">1. SAM3 서버</div><div class="flow-node-loc gpu">4090</div></div>
+      <div class="flow-arrow"><svg width="28" height="22" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#A855F7"><div class="flow-node-icon">🤖</div><div class="flow-node-title">2. VLM 서버</div><div class="flow-node-loc" style="color:#A855F7">0.36</div></div>
+      <div class="flow-arrow"><svg width="28" height="22" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#2563EB"><div class="flow-node-icon">⚙️</div><div class="flow-node-title">3. config</div><div class="flow-node-loc nuc">NUC</div></div>
+      <div class="flow-arrow"><svg width="28" height="22" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#64748B"><div class="flow-node-icon">📷</div><div class="flow-node-title">4. flirone</div><div class="flow-node-loc nuc">NUC</div></div>
+      <div class="flow-arrow"><svg width="28" height="22" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">🖥️</div><div class="flow-node-title">5. app.py</div><div class="flow-node-loc nuc">NUC</div></div>
+      <div class="flow-arrow"><svg width="28" height="22" viewBox="0 0 40 24"><path d="M0 12h30M24 4l8 8-8 8" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">✅</div><div class="flow-node-title">6. 판별</div><div class="flow-node-loc nuc">NUC</div></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--color-card)">
+  <div class="container">
+    <h2 class="section-title">📝 단계별 실습</h2>
+    <p class="section-lead">헤더 오른쪽 배지로 어느 컴퓨터인지 확인하세요. 1·2단계는 GPU 서버, 3~6단계는 NUC입니다.</p>
+
+    <!-- 1 -->
+    <div class="cmd-card" style="--accent:#EC4899">
+      <div class="cmd-head"><span class="cmd-badge">1</span><span class="cmd-emoji">🎯</span><div class="cmd-name">SAM3 서버 실행<small>person 텍스트로 사람 윤곽 분할</small></div><span class="cmd-loc">🎯 4090</span></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python sam3_server.py</code><button class="copy-btn" data-cmd="python sam3_server.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">4090 GPU에서 <strong>SAM3가 사람 윤곽을 따낼 준비</strong>를 해요. 한 번 켜두면 됩니다.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">시작 로그에 "POST /segment_text ★신규"가 보이면 텍스트 분할 기능이 켜진 거예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">NUC에서 <code>curl http://192.168.0.75:5001/ping</code> → status ok 나오면 연결 정상.</span></div>
+        </div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>왜 텍스트인가:</strong> 박스 프롬프트는 사람 열화상에서 89% 과분할해 배경을 잡았어요. "person" 텍스트가 근본 해결입니다.</span></div>
+      </div>
+    </div>
+
+    <!-- 2: InternVL VLM 서버 -->
+    <div class="cmd-card" style="--accent:#A855F7">
+      <div class="cmd-head"><span class="cmd-badge">2</span><span class="cmd-emoji">🤖</span><div class="cmd-name">InternVL 판정 서버 실행<small>열화상을 보고 안전 판정하는 VLM</small></div><span class="cmd-loc">🤖 0.36</span></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python vlm_server_internvl.py</code><button class="copy-btn" data-cmd="python vlm_server_internvl.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">VLM 서버(192.168.0.36)에서 <strong>InternVL이 열화상을 판정할 준비</strong>를 해요. 이것도 한 번 켜두면 됩니다.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">GPU 메모리를 확인해 4B/8B 모델을 자동 선택해요(첫 실행은 다운로드로 5~10분).</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">NUC에서 <code>curl http://192.168.0.36:5002/ping</code> → ok 나오면 연결 정상.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">모델이 안 올라가도 규칙기반 폴백으로 동작해요(멈추지 않음).</span></div>
+        </div>
+        <div class="callout callout-danger"><span class="callout-icon">🔧</span><span class="callout-content"><strong>이 서버가 빠지면:</strong> 마지막 "AI 판별"에서 "VLM 서버 연결 실패 (192.168.0.36)" 에러가 나요. 반드시 먼저 켜두세요.</span></div>
+        <div class="callout callout-warning"><span class="callout-icon">⚠️</span><span class="callout-content"><strong>버전 충돌 시:</strong> transformers가 너무 높으면 <code>pip install transformers==4.40.1</code>로 낮추세요.</span></div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="cmd-card" style="--accent:#2563EB">
+      <div class="cmd-head"><span class="cmd-badge">3</span><span class="cmd-emoji">⚙️</span><div class="cmd-name">config 폴더와 설정 확인<small>없으면 만들기, max_persons 확인</small></div><span class="cmd-loc">🖥️ NUC</span></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>ls config/config.yaml</code><button class="copy-btn" data-cmd="ls config/config.yaml">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">app.py가 찾는 <strong>config 폴더가 있는지</strong> 확인해요.</p>
+        <div class="phase-label">📌 폴더가 없으면 만들고 설정 확인</div>
+        <div class="sub-terminal"><span class="c"># config 폴더 만들고 파일 넣기</span>
+<span class="g">$</span> mkdir -p config
+<span class="g">$</span> cp config.yaml config/        <span class="c"># 받은 config.yaml을 폴더 안으로</span>
+
+<span class="c"># 여러 명 잡으려면 max_persons 확인</span>
+<span class="g">$</span> grep max_persons config/config.yaml
+<span class="y">  max_persons: 5</span>             <span class="c"># 1이면 5로 바꾸기 (여러 명)</span></div>
+        <div class="callout callout-danger"><span class="callout-icon">🔧</span><span class="callout-content"><strong>두 명인데 한 명만 잡힐 때:</strong> config의 max_persons가 1이거나 빠진 거예요. 5로 바꾸면 둘 다 잡힙니다.</span></div>
+      </div>
+    </div>
+
+    <!-- 3 flirone 상세 -->
+    <div class="cmd-card" style="--accent:#64748B">
+      <div class="cmd-head"><span class="cmd-badge">4</span><span class="cmd-emoji">📷</span><div class="cmd-name">flirone 카메라 켜기<small>설치 → 찾기 → 실행 → 문제 해결</small></div><span class="cmd-loc">🖥️ NUC</span></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이 단계가 가장 까다로워요</div>
+        <p class="big-easy">FLIR ONE은 일반 웹캠이 아니라서, <strong>전용 드라이버(flirone)</strong>로 영상을 가상 카메라(/dev/video3)에 흘려보내야 해요.</p>
+
+        <div class="phase-label">📌 4-1. 처음 한 번만 — 드라이버 설치</div>
+        <div class="sub-terminal"><span class="c"># ① 빌드 도구 + 라이브러리 설치</span>
+<span class="g">$</span> sudo apt update
+<span class="g">$</span> sudo apt install -y git cmake build-essential \
+       libusb-1.0-0-dev libjpeg-dev v4l-utils
+
+<span class="c"># ② flirone-v4l2 드라이버 소스 받기</span>
+<span class="g">$</span> cd ~
+<span class="g">$</span> git clone https://github.com/fnoop/flirone-v4l2.git
+<span class="g">$</span> cd flirone-v4l2
+
+<span class="c"># ③ 컴파일</span>
+<span class="g">$</span> make
+
+<span class="c"># ④ 가상 카메라 모듈 설치</span>
+<span class="g">$</span> sudo apt install -y v4l2loopback-dkms v4l2loopback-utils</div>
+
+        <div class="phase-label">📌 4-2. FLIR이 USB로 잡혔는지 찾기</div>
+        <div class="sub-terminal"><span class="c"># FLIR ONE Gen2 USB ID는 09cb:1996</span>
+<span class="g">$</span> lsusb -d 09cb:1996
+<span class="y">Bus 001 Device 005: ID 09cb:1996 FLIR Systems</span>   <span class="c"># 보이면 인식 성공</span>
+
+<span class="c"># 안 보이면 → USB 다시 꽂고 위 명령 재시도</span></div>
+
+        <div class="phase-label">📌 4-3. 가상 카메라 2개 만들기 (video2, video3)</div>
+        <div class="sub-terminal"><span class="c"># 기존 모듈 제거 후 새로 2개 생성</span>
+<span class="g">$</span> sudo modprobe -r v4l2loopback
+<span class="g">$</span> sudo modprobe v4l2loopback devices=2 video_nr=2,3 \
+       card_label="FLIR_THERMAL","FLIR_VISIBLE" exclusive_caps=1
+
+<span class="c"># 생성 확인 — video2, video3이 보여야 함</span>
+<span class="g">$</span> ls /dev/video*
+<span class="y">/dev/video2  /dev/video3</span></div>
+
+        <div class="phase-label">📌 4-4. flirone 실행 (이 터미널은 계속 켜둠)</div>
+        <div class="cmd-terminal" style="border-radius:10px;margin-top:0.6rem"><span class="prompt">$</span><code>sudo ./flirone ./palettes/Grayscale.raw</code><button class="copy-btn" data-cmd="sudo ./flirone ./palettes/Grayscale.raw">📋 복사</button></div>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">"Successfully claimed interface 0,1,2"가 나오면 FLIR 연결 성공이에요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">이 터미널은 <strong>끄지 말고 계속 켜두세요.</strong> 끄면 video3도 사라져요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">팔레트: <code>Grayscale.raw</code>(AI 분석용) / <code>Iron_Black.raw</code>(발열 확인용).</span></div>
+        </div>
+        <div class="callout callout-danger"><span class="callout-icon">🔧</span><span class="callout-content"><strong>"Assertion `fdwr1 >= 0' failed" 에러가 나면:</strong> 가상 카메라가 막힌 거예요. 아래 4-7로 정리하고 4-3부터 다시 하세요.</span></div>
+
+        <div class="phase-label">📌 4-5. 팔레트 바꿔보기 (다양한 색으로 확인)</div>
+        <p style="font-size:0.92rem;margin-top:0.5rem">열화상은 <strong>온도 숫자 덩어리</strong>예요. 팔레트(색칠 규칙)를 바꾸면 같은 온도라도 완전히 다른 색으로 보여요. 목적에 맞게 골라 쓰세요.</p>
+        <div class="sub-terminal"><span class="c"># 사용 가능한 팔레트 목록 + 목적별 추천 보기</span>
+<span class="g">$</span> python test_palette.py --list
+
+<span class="c"># 특정 팔레트로 실행 (예: 현장 점검용)</span>
+<span class="g">$</span> python test_palette.py --run Iron_Black
+
+<span class="c"># 추천 4종을 차례로 비교 (Enter로 넘김)</span>
+<span class="g">$</span> python test_palette.py --tour</span></div>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">🔥</span><span class="mini-step-text"><strong>Iron_Black</strong> — 현장 점검용. 발열 지점이 또렷하게 보여요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">🌈</span><span class="mini-step-text"><strong>Rainbow</strong> — 발표·시연용. 작은 온도 차이도 눈에 확 띄어요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">🤖</span><span class="mini-step-text"><strong>Grayscale</strong> — AI 학습용. YOLO·SAM이 분석하기 깔끔해요(app.py 권장).</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>핵심:</strong> 파이프라인(YOLO→SAM3→VLM)을 돌릴 땐 <code>Grayscale</code>이 가장 좋아요. AI가 색에 헷갈리지 않고 밝기(온도)만 봐요. 발표할 때만 Iron_Black/Rainbow로 바꾸면 보기 좋고요.</span></div>
+
+        <div class="phase-label">📌 4-6. 영상이 진짜 나오는지 테스트 (권장)</div>
+        <div class="sub-terminal"><span class="c"># 방법 ①: 터미널에서 양쪽(video2+video3) 빠른 진단</span>
+<span class="g">$</span> python test_thermal_camera.py --check
+<span class="y">  ✅ /dev/video2: 5/5 수신, 크기 160x128, 🎨 컬러</span>
+<span class="y">  ✅ /dev/video3: 5/5 수신, 크기 160x128, ⬜ 흑백(회색조)</span>
+
+<span class="c"># 방법 ②: 브라우저로 두 영상 나란히 보기</span>
+<span class="g">$</span> python test_thermal_camera.py
+<span class="c"># → http://NUC_IP:5050 접속하면 video2와 video3이 나란히 표시됨</span></div>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><strong>--check</strong>: video2·video3 둘 다 확인하고, 각각 흑백인지 컬러인지 알려줘요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><strong>옵션 없이 실행</strong>: 포트 5050으로 두 영상을 나란히 보며 어느 게 쓸 영상인지 확인해요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text">영상 위 라벨에 GRAY/COLOR가 표시돼요. app.py가 쓰는 건 보통 흑백(video3)이에요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>왜 둘 다 보나:</strong> flirone은 video2·video3 두 개를 만들어요. 어느 쪽에 흑백/컬러가 나오는지 눈으로 확인해야 config의 device_index를 맞출 수 있어요.</span></div>
+
+        <div class="phase-label">📌 4-7. 카메라가 막혔을 때 — 프로세스 죽이기</div>
+        <div class="sub-terminal"><span class="c"># ① /dev/video3을 누가 쓰는지 확인 (숫자가 PID)</span>
+<span class="g">$</span> sudo fuser /dev/video3
+<span class="y">/dev/video3:    14440</span>
+
+<span class="c"># ② 그 프로세스가 뭔지 확인</span>
+<span class="g">$</span> ps aux | grep 14440
+
+<span class="c"># ③ 점유 프로세스 강제 종료 (한 줄로)</span>
+<span class="g">$</span> sudo kill $(sudo fuser /dev/video3 2>/dev/null | awk '{print $1}')
+
+<span class="c"># ④ 이전 app.py가 잡고 있는 경우도 정리</span>
+<span class="g">$</span> sudo pkill -f app.py
+
+<span class="c"># ⑤ 그 다음 4-3(modprobe) → 4-4(flirone) 다시 실행</span></div>
+        <div class="callout callout-warning"><span class="callout-icon">💡</span><span class="callout-content"><strong>왜 막히나:</strong> 터미널을 Ctrl+C 없이 그냥 닫거나, 이전 app.py가 카메라를 쥐고 있으면 발생해요. 위 순서로 정리하면 풀립니다.</span></div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="cmd-card" style="--accent:#7C3AED">
+      <div class="cmd-head"><span class="cmd-badge">5</span><span class="cmd-emoji">🖥️</span><div class="cmd-name">메인 파이프라인 실행<small>YOLO + 측정 + 판정 통합</small></div><span class="cmd-loc">🖥️ NUC</span></div>
+      <div class="cmd-terminal"><span class="prompt">$</span><code>python app.py</code><button class="copy-btn" data-cmd="python app.py">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">실시간 열화상에서 <strong>YOLO가 사람을 자동 탐지</strong>해요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text">"⚙️ 설정 로드: .../config/config.yaml"이 보이면 config를 잘 찾은 거예요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text">브라우저에서 <code>http://NUC_IP:5000</code> 접속하면 4단계 UI가 나와요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">💡</span><span class="callout-content"><strong>전체 켜는 순서:</strong> ① 4090 SAM3 → ② InternVL 서버(0.36) → ③ config → ④ flirone → ⑤ 여기 app.py</span></div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="cmd-card" style="--accent:#059669">
+      <div class="cmd-head"><span class="cmd-badge">6</span><span class="cmd-emoji">✅</span><div class="cmd-name">4단계 버튼으로 판별<small>SAM3 → 세분화 → 판별</small></div><span class="cmd-loc">🖥️ NUC 브라우저</span></div>
+      <div class="cmd-terminal"><span class="prompt">▶</span><code>SAM3 윤곽 → 세분화 → AI 판별</code><button class="copy-btn" data-cmd="SAM3 윤곽 → 세분화 → AI 판별 순서로 클릭">📋 복사</button></div>
+      <div class="cmd-body">
+        <div class="cmd-result-label">▶ 이렇게 하면</div>
+        <p class="big-easy">각 단계를 <strong>눈으로 확인하며</strong> 진행해요.</p>
+        <div class="mini-steps">
+          <div class="mini-step"><span class="mini-step-num">1</span><span class="mini-step-text"><strong>SAM3 윤곽</strong>: "person" 텍스트로 사람 윤곽을 따요. 보라색 선으로 표시돼요.</span></div>
+          <div class="mini-step"><span class="mini-step-num">2</span><span class="mini-step-text"><strong>세분화</strong>: 윤곽 안에서만 상/중/하 3등분 상대지수를 측정해요(배경 제외).</span></div>
+          <div class="mini-step"><span class="mini-step-num">3</span><span class="mini-step-text"><strong>AI 판별</strong>: InternVL이 베테랑 안전관리자 역할로 열화상을 판정해요.</span></div>
+        </div>
+        <div class="callout callout-tip"><span class="callout-icon">🎯</span><span class="callout-content"><strong>단계 분리의 장점:</strong> SAM3가 이상하면 그 단계만 다시 누르면 돼요. 세분화·판별은 다시 안 해도 됩니다.</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section style="background:var(--color-card)">
+  <div class="container">
+    <h2 class="section-title">🎓 핵심 정리</h2>
+    <div class="concept-box">
+      <h3>이 실습의 5가지 교훈</h3>
+      <div class="mini-steps">
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">1</span><span class="mini-step-text"><strong>박스보다 텍스트</strong> — 사람처럼 명확한 대상은 "person" 텍스트 프롬프트가 박스보다 정확해요.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">2</span><span class="mini-step-text"><strong>flirone 먼저</strong> — 카메라(video3)가 떠 있어야 app.py가 영상을 받아요. "못 연다" 에러는 flirone부터 확인.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">★</span><span class="mini-step-text"><strong>테스트로 원인 구분</strong> — <code>test_thermal_camera.py</code>로 카메라만 먼저 확인하면, app 문제와 카메라 문제가 바로 갈려요.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">🎨</span><span class="mini-step-text"><strong>팔레트로 골라보기</strong> — <code>test_palette.py</code>로 여러 색을 시험해요. AI는 Grayscale, 발표는 Iron_Black/Rainbow.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">3</span><span class="mini-step-text"><strong>막히면 프로세스 죽이기</strong> — <code>fuser</code>로 찾고 <code>kill</code>로 정리한 뒤 다시 시작.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">4</span><span class="mini-step-text"><strong>config 폴더 필수</strong> — app.py는 config/config.yaml을 찾아요. 없으면 시작도 못 해요.</span></div>
+        <div class="mini-step" style="--accent:#7C3AED"><span class="mini-step-num">5</span><span class="mini-step-text"><strong>서버 먼저, NUC 나중</strong> — SAM3(4090)와 InternVL(0.36) 두 서버를 먼저 켜고, 그다음 NUC 작업.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var cmd=btn.getAttribute('data-cmd');
+    var done=function(){var o=btn.innerHTML;btn.innerHTML='✅ 복사됨';btn.classList.add('copied');setTimeout(function(){btn.innerHTML=o;btn.classList.remove('copied');},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cmd).then(done).catch(function(){fb(cmd,done);});}else{fb(cmd,done);}
+  });
+});
+function fb(t,d){var a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(a);d();}
+</script>
+</body>
+</html>

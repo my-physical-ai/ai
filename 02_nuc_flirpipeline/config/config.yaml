@@ -1,0 +1,49 @@
+# ============================================================
+# 파일명: config.yaml
+# 설명: 열화상 3등분 온도측정 AI 파이프라인 공통 설정
+# 변경 이력:
+#   - [2026-06-22] 최초 생성: NUC/4090/4070 3대 머신 설정 통합
+#   - [2026-06-27] 코드와 키 정합화: max_persons 추가, IRGPT→InternVL 전환,
+#                  sam3.enabled 추가, 키 이름 코드와 일치 (display_colormap/alert_level)
+# ============================================================
+
+# --- 열화상 카메라 (NUC USB 직결) ---
+thermal:
+  device_index: 3                 # ← FLIR ONE 열화상 (/dev/video3)
+  display_colormap: "inferno"     # 화면 의사색상 (inferno/magma) — 코드 키 이름과 일치
+  palette_type: "color"           # flirone 팔레트: color(컬러 inferno) / grayscale(회색조)
+  raw_scale: 0.01                 # raw 1단위당 0.01도 (참고용, 현재 상대지수 방식이라 미사용)
+  raw_offset: -273.15             # 켈빈→섭씨 오프셋 (참고용, 미사용)
+
+# --- YOLO26 (NUC, 열화상 파인튜닝 모델) ---
+yolo:
+  model_path: "/home/zeta/thermal_3zon_ai/02_nuc_pipeline/best_openvino_model/"  # ← 학습 후 OpenVINO 절대경로
+  imgsz: 640                      # ← OpenVINO 변환 크기와 반드시 일치
+  conf: 0.4                       # 탐지 신뢰도 임계값
+  iou: 0.45                       # NMS 중복 제거 임계값
+  target_classes: [0]             # 측정 대상 클래스 (0=person)
+  grayscale_input: true           # YOLO 입력을 흑백으로 변환 (학습 데이터가 흑백)
+  max_persons: 5                  # ★ 최대 탐지 인원 (1=한명만, 5=여러명) — 두 명 이상이면 늘리기
+
+# --- SAM3 분할 서버 (4090) ---
+sam3:
+  server_url: "http://192.168.0.75:5001"   # ← 4090 IP:포트
+  timeout: 30                              # 추론 타임아웃(초)
+  enabled: true                            # true=SAM3 윤곽 사용, false=박스 측정만
+
+# --- VLM 판단 서버 (InternVL, 192.168.0.36) ---
+# ※ IRGPT는 ℃ 텍스트 기반이라 상대지수와 충돌 → InternVL로 교체됨
+vlm:
+  server_url: "http://192.168.0.36:5002"   # ← InternVL 서버 IP:포트
+  timeout: 30                              # VLM 추론 타임아웃(초)
+  enabled: true                            # false면 VLM 호출 생략(수치만 출력)
+
+# --- 3등분 상대지수 측정 ---
+zones:
+  names: ["상(上)", "중(中)", "하(下)"]    # 상/중/하 라벨
+  alert_level: 75                          # 고온 경고 기준 (상대지수 0~100) — 코드 키 이름과 일치
+
+# --- NUC Flask 웹서버 ---
+flask:
+  host: "0.0.0.0"                 # 모든 네트워크 접속 허용
+  port: 5000                      # 웹서버 포트

@@ -1,0 +1,8 @@
+# NUC 메인 파이프라인 의존성 (CPU, OpenVINO)
+ultralytics>=8.3.0
+openvino>=2024.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+flask>=3.0.0
+requests>=2.31.0
+pyyaml>=6.0

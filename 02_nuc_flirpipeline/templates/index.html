@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>열화상 4단계 AI 판별</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0b0e14;--panel:#141925;--line:#232b3a;--ink:#e6edf3;--dim:#8a94a6;--hot:#ff5252;--ok:#34d399;--acc:#a855f7;--sam:#ec4899;--seg:#2563eb}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink);padding:22px;line-height:1.5}
+    .head{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+    .head h1{font-size:1.35rem;font-weight:700}.head .sub{color:var(--dim);font-size:.82rem}
+    .statusbar{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--dim);margin-bottom:18px}
+    .wrap{display:grid;grid-template-columns:1.7fr 1fr;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+    .card h2{font-size:.82rem;color:var(--dim);font-weight:500;padding:14px 16px 0}
+    .stream{padding:14px}
+    .stream img{width:100%;border-radius:10px;display:block;background:#05070b}
+    .steps{padding:16px;display:flex;flex-direction:column;gap:10px}
+    .stepbtn{width:100%;font-family:inherit;font-size:.9rem;font-weight:700;color:#fff;border:none;border-radius:10px;padding:13px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:10px;justify-content:center}
+    .stepbtn .num{width:1.5rem;height:1.5rem;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+    .stepbtn:disabled{background:#2a3340!important;color:#5a6473;cursor:not-allowed}
+    .stepbtn.sam{background:var(--sam)}.stepbtn.seg{background:var(--seg)}.stepbtn.judge{background:var(--acc)}
+    .stepbtn:not(:disabled):hover{filter:brightness(1.12)}
+    .stepbtn.done{background:var(--ok)!important}
+    .slider-row{padding:0 16px 12px}
+    .slider-row label{font-size:.78rem;color:var(--dim);display:flex;justify-content:space-between;margin-bottom:6px}
+    .slider-row input[type=range]{width:100%}
+    .slider-hint{font-size:.68rem;color:var(--dim);margin-top:4px;line-height:1.4}
+    .res{font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:4px 16px 0;min-height:16px}
+    .zonecard{padding:16px}
+    .zrow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:8px;background:#0b0e14;margin-bottom:6px;border:1px solid var(--line)}
+    .zrow .zn{font-weight:700}.zrow .zt{font-family:'JetBrains Mono',monospace;font-size:1.2rem}
+    .zrow.hot{border-color:var(--hot)}.zrow.hot .zt{color:var(--hot)}.zrow.ok .zt{color:var(--ok)}
+    .verdict{padding:16px}
+    .verdict .txt{font-size:.9rem;line-height:1.7;white-space:pre-wrap;max-height:260px;overflow-y:auto}
+    .dim{color:var(--dim);font-size:.85rem}
+  </style>
+</head>
+<body>
+  <div class="head"><h1>열화상 4단계 AI 판별</h1><span class="sub">YOLO → SAM3 윤곽 → 세분화 → 판별</span></div>
+  <div class="statusbar" id="statusbar">상태 확인 중...</div>
+  <div class="wrap">
+    <div>
+      <div class="card">
+        <h2>① 실시간 열화상 (YOLO 자동 탐지)</h2>
+        <div class="stream"><img id="video" alt="live"></div>
+      </div>
+      <div class="card" id="resultCard" style="display:none">
+        <h2 id="resultTitle">결과</h2>
+        <div class="stream"><img id="resultImg" alt="result"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>실행 단계</h2>
+        <div class="steps">
+          <button class="stepbtn sam" id="btnSam3" onclick="runSam3()">
+            <span class="num">2</span>SAM3 윤곽 따기
+          </button>
+        </div>
+        <div class="slider-row">
+          <label>인물 민감도 (percentile) <span id="pctVal">92</span></label>
+          <input type="range" id="pctSlider" min="50" max="95" value="92" step="1" oninput="document.getElementById('pctVal').textContent=this.value">
+          <div class="slider-hint">⚠️ 배경이 잡히면 <strong>낮추고</strong>(예: 70), 사람보다 넓게 잡히면 <strong>높이세요</strong>(예: 92). 조절 후 SAM3 버튼을 다시 누르세요.</div>
+        </div>
+        <div class="res" id="resSam3"></div>
+        <div class="steps">
+          <button class="stepbtn seg" id="btnSegment" onclick="runSegment()" disabled>
+            <span class="num">3</span>세분화 측정 (3등분)
+          </button>
+          <div class="res" id="resSegment"></div>
+          <button class="stepbtn judge" id="btnJudge" onclick="runJudge()" disabled>
+            <span class="num">4</span>AI 판별 (VLM)
+          </button>
+          <div class="res" id="resJudge"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>부위별 상대지수 (상/중/하)</h2>
+        <div class="zonecard" id="zonelist">
+          <div class="dim">SAM3 윤곽 → 세분화 순서로 진행하세요<br><span style="font-size:.75rem">※ 0~100 상대지수 (윤곽 내 재정규화 · ℃ 아님)</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>AI 판정 결과</h2>
+        <div class="verdict"><div class="txt" id="verdict">대기 중...</div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    let alertLevel = 75;
+    document.getElementById('video').src = '/video_feed?t=' + Date.now();
+
+    async function checkStatus(){
+      try{
+        const s = await (await fetch('/status')).json();
+        alertLevel = s.alert_level || 75;
+        const sam = s.sam3_online ? 'OK' : 'X';
+        document.getElementById('statusbar').textContent =
+          `YOLO ${s.yolo_loaded?'OK':'X'} | 탐지 ${s.live_boxes}명 | video${s.thermal_device} | SAM3(4090) ${sam}`;
+      }catch(e){}
+    }
+
+    function showResult(title, b64){
+      document.getElementById('resultCard').style.display = 'block';
+      document.getElementById('resultTitle').textContent = title;
+      const ri = document.getElementById('resultImg');
+      ri.src = ''; ri.src = 'data:image/jpeg;base64,' + b64;
+    }
+
+    async function runSam3(){
+      const btn = document.getElementById('btnSam3');
+      btn.disabled = true; const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="num">2</span>윤곽 따는 중...';
+      document.getElementById('resSam3').textContent = '';
+      const pct = parseFloat(document.getElementById('pctSlider').value);
+      try{
+        const r = await (await fetch('/run_sam3',{method:'POST',headers:{'Content-Type':'application/json'},
+                          body:JSON.stringify({percentile:pct})})).json();
+        if(!r.ok){
+          document.getElementById('resSam3').style.color='var(--hot)';
+          document.getElementById('resSam3').textContent='❌ '+r.error;
+        }else{
+          document.getElementById('resSam3').style.color='var(--ok)';
+          document.getElementById('resSam3').textContent=`✅ 윤곽 완료 (면적 ${r.areas}%)`;
+          showResult('② SAM3 사람 윤곽 (보라선)', r.image);
+          btn.classList.add('done');
+          document.getElementById('btnSegment').disabled = false;
+        }
+      }catch(e){
+        document.getElementById('resSam3').style.color='var(--hot)';
+        document.getElementById('resSam3').textContent='❌ 통신 오류';
+      }
+      btn.disabled = false; btn.innerHTML = orig;
+    }
+
+    async function runSegment(){
+      const btn = document.getElementById('btnSegment');
+      btn.disabled = true; const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="num">3</span>측정 중...';
+      document.getElementById('resSegment').textContent = '';
+      try{
+        const r = await (await fetch('/run_segment',{method:'POST'})).json();
+        if(!r.ok){
+          document.getElementById('resSegment').style.color='var(--hot)';
+          document.getElementById('resSegment').textContent='❌ '+r.error;
+        }else{
+          document.getElementById('resSegment').style.color='var(--ok)';
+          document.getElementById('resSegment').textContent='✅ 세분화 완료';
+          showResult('③ 윤곽 내 3등분 세분화', r.image);
+          renderZones(r.zones);
+          btn.classList.add('done');
+          document.getElementById('btnJudge').disabled = false;
+        }
+      }catch(e){
+        document.getElementById('resSegment').style.color='var(--hot)';
+        document.getElementById('resSegment').textContent='❌ 통신 오류';
+      }
+      btn.disabled = false; btn.innerHTML = orig;
+    }
+
+    async function runJudge(){
+      const btn = document.getElementById('btnJudge');
+      btn.disabled = true; const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="num">4</span>판정 중...';
+      document.getElementById('resJudge').textContent = '';
+      try{
+        const r = await (await fetch('/run_judge',{method:'POST'})).json();
+        if(!r.ok){
+          document.getElementById('resJudge').style.color='var(--hot)';
+          document.getElementById('resJudge').textContent='❌ '+r.error;
+        }else{
+          document.getElementById('resJudge').style.color='var(--ok)';
+          document.getElementById('resJudge').textContent='✅ 판별 완료';
+          showResult('④ 최종 판정', r.image);
+          document.getElementById('verdict').textContent = r.analysis || '';
+          btn.classList.add('done');
+        }
+      }catch(e){
+        document.getElementById('resJudge').style.color='var(--hot)';
+        document.getElementById('resJudge').textContent='❌ 통신 오류';
+      }
+      btn.disabled = false; btn.innerHTML = orig;
+    }
+
+    function renderZones(allZones){
+      const box = document.getElementById('zonelist');
+      if(!allZones || !allZones.length){ box.innerHTML='<div class="dim">측정 데이터 없음</div>'; return; }
+      let html = '';
+      allZones.forEach((zones,i)=>{
+        if(allZones.length>1) html += `<div class="dim" style="margin:6px 0">대상 ${i+1}</div>`;
+        zones.forEach(z=>{
+          if(z.mean===null){ html += `<div class="zrow"><span class="zn">${z.name}</span><span class="zt">N/A</span></div>`; return; }
+          const hot = z.max >= alertLevel;
+          html += `<div class="zrow ${hot?'hot':'ok'}"><span class="zn">${z.name}</span><span class="zt">${z.mean}<span style="font-size:.7rem;color:var(--dim)"> 지수</span></span></div>`;
+        });
+      });
+      box.innerHTML = html;
+    }
+
+    setInterval(checkStatus, 2000);
+    checkStatus();
+  </script>
+</body>
+</html>
