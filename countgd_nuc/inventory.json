@@ -1,0 +1,33 @@
+[
+  {
+    "timestamp": "2026-06-28T16:54:17",
+    "location": "미지정",
+    "total": 8,
+    "rim_count": 8,
+    "countgd_count": 18
+  },
+  {
+    "timestamp": "2026-06-28T17:27:11",
+    "location": "미지정",
+    "total": 30,
+    "rim_count": 30,
+    "countgd_count": 43,
+    "vlm_count": 12
+  },
+  {
+    "timestamp": "2026-06-28T17:39:32",
+    "location": "미지정",
+    "total": 8,
+    "rim_count": 8,
+    "countgd_count": 16,
+    "vlm_count": 12
+  },
+  {
+    "timestamp": "2026-06-28T17:44:24",
+    "location": "미지정",
+    "total": 27,
+    "rim_count": 27,
+    "countgd_count": 42,
+    "vlm_count": 12
+  }
+]

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!-- 재고조사 보고서 — 저장된 inventory.json 기록만 표로 표시 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 컵 재고조사 보고서</title>
+<style>
+  :root { --green:#059669; --purple:#7C3AED; --blue:#2563EB; --gold:#fbbf24;
+          --bg:#0f172a; --card:#1e293b; --border:#334155; --dim:#64748b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:#e2e8f0; padding:24px;
+         max-width:1000px; margin:0 auto; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:12px; }
+  h1 { font-size:1.5rem; }
+  .back { background:#475569; color:#fff; text-decoration:none; padding:9px 16px; border-radius:9px;
+          font-size:.85rem; font-weight:700; white-space:nowrap; }
+  .subtitle { color:var(--dim); font-size:.85rem; margin-bottom:20px; }
+
+  /* 요약 카드 */
+  .summary { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:22px; }
+  .scard { flex:1; min-width:160px; background:var(--card); border-radius:12px; padding:18px; text-align:center; }
+  .scard .n { font-size:2.4rem; font-weight:800; }
+  .scard.rec .n { color:var(--blue); } .scard.sum .n { color:var(--green); }
+  .scard .lbl { font-size:.8rem; color:var(--dim); margin-top:2px; }
+
+  /* 표 */
+  .table-wrap { background:var(--card); border-radius:12px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { padding:13px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  th { background:rgba(124,58,237,.12); color:#cbd5e1; font-weight:700; font-size:.82rem; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,.02); }
+  td.total { font-weight:800; color:var(--green); font-size:1.1rem; }
+  td.loc { color:#e2e8f0; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:.75rem; font-weight:700; }
+  .badge.rim { background:rgba(5,150,105,.2); color:#34d399; }
+  .badge.cgd { background:rgba(124,58,237,.2); color:#a78bfa; }
+  .badge.vlm { background:rgba(37,99,235,.2); color:#60a5fa; }
+  .time { color:var(--dim); font-size:.82rem; white-space:nowrap; }
+
+  .empty { background:var(--card); border-radius:12px; padding:50px 20px; text-align:center; color:var(--dim); }
+  .empty .icon { font-size:3rem; margin-bottom:12px; }
+  .print-btn { background:var(--blue); color:#fff; border:none; padding:11px 20px; border-radius:9px;
+               font-weight:700; cursor:pointer; font-size:.88rem; margin-top:18px; }
+  @media print {
+    body { background:#fff; color:#000; } .back, .print-btn { display:none; }
+    .scard, .table-wrap { background:#f8f8f8; border:1px solid #ddd; }
+    th { background:#eee; color:#000; } td.total { color:#059669; }
+  }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>📊 컵 재고조사 보고서</h1>
+    <a href="/" class="back">← 조사 화면으로</a>
+  </div>
+  <div class="subtitle">저장된 재고조사 기록 (최신순)</div>
+
+  <div class="summary">
+    <div class="scard rec"><div class="n">{{ total_records }}</div><div class="lbl">총 조사 건수</div></div>
+    <div class="scard sum"><div class="n">{{ total_sum }}</div><div class="lbl">누적 컵 합계 (EA)</div></div>
+  </div>
+
+  {% if records %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>조사 시각</th>
+          <th>위치</th>
+          <th>최종 개수</th>
+          <th>rim</th>
+          <th>CountGD</th>
+          <th>VLM</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td class="time">{{ r.timestamp|replace("T", " ") }}</td>
+          <td class="loc">{{ r.location }}</td>
+          <td class="total">{{ r.total }}</td>
+          <td><span class="badge rim">{{ r.rim_count if r.rim_count is defined else "-" }}</span></td>
+          <td><span class="badge cgd">{{ r.countgd_count if r.countgd_count is defined else "-" }}</span></td>
+          <td><span class="badge vlm">{{ r.vlm_count if r.vlm_count is defined else "-" }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+  {% else %}
+  <div class="empty">
+    <div class="icon">📭</div>
+    <div>아직 저장된 재고조사 기록이 없습니다.</div>
+    <div style="margin-top:8px; font-size:.85rem;">조사 화면에서 컵을 세고 저장하면 여기에 표시됩니다.</div>
+  </div>
+  {% endif %}
+</body>
+</html>

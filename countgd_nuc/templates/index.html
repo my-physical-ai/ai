@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<!-- 단계별 컵 재고조사 — YOLO→GDINO(2단검증)→SAM3분할→(CountGD vs rim)→저장 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 컵 재고조사 (YOLO+GDINO 2단검증)</title>
+<style>
+  :root { --green:#059669; --purple:#7C3AED; --blue:#2563EB; --gold:#fbbf24;
+          --bg:#0f172a; --card:#1e293b; --border:#334155; --dim:#64748b; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:#e2e8f0; padding:20px;
+         max-width:1000px; margin:0 auto; }
+  h1 { font-size:1.5rem; margin-bottom:4px; }
+  .subtitle { color:var(--dim); font-size:.85rem; margin-bottom:18px; }
+  .links { margin-bottom:16px; } .links a { color:var(--purple); text-decoration:none; font-size:.85rem; }
+  .stepper { display:flex; justify-content:space-between; margin-bottom:24px; position:relative; }
+  .stepper::before { content:''; position:absolute; top:18px; left:5%; right:5%; height:2px; background:var(--border); z-index:0; }
+  .step { display:flex; flex-direction:column; align-items:center; gap:6px; z-index:1; flex:1; }
+  .step .dot { width:38px; height:38px; border-radius:50%; background:var(--card); border:2px solid var(--border);
+               display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--dim); transition:all .3s; }
+  .step.active .dot { background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 0 0 4px rgba(37,99,235,.25); }
+  .step.done .dot { background:var(--green); border-color:var(--green); color:#fff; }
+  .step .lbl { font-size:.72rem; color:var(--dim); text-align:center; }
+  .step.active .lbl { color:#e2e8f0; font-weight:700; }
+  .card { background:var(--card); border-radius:14px; padding:20px; margin-bottom:16px; }
+  .card h2 { font-size:1.1rem; margin-bottom:12px; }
+  .card h2 .num { display:inline-block; width:26px; height:26px; border-radius:50%; background:var(--blue);
+                  color:#fff; text-align:center; line-height:26px; font-size:.85rem; margin-right:8px; }
+  img.view { width:100%; border-radius:10px; background:#000; display:block; }
+  button { border:none; border-radius:10px; padding:13px 22px; font-size:1rem; font-weight:700; cursor:pointer; color:#fff; }
+  button:disabled { opacity:.35; }
+  .b-next { background:var(--blue); } .b-save { background:var(--green); } .b-reset { background:#475569; font-size:.85rem; padding:9px 16px; }
+  .actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+  input { background:var(--bg); border:1px solid var(--border); color:#e2e8f0; padding:11px; border-radius:8px; min-width:160px; }
+  input.num { width:90px; text-align:center; font-size:1.1rem; font-weight:700; }
+  .msg { padding:10px 14px; border-radius:8px; font-size:.9rem; margin-top:10px; }
+  .msg.info { background:rgba(37,99,235,.15); border-left:3px solid var(--blue); }
+  .msg.ok { background:rgba(5,150,105,.15); border-left:3px solid var(--green); }
+  .msg.err { background:rgba(230,70,70,.15); border-left:3px solid #e64646; }
+  .hidden { display:none; }
+  .compare { display:flex; gap:14px; flex-wrap:wrap; margin:14px 0; }
+  .method { flex:1; min-width:200px; background:var(--bg); border-radius:10px; padding:16px; text-align:center; }
+  .method.rim { border:2px solid var(--green); } .method.countgd { border:2px solid var(--purple); } .method.vlm { border:2px solid var(--blue); }
+  .method .name { font-size:.85rem; color:var(--dim); }
+  .method .n { font-size:2.6rem; font-weight:800; margin:4px 0; }
+  .method.rim .n { color:var(--green); } .method.countgd .n { color:var(--purple); } .method.vlm .n { color:var(--blue); }
+  .method .desc { font-size:.72rem; color:var(--dim); }
+  .rimview img { width:100%; border-radius:8px; margin-top:10px; }
+</style>
+</head>
+<body>
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:6px;">
+    <div>
+      <h1>📦 컵 재고조사 <span style="font-size:.8rem;color:var(--dim);">YOLO + GDINO 2단검증</span></h1>
+      <div class="subtitle">YOLO 1차 → GDINO 재확인 → SAM3 분할 → CountGD vs rim 비교 → 저장</div>
+    </div>
+    <a href="/report" target="_blank" style="flex-shrink:0; background:var(--purple); color:#fff;
+       text-decoration:none; padding:11px 18px; border-radius:10px; font-weight:700; font-size:.9rem;
+       white-space:nowrap;">📊 재고 보고서</a>
+  </div>
+
+  <div class="stepper">
+    <div class="step active" id="st1"><div class="dot">1</div><div class="lbl">YOLO<br>1차탐지</div></div>
+    <div class="step" id="st2"><div class="dot">2</div><div class="lbl">GDINO<br>재확인</div></div>
+    <div class="step" id="st3"><div class="dot">3</div><div class="lbl">SAM3<br>분할</div></div>
+    <div class="step" id="st4"><div class="dot">4</div><div class="lbl">카운팅<br>비교</div></div>
+    <div class="step" id="st5"><div class="dot">5</div><div class="lbl">서버<br>저장</div></div>
+  </div>
+
+  <!-- 1단계: YOLO -->
+  <div class="card" id="card1">
+    <h2><span class="num">1</span>촬영 — YOLO 1차 탐지</h2>
+    <img class="view" id="live" src="/video_feed" alt="live">
+    <div class="msg info">컵이 잘 보이게 한 뒤 촬영하면 YOLO가 컵을 1차로 찾습니다.</div>
+    <div class="msg err hidden" id="msg1"></div>
+    <div class="actions"><button class="b-next" onclick="step1()">📸 촬영 &amp; YOLO 탐지</button></div>
+  </div>
+
+  <!-- 2단계: GDINO -->
+  <div class="card hidden" id="card2">
+    <h2><span class="num">2</span>GDINO 재확인 — 2단 검증</h2>
+    <img class="view" id="img2" alt="gdino">
+    <div class="msg info" id="msg2">GDINO로 다시 확인하고 가장 큰 컵(스택)을 선택합니다.</div>
+    <div class="actions"><button class="b-next" onclick="step2()">🔍 GDINO 재확인</button></div>
+  </div>
+
+  <!-- 3단계: SAM3 분할 -->
+  <div class="card hidden" id="card3">
+    <h2><span class="num">3</span>SAM3 분할 — 컵만 분리 (분할 상태 표시)</h2>
+    <img class="view" id="img3" alt="sam">
+    <div class="msg info" id="msg3">SAM3가 선택된 컵을 분리합니다. 분할된 상태를 그대로 보여줍니다.</div>
+    <div class="actions"><button class="b-next" onclick="step3()">🎨 SAM3 분할</button></div>
+  </div>
+
+  <!-- 4단계: 비교 -->
+  <div class="card hidden" id="card4">
+    <h2><span class="num">4</span>카운팅 비교 — rim vs CountGD</h2>
+    <div class="compare">
+      <div class="method rim"><div class="name">🟢 rim 카운팅</div><div class="n" id="rimN">-</div><div class="desc">줄무늬 · 민무늬컵 강함</div></div>
+      <div class="method countgd"><div class="name">🟣 CountGD</div><div class="n" id="cgdN">-</div><div class="desc">객체탐지 · 4090</div></div>
+      <div class="method vlm"><div class="name">🔵 VLM</div><div class="n" id="vlmN">-</div><div class="desc">맥락추론 · 무늬컵 강함</div></div>
+    </div>
+    <div class="rimview"><img id="rimImg" alt="rim"></div>
+    <div class="msg info" id="msg4">두 방식으로 동시에 세어 비교합니다.</div>
+    <div class="actions"><button class="b-next" onclick="step4()">🔢 카운팅 비교</button></div>
+  </div>
+
+  <!-- 5단계: 저장 -->
+  <div class="card hidden" id="card5">
+    <h2><span class="num">5</span>서버 저장</h2>
+    <div class="actions"><span>최종 개수:</span><input class="num" type="number" id="finalN" value="0">
+      <span style="color:var(--dim);font-size:.85rem;">(수정 가능)</span></div>
+    <div class="actions"><input type="text" id="loc" placeholder="창고 위치 (예: A-3 선반)" style="flex:1;">
+      <button class="b-save" onclick="step5()">💾 서버에 저장</button></div>
+    <div class="msg ok hidden" id="msg5"></div>
+    <div class="actions"><button class="b-reset" onclick="resetAll()">🔄 새 조사</button></div>
+  </div>
+
+<script>
+function setStep(n){ for(let i=1;i<=5;i++){ const el=document.getElementById('st'+i);
+  el.classList.remove('active','done'); if(i<n) el.classList.add('done'); else if(i===n) el.classList.add('active'); } }
+function showCard(n){ document.getElementById('card'+n).classList.remove('hidden'); }
+
+async function step1(){
+  const m=document.getElementById('msg1'); m.classList.add('hidden');
+  try{
+    const res=await fetch('/step1_yolo',{method:'POST'}); const d=await res.json();
+    if(!res.ok){ m.textContent=(d.error||res.status); m.classList.remove('hidden'); return; }
+    document.getElementById('live').style.display='none';
+    let img=document.getElementById('prev1');
+    if(!img){ img=document.createElement('img'); img.id='prev1'; img.className='view';
+              document.getElementById('card1').insertBefore(img, document.getElementById('live').nextSibling); }
+    img.src='data:image/jpeg;base64,'+d.image;
+    setStep(2); showCard(2); document.getElementById('card2').scrollIntoView({behavior:'smooth'});
+  }catch(e){ m.textContent='오류: '+e.message; m.classList.remove('hidden'); }
+}
+async function step2(){
+  const m=document.getElementById('msg2'); m.textContent='GDINO 재확인 중...'; m.className='msg info';
+  const res=await fetch('/step2_gdino',{method:'POST'}); const d=await res.json();
+  if(!res.ok){ m.textContent=d.error; m.className='msg err'; return; }
+  document.getElementById('img2').src='data:image/jpeg;base64,'+d.image;
+  m.textContent=d.message; m.className='msg ok';
+  setStep(3); showCard(3); document.getElementById('card3').scrollIntoView({behavior:'smooth'});
+}
+async function step3(){
+  const m=document.getElementById('msg3'); m.textContent='SAM3 분할 중...'; m.className='msg info';
+  const res=await fetch('/step3_sam',{method:'POST'}); const d=await res.json();
+  if(!res.ok){ m.textContent=d.error; m.className='msg err'; return; }
+  document.getElementById('img3').src='data:image/jpeg;base64,'+d.image;
+  m.textContent=d.message; m.className='msg ok';
+  setStep(4); showCard(4); document.getElementById('card4').scrollIntoView({behavior:'smooth'});
+}
+async function step4(){
+  const m=document.getElementById('msg4'); m.textContent='카운팅 중...'; m.className='msg info';
+  const res=await fetch('/step4_count',{method:'POST'}); const d=await res.json();
+  if(!res.ok){ m.textContent=d.error; m.className='msg err'; return; }
+  document.getElementById('rimN').textContent=d.rim;
+  document.getElementById('cgdN').textContent=(d.countgd===null?'실패':d.countgd);
+  document.getElementById('vlmN').textContent=(d.vlm===null?'실패':d.vlm);
+  document.getElementById('rimImg').src='data:image/jpeg;base64,'+d.rim_image;
+  document.getElementById('finalN').value=d.final;
+  m.textContent=d.message; m.className='msg ok';
+  setStep(5); showCard(5); document.getElementById('card5').scrollIntoView({behavior:'smooth'});
+}
+async function step5(){
+  const payload={ location:document.getElementById('loc').value||'미지정', final:parseInt(document.getElementById('finalN').value)||0 };
+  const res=await fetch('/step5_save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const d=await res.json();
+  const m=document.getElementById('msg5'); m.textContent=d.message; m.classList.remove('hidden');
+  for(let i=1;i<=5;i++) document.getElementById('st'+i).classList.add('done');
+}
+function resetAll(){
+  setStep(1); for(let i=2;i<=5;i++) document.getElementById('card'+i).classList.add('hidden');
+  const p=document.getElementById('prev1'); if(p) p.remove();
+  document.getElementById('live').style.display='block';
+  document.getElementById('msg5').classList.add('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<!-- 핸드폰 촬영 재고조사 — 모바일 브라우저에서 카메라로 찍어 바로 업로드 -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>📱 컵 재고조사 (모바일)</title>
+<style>
+  :root { --green:#059669; --purple:#7C3AED; --blue:#2563EB; --bg:#0f172a; --card:#1e293b; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Noto Sans KR',sans-serif; background:var(--bg); color:#e2e8f0; padding:16px; }
+  h1 { font-size:1.3rem; margin-bottom:14px; text-align:center; }
+  .card { background:var(--card); border-radius:14px; padding:16px; margin-bottom:14px; }
+  input[type=text] { width:100%; background:#0f172a; border:1px solid #334155; color:#e2e8f0;
+                     padding:13px; border-radius:10px; font-size:1rem; margin-bottom:12px; }
+  .big-btn { display:block; width:100%; border:none; border-radius:12px; padding:18px;
+             font-size:1.15rem; font-weight:800; color:#fff; cursor:pointer; margin-bottom:10px; }
+  .b-cam { background:var(--blue); } .b-save { background:var(--green); } .b-report { background:#475569; }
+  .big-btn:disabled { opacity:.4; }
+  img.result { width:100%; border-radius:10px; background:#000; margin-top:10px; }
+  .total { text-align:center; font-size:3rem; font-weight:800; color:var(--green); margin:10px 0; }
+  .stack { background:#0f172a; border-left:4px solid var(--purple); padding:10px 12px;
+           border-radius:8px; margin-top:8px; font-size:.92rem; }
+  .stack.occ { border-left-color:#e64646; }
+  .tag { font-size:.72rem; font-weight:700; padding:2px 7px; border-radius:5px; margin-left:6px; }
+  .tag.occ { background:#e64646; } .tag.stk { background:var(--purple); } .tag.sgl { background:#475569; }
+  .spinner { text-align:center; padding:20px; color:#94a3b8; }
+  /* 카메라 입력은 숨기고 버튼으로 트리거 */
+  #camInput { display:none; }
+</style>
+</head>
+<body>
+  <h1>📱 컵 재고조사</h1>
+
+  <div class="card">
+    <input type="text" id="loc" placeholder="창고 위치 (예: A-3 선반)">
+    <!-- capture="environment" = 후면 카메라 바로 실행 -->
+    <input type="file" id="camInput" accept="image/*" capture="environment" onchange="onPhoto(event)">
+    <button class="big-btn b-cam" onclick="document.getElementById('camInput').click()">
+      📷 사진 찍어서 재고조사
+    </button>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none;">
+    <div id="spinner" class="spinner">🔍 AI 분석 중...<br><small>GDINO → SAM3 → 겹침분석 → VLM</small></div>
+    <div id="resultBody" style="display:none;">
+      <div class="total"><span id="total">-</span><span style="font-size:1.2rem;"> EA</span></div>
+      <div id="stacks"></div>
+      <img class="result" id="resultImg" alt="결과">
+      <button class="big-btn b-save" id="saveBtn" onclick="save()" style="margin-top:14px;">💾 서버에 저장</button>
+    </div>
+  </div>
+
+  <button class="big-btn b-report" onclick="location.href='/report'">📊 재고조사 보고서 보기</button>
+
+<script>
+let lastResult = null;  // 마지막 분석 결과
+
+// 사진 촬영 → 업로드 → 파이프라인
+async function onPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('resultBody').style.display = 'none';
+
+  const fd = new FormData();
+  fd.append('file', file);                         // 촬영 이미지 첨부
+
+  const res = await fetch('/upload', {method:'POST', body:fd});  // 업로드 API
+  if(!res.ok){ alert('분석 실패'); return; }
+  const data = await res.json();
+  lastResult = data;
+
+  // 결과 표시
+  document.getElementById('total').textContent = data.total;
+  document.getElementById('resultImg').src = 'data:image/jpeg;base64,' + data.image;
+
+  const box = document.getElementById('stacks');
+  box.innerHTML = data.stacks.map(s => {
+    const tag = s.occluded ? '<span class="tag occ">겹침</span>'
+              : s.stack_likely ? '<span class="tag stk">스택</span>'
+              : '<span class="tag sgl">단일</span>';
+    const m = {yolo:'YOLO', vlm:'VLM', fusion:'융합', countgd:'CountGD', 'countgd+divide':'CountGD+분할'}[s.method] || s.method || '';
+    const mtag = m ? `<span class="tag" style="background:#2563EB">${m}</span>` : '';
+    const dtag = s.divide_info ? `<span class="tag" style="background:#7C3AED">${s.divide_info.grid}×${s.divide_info.grid}분할</span>` : '';
+    const sig = s.signals ? `IoU ${s.signals.max_iou} · 종횡비 ${s.signals.aspect} · 볼록성 ${s.signals.convexity}` : '';
+    return `<div class="stack ${s.occluded?'occ':''}">
+              <b>스택 #${s.stack_id}</b>: ${s.count}개 ${tag}${mtag}${dtag}
+              <div style="color:#94a3b8;font-size:.82rem;margin-top:4px;">${s.reason}</div>
+              <div style="color:#64748b;font-size:.72rem;margin-top:3px;">${sig}</div>
+            </div>`;
+  }).join('');
+
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('resultBody').style.display = 'block';
+  e.target.value = '';  // 같은 사진 재촬영 가능하도록 초기화
+}
+
+// 서버 저장
+async function save(){
+  if(!lastResult) return;
+  const payload = {
+    location: document.getElementById('loc').value || '미지정',
+    total: lastResult.total,
+    stacks: lastResult.stacks
+  };
+  const res = await fetch('/save', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  alert(`저장 완료! (총 ${data.record_count}건)`);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# 컵 재고조사 시스템 — 누크(NUC) 측 의존성
+flask>=3.0.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+requests>=2.31.0
