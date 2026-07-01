@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>열화상 AI 산업 10대 사례 (SVG·링크·검색어) - Physical AI Education</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --color-primary: #DC2626; --color-primary-light: #FEE2E2;
+  --color-secondary: #7C3AED; --color-secondary-light: #EDE9FE;
+  --color-success: #059669; --color-success-light: #D1FAE5;
+  --color-warning: #D97706; --color-warning-light: #FEF3C7;
+  --color-blue: #2563EB; --color-blue-light: #DBEAFE;
+  --color-surface: #F8FAFC; --color-card: #FFFFFF;
+  --color-text: #1E293B; --color-muted: #64748B; --color-border: #E2E8F0;
+}
+body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.75; }
+code, pre { font-family: 'JetBrains Mono', monospace; }
+.container { max-width: 980px; margin: 0 auto; padding: 0 1.5rem; }
+section { padding: 3rem 0; }
+
+/* 히어로 */
+.hero { background: linear-gradient(135deg, #7F1D1D 0%, #DC2626 50%, #7C3AED 100%); color: white; padding: 4rem 0 3.5rem; position: relative; overflow: hidden; }
+.hero::after { content:""; position:absolute; inset:0; background: radial-gradient(circle at 85% 15%, rgba(245,158,11,0.35), transparent 45%), radial-gradient(circle at 10% 90%, rgba(37,99,235,0.30), transparent 42%); pointer-events:none; }
+.hero .container { position: relative; z-index: 1; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+.hero-tag { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); padding: 0.35rem 0.9rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; }
+.hero h1 { font-size: 2.5rem; font-weight: 900; line-height: 1.2; margin-bottom: 1rem; }
+.hero-subtitle { font-size: 1.1rem; opacity: 0.95; max-width: 760px; }
+.hero-badge { display:inline-block; background:#FBBF24; color:#7F1D1D; font-weight:900; font-size:0.82rem; padding:0.25rem 0.8rem; border-radius:8px; margin-bottom:1rem; }
+
+.section-title { font-size: 1.85rem; font-weight: 900; margin-bottom: 0.5rem; }
+.section-lead { color: var(--color-muted); margin-bottom: 2rem; font-size: 1.02rem; }
+.kicker { display:inline-block; font-size:0.8rem; font-weight:700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+
+/* 비유 */
+.analogy-box { display:flex; gap:1.25rem; padding:1.5rem; background: var(--color-primary-light); border-radius:12px; border-left:4px solid var(--color-primary); margin:1.5rem 0; }
+.analogy-icon { font-size:2.5rem; flex-shrink:0; }
+.analogy-title { font-weight:700; font-size:0.85rem; color: var(--color-primary); text-transform: uppercase; letter-spacing:0.05em; margin-bottom:0.5rem; }
+.analogy-text { line-height:1.7; }
+.analogy-real { margin-top:0.75rem; padding-top:0.75rem; border-top:1px dashed var(--color-primary); font-size:0.9rem; color: var(--color-muted); }
+
+/* 콜아웃 */
+.callout { display:flex; gap:0.75rem; padding:1rem 1.25rem; border-radius:10px; align-items:flex-start; margin:1.25rem 0; }
+.callout-icon { font-size:1.25rem; flex-shrink:0; padding-top:0.1rem; }
+.callout-content { font-size:0.95rem; line-height:1.6; }
+.callout-tip { background: var(--color-success-light); border-left:3px solid var(--color-success); }
+.callout-warning { background: var(--color-warning-light); border-left:3px solid var(--color-warning); }
+.callout-info { background: var(--color-blue-light); border-left:3px solid var(--color-blue); }
+
+/* 사례 카드 */
+.case-card { background: var(--color-card); border:1px solid var(--color-border); border-radius:16px; overflow:hidden; margin-bottom:2.5rem; box-shadow:0 4px 12px -2px rgba(0,0,0,0.08); }
+.case-head { display:flex; align-items:center; gap:1rem; padding:1.5rem 1.75rem; color:white; }
+.case-head.c-detect { background: linear-gradient(120deg, #7C3AED, #A78BFA); }
+.case-head.c-maint  { background: linear-gradient(120deg, #DC2626, #F97316); }
+.case-head.c-safety { background: linear-gradient(120deg, #059669, #34D399); }
+.case-head.c-energy { background: linear-gradient(120deg, #2563EB, #38BDF8); }
+.case-num { font-size:2rem; font-weight:900; opacity:0.55; min-width:56px; line-height:1; }
+.case-titlewrap h3 { font-size:1.2rem; font-weight:900; margin-bottom:0.15rem; }
+.case-org { font-size:0.83rem; opacity:0.92; font-weight:500; }
+.case-badge { margin-left:auto; background: rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.35); padding:0.3rem 0.8rem; border-radius:999px; font-size:0.72rem; font-weight:700; white-space:nowrap; }
+.case-body { padding:1.5rem 1.75rem; }
+.case-body p { margin-bottom:0.9rem; }
+.case-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.25rem 0; }
+.spec-box { background: var(--color-surface); border:1px solid var(--color-border); border-radius:10px; padding:1rem 1.1rem; }
+.spec-box .spec-h { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color: var(--color-muted); margin-bottom:0.5rem; }
+.spec-box ul { list-style:none; }
+.spec-box li { font-size:0.9rem; padding:0.2rem 0; display:flex; gap:0.45rem; }
+.spec-box li::before { content:"▸"; color: var(--color-primary); flex-shrink:0; }
+
+/* SVG 일러스트 박스 */
+.illust { width:100%; border-radius:12px; border:1px solid var(--color-border); display:block; margin:1.25rem 0 0.4rem; background:#0F172A; }
+.illust-cap { font-size:0.78rem; color:var(--color-muted); margin-bottom:1rem; font-style:italic; text-align:center; }
+
+/* AI 모델 박스 */
+.ai-model-box { background: linear-gradient(135deg, #4C1D95, #6D28D9); color:white; border-radius:12px; padding:1.25rem 1.4rem; margin:1.25rem 0; }
+.ai-model-box .ai-h { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; opacity:0.85; margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem; }
+.ai-model-box .ai-models { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem; }
+.ai-model-tag { background: rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); font-family:'JetBrains Mono', monospace; font-size:0.8rem; font-weight:500; padding:0.25rem 0.7rem; border-radius:6px; }
+.ai-model-box .ai-desc { font-size:0.88rem; line-height:1.6; opacity:0.95; }
+
+/* 동영상/검색 박스 */
+.media-ref { background: #FFF7ED; border:1px solid #FED7AA; border-left:4px solid #EA580C; border-radius:10px; padding:1rem 1.2rem; margin:1.25rem 0; }
+.media-ref .mr-h { font-size:0.78rem; font-weight:700; color:#C2410C; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem; }
+.media-ref ul { list-style:none; }
+.media-ref li { font-size:0.88rem; padding:0.35rem 0; line-height:1.5; border-bottom:1px dashed #FED7AA; }
+.media-ref li:last-child { border-bottom:none; }
+.media-ref .mr-label { font-weight:700; color:#9A3412; margin-right:0.3rem; }
+.media-ref a { color:#0369A1; word-break:break-all; text-decoration:none; font-family:'JetBrains Mono', monospace; font-size:0.82rem; }
+.media-ref a:hover { text-decoration:underline; }
+.media-ref .mr-search { display:inline-block; background:#FFEDD5; color:#9A3412; font-weight:600; padding:0.1rem 0.5rem; border-radius:5px; font-size:0.83rem; }
+
+.result-line { display:flex; align-items:baseline; gap:0.6rem; padding:0.5rem 0; border-bottom:1px dashed var(--color-border); }
+.result-line:last-child { border-bottom:none; }
+.result-val { font-weight:900; color: var(--color-success); font-size:1.05rem; min-width:92px; }
+.result-txt { font-size:0.9rem; }
+
+/* 표 */
+.tbl-wrap { overflow-x:auto; border-radius:12px; border:1px solid var(--color-border); margin:1.5rem 0; }
+table { border-collapse:collapse; width:100%; min-width:720px; background: var(--color-card); }
+th, td { padding:0.8rem 1rem; text-align:left; font-size:0.86rem; border-bottom:1px solid var(--color-border); }
+th { background: var(--color-surface); font-weight:700; }
+td code { background: var(--color-secondary-light); color: var(--color-secondary); padding:0.1rem 0.4rem; border-radius:4px; font-size:0.8rem; }
+tr:last-child td { border-bottom:none; }
+
+/* 흐름 */
+.flow-diagram { display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:1.75rem; background: var(--color-surface); border-radius:16px; overflow-x:auto; border:1px solid var(--color-border); margin:1.5rem 0; }
+.flow-node { background: var(--color-card); border:2px solid var(--node-color, var(--color-primary)); border-radius:12px; padding:1.1rem 0.9rem; text-align:center; min-width:125px; flex-shrink:0; }
+.flow-node-icon { font-size:1.7rem; margin-bottom:0.4rem; }
+.flow-node-title { font-weight:700; font-size:0.88rem; }
+.flow-node-desc { font-size:0.74rem; color: var(--color-muted); margin-top:0.2rem; }
+
+/* 목차 */
+.toc { background: var(--color-card); border:1px solid var(--color-border); border-radius:16px; padding:1.5rem 1.75rem; margin-top:-1.5rem; box-shadow:0 4px 12px -4px rgba(0,0,0,0.1); }
+.toc h2 { font-size:1.1rem; margin-bottom:1rem; }
+.toc-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:0.4rem; }
+.toc-item { display:flex; gap:0.7rem; padding:0.5rem 0.7rem; border-radius:8px; text-decoration:none; color: var(--color-text); font-size:0.9rem; align-items:center; }
+.toc-item:hover { background: var(--color-surface); }
+.toc-item .n { font-weight:900; color: var(--color-primary); min-width:26px; }
+.toc-item .flag { margin-left:auto; font-size:0.72rem; }
+
+/* 마무리 */
+.wrap-box { background: linear-gradient(135deg, #1E293B, #334155); color:white; border-radius:16px; padding:2rem; }
+.wrap-box h3 { font-size:1.3rem; margin-bottom:1rem; }
+.wrap-box ul { list-style:none; }
+.wrap-box li { padding:0.5rem 0; display:flex; gap:0.6rem; line-height:1.6; }
+.wrap-box li::before { content:"✓"; color:#34D399; font-weight:900; flex-shrink:0; }
+
+footer { text-align:center; padding:2.5rem 1rem; color: var(--color-muted); font-size:0.85rem; }
+
+@media (max-width:768px) {
+  .hero h1 { font-size:1.85rem; }
+  .case-row { grid-template-columns:1fr; }
+  .flow-diagram { flex-direction:column; }
+  .case-head { flex-wrap:wrap; }
+  .case-badge { margin-left:0; }
+}
+@media print { .hero { background:white !important; color:black !important; } .hero-tag { color:black; border-color:#ccc; } .case-card { break-inside:avoid; } }
+</style>
+</head>
+<body>
+
+<!-- 히어로 -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge">🖼️ SVG 일러스트 · 🧠 AI 모델 · 🔗 영상 링크+검색어</div>
+    <div class="hero-tags">
+      <span class="hero-tag">🌡️ Thermal AI</span>
+      <span class="hero-tag">🏭 Smart Factory</span>
+      <span class="hero-tag">📎 오프라인 배포</span>
+      <span class="hero-tag">🇰🇷 K-제조</span>
+    </div>
+    <h1>열화상 카메라 × AI<br>산업 적용 10대 사례</h1>
+    <p class="hero-subtitle">
+      모든 그림은 <strong>인라인 SVG</strong>로 그려 핫링킹·깨짐이 없습니다.
+      각 사례 아래에 <strong>실제 동영상 링크 주소 + YouTube 검색어</strong>를 함께 넣어,
+      필요할 때 바로 찾아볼 수 있게 했습니다.
+    </p>
+  </div>
+</header>
+
+<!-- 목차 -->
+<div class="container">
+  <nav class="toc">
+    <h2>📑 10대 사례 — AI 모델 한눈에</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#c1"><span class="n">01</span> POSCO Spot 로봇 용광로 점검 <span class="flag">🇰🇷</span></a>
+      <a class="toc-item" href="#c2"><span class="n">02</span> 태양광 핫스팟 드론 AI</a>
+      <a class="toc-item" href="#c3"><span class="n">03</span> FLIR 플라스틱 IR 용접 검사</a>
+      <a class="toc-item" href="#c4"><span class="n">04</span> 시멘트 킬른 내화물 AI 비전</a>
+      <a class="toc-item" href="#c5"><span class="n">05</span> 로봇 용접 멜트풀 CNN-LSTM</a>
+      <a class="toc-item" href="#c6"><span class="n">06</span> 전기설비 자율 예지보전</a>
+      <a class="toc-item" href="#c7"><span class="n">07</span> FLIR 가스누출 OGI 머신러닝</a>
+      <a class="toc-item" href="#c8"><span class="n">08</span> 3D프린팅 결함 CNN 분류</a>
+      <a class="toc-item" href="#c9"><span class="n">09</span> 모터·베어링 전이학습 진단</a>
+      <a class="toc-item" href="#c10"><span class="n">10</span> 한국 전기설비 화재예방 <span class="flag">🇰🇷</span></a>
+    </div>
+  </nav>
+</div>
+
+<!-- 도입 -->
+<section>
+  <div class="container">
+    <span class="kicker">How to Read</span>
+    <h2 class="section-title">이 자료 보는 법</h2>
+    <p class="section-lead">보라색 박스(🧠)=AI 모델, 주황색 박스(🔗)=동영상 링크·검색어</p>
+    <div class="analogy-box">
+      <div class="analogy-icon">🌡️</div>
+      <div class="analogy-content">
+        <div class="analogy-title">이해하기 쉽게!</div>
+        <p class="analogy-text">
+          열화상 카메라는 <strong>"공장의 체온계"</strong>입니다. 기계가 고장 나기 전엔 먼저 미열이 나죠.
+          베어링은 마찰열로 월 2~5℃, 전기 접점은 헐거워지면 10~50℃ 올라요. 눈엔 안 보여도 열로는 보입니다.
+        </p>
+        <p class="analogy-real">
+          💡 <strong>AI는 "판독 의사"</strong> — 수천 개 장비의 체온을 사람이 다 못 보니, AI가 "정상/고장 전조"를 스스로 판단해 사람을 부릅니다.
+        </p>
+      </div>
+    </div>
+    <h3 style="margin:1.5rem 0 1rem; font-size:1.2rem;">🔄 공통 파이프라인</h3>
+    <div class="flow-diagram">
+      <div class="flow-node" style="--node-color:#DC2626"><div class="flow-node-icon">🌡️</div><div class="flow-node-title">열화상 취득</div><div class="flow-node-desc">IR 카메라</div></div>
+      <div class="flow-node" style="--node-color:#D97706"><div class="flow-node-icon">🧹</div><div class="flow-node-title">전처리</div><div class="flow-node-desc">정규화·정렬</div></div>
+      <div class="flow-node" style="--node-color:#7C3AED"><div class="flow-node-icon">🧠</div><div class="flow-node-title">AI 추론</div><div class="flow-node-desc">CNN/YOLO/AE</div></div>
+      <div class="flow-node" style="--node-color:#059669"><div class="flow-node-icon">🚨</div><div class="flow-node-title">판정·대응</div><div class="flow-node-desc">경보·작업지시</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 1 -->
+<section id="c1">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-safety">
+        <div class="case-num">01</div>
+        <div class="case-titlewrap"><h3>POSCO Spot 로봇 용광로 열화상 점검 🇰🇷</h3><div class="case-org">POSCO 광양제철소 × Boston Dynamics (2023~)</div></div>
+        <div class="case-badge">로봇+열화상</div>
+      </div>
+      <div class="case-body">
+        <p>POSCO는 사족보행 로봇 <strong>Spot</strong>에 <strong>Spot CAM+IR(열화상)</strong>을 달아 1,200℃ 넘는 용광로 외부를 하루 2회 자율 순찰합니다. 미션당 <strong>40개 지점</strong>을 점검하며 44개 송풍구의 가스 누출·과열을 잡아냅니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <!-- 용광로 -->
+          <ellipse cx="430" cy="200" rx="110" ry="14" fill="#1E293B"/>
+          <path d="M360 190 L370 70 Q430 50 490 70 L500 190 Z" fill="#7F1D1D"/>
+          <path d="M370 70 Q430 50 490 70" fill="none" stroke="#F59E0B" stroke-width="3"/>
+          <ellipse cx="430" cy="120" rx="45" ry="30" fill="#DC2626" opacity="0.7"/>
+          <ellipse cx="430" cy="120" rx="25" ry="16" fill="#FBBF24" opacity="0.9"/>
+          <text x="430" y="125" fill="#FFF7ED" font-size="11" text-anchor="middle" font-family="monospace">1200°C</text>
+          <!-- 송풍구 -->
+          <circle cx="375" cy="150" r="5" fill="#F97316"/>
+          <circle cx="430" cy="165" r="5" fill="#F97316"/>
+          <circle cx="485" cy="150" r="5" fill="#F97316"/>
+          <!-- Spot 로봇 -->
+          <g transform="translate(110,140)">
+            <rect x="-30" y="-15" width="60" height="22" rx="6" fill="#FCD34D"/>
+            <rect x="-8" y="-30" width="22" height="14" rx="3" fill="#1E293B"/>
+            <circle cx="3" cy="-23" r="4" fill="#DC2626"/>
+            <line x1="-22" y1="7" x2="-28" y2="30" stroke="#FCD34D" stroke-width="4"/>
+            <line x1="-8" y1="7" x2="-12" y2="30" stroke="#FCD34D" stroke-width="4"/>
+            <line x1="8" y1="7" x2="12" y2="30" stroke="#FCD34D" stroke-width="4"/>
+            <line x1="22" y1="7" x2="28" y2="30" stroke="#FCD34D" stroke-width="4"/>
+          </g>
+          <!-- 열화상 스캔 빔 -->
+          <path d="M120 117 L355 130 M120 117 L355 110" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+          <text x="110" y="195" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="monospace">Spot CAM+IR</text>
+          <text x="300" y="30" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">자율 순찰 로봇이 용광로 열화상 점검</text>
+        </svg>
+        <div class="illust-cap">🖼️ Spot 로봇이 열화상 빔으로 용광로 송풍구를 스캔하는 개념도</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델 / 시스템</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">Autowalk (자율주행)</span>
+            <span class="ai-model-tag">SLAM + 장애물 회피</span>
+            <span class="ai-model-tag">Orbit AI (이상 트렌드)</span>
+            <span class="ai-model-tag">Radiometric Thermal</span>
+          </div>
+          <div class="ai-desc">Spot은 3D 비전 SLAM으로 자율 보행하고, Orbit 플릿관리 SW의 AI가 온도 트렌드를 분석해 임계 초과 시 경보·작업지시를 생성합니다.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">영상:</span><a href="https://www.youtube.com/watch?v=V7D7jXF2pj8">https://www.youtube.com/watch?v=V7D7jXF2pj8</a></li>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">Spot at POSCO Boston Dynamics</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://bostondynamics.com/case-studies/spot-at-posco/">bostondynamics.com/case-studies/spot-at-posco</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">빅맨님의 <strong>LeKiwi 모바일 로봇 + 열화상 순회</strong>와 같은 구조 — 이동 플랫폼 + 센서 + 원격 모니터링. 스케일만 다릅니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 2 -->
+<section id="c2" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-energy">
+        <div class="case-num">02</div>
+        <div class="case-titlewrap"><h3>태양광 핫스팟 드론 AI 검사</h3><div class="case-org">Teledyne FLIR + TOPA/AID 정부 실증 · DJI M30T/M4T</div></div>
+        <div class="case-badge">에너지·드론</div>
+      </div>
+      <div class="case-body">
+        <p>드론이 항공 열화상으로 패널을 스캔하고, AI가 과열 패널을 자동 탐지·분류·위치 매핑합니다. 독일 정부 실증(FLIR A700+AI)에서 검사 비용을 <strong>패널당 €246 → €49(80% 절감)</strong>로 낮췄습니다. 결함 패널은 정상보다 10~20℃ 뜨겁습니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">드론 열화상으로 과열 패널(핫스팟) 탐지</text>
+          <!-- 드론 -->
+          <g transform="translate(120,60)">
+            <rect x="-22" y="-6" width="44" height="12" rx="4" fill="#E2E8F0"/>
+            <circle cx="-22" cy="-6" r="9" fill="none" stroke="#94A3B8" stroke-width="2"/>
+            <circle cx="22" cy="-6" r="9" fill="none" stroke="#94A3B8" stroke-width="2"/>
+            <rect x="-8" y="6" width="16" height="8" rx="2" fill="#DC2626"/>
+          </g>
+          <path d="M120 78 L260 150 M120 78 L390 150" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>
+          <!-- 패널 그리드 -->
+          <g transform="translate(250,150)">
+            <!-- 정상 패널 파란색, 결함 빨간색 -->
+            <rect x="0" y="0" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+            <rect x="30" y="0" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+            <rect x="60" y="0" width="28" height="20" fill="#DC2626" stroke="#0F172A"/>
+            <rect x="90" y="0" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+            <rect x="0" y="22" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+            <rect x="30" y="22" width="28" height="20" fill="#F59E0B" stroke="#0F172A"/>
+            <rect x="60" y="22" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+            <rect x="90" y="22" width="28" height="20" fill="#1D4ED8" stroke="#0F172A"/>
+          </g>
+          <!-- 핫스팟 표시 -->
+          <circle cx="324" cy="160" r="16" fill="none" stroke="#FBBF24" stroke-width="2"/>
+          <text x="324" y="200" fill="#FBBF24" font-size="11" text-anchor="middle" font-family="monospace">HOT SPOT</text>
+          <text x="490" y="120" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="monospace">정상: 파랑</text>
+          <text x="490" y="138" fill="#F87171" font-size="11" text-anchor="middle" font-family="monospace">결함: 빨강(+15°C)</text>
+        </svg>
+        <div class="illust-cap">🖼️ 드론이 태양광 패널을 열화상 스캔 — 빨간 패널이 과열 결함</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델 (5종 종합)</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">HOTSPOT-YOLO (mAP 90.8%)</span>
+            <span class="ai-model-tag">HDUNet (UNet+DenseNet+HRNet)</span>
+            <span class="ai-model-tag">Swin Transformer (98.71%)</span>
+            <span class="ai-model-tag">Autoencoder (비지도)</span>
+            <span class="ai-model-tag">Fast R-CNN + GoogLeNet</span>
+          </div>
+          <div class="ai-desc">같은 문제에 5가지 모델이 모두 적용. YOLO(실시간 탐지), UNet 계열(경량 세그), Swin(미세결함), Autoencoder(라벨 없는 이상감지), 2단계 캐스케이드(패널 분리→결함 분류)까지.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">영상:</span><a href="https://www.youtube.com/watch?v=ImyjRyIXhaM">https://www.youtube.com/watch?v=ImyjRyIXhaM</a></li>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">FLIR Delta thermal drone solar panel inspection</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.flir.com/discover/rd-science/detect-pv-defects-thermal-solar-inspection/">flir.com — AI thermal solar inspection</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">🎯</div>
+          <div class="callout-content"><strong>교육 황금 사례:</strong> "어떤 AI 모델이 언제 유리한가"를 가르치기에 최적. 2단계 캐스케이드는 빅맨님 2D+3D 캐스케이드 설계와 같은 철학.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 3 -->
+<section id="c3" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-detect">
+        <div class="case-num">03</div>
+        <div class="case-titlewrap"><h3>FLIR 플라스틱 IR 용접 품질 검사</h3><div class="case-org">Teledyne FLIR A50/A70 · 자동차 대시보드·그릴</div></div>
+        <div class="case-badge">자동차 품질</div>
+      </div>
+      <div class="case-body">
+        <p>자동차 플라스틱 부품은 적외선(IR) 용접으로 접합되는데, 균일 온도에 도달하지 않으면 접합 실패 → 리콜로 이어집니다. <strong>육안으론 성공 여부를 알 수 없어</strong>, 라인에 고정 설치된 열화상이 온도 패턴을 실시간 감시해 상·하한을 벗어난 용접을 잡아냅니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">고정 열화상이 용접부 온도 균일도 검사</text>
+          <!-- 컨베이어 -->
+          <rect x="40" y="170" width="520" height="10" fill="#334155"/>
+          <circle cx="70" cy="185" r="10" fill="#475569"/><circle cx="200" cy="185" r="10" fill="#475569"/>
+          <circle cx="400" cy="185" r="10" fill="#475569"/><circle cx="530" cy="185" r="10" fill="#475569"/>
+          <!-- 정상 용접부 (균일) -->
+          <g transform="translate(160,140)">
+            <rect x="-40" y="-10" width="80" height="20" rx="4" fill="#1E3A8A"/>
+            <rect x="-40" y="-10" width="80" height="6" rx="3" fill="#F59E0B"/>
+            <text x="0" y="35" fill="#34D399" font-size="10" text-anchor="middle" font-family="monospace">균일 ✓</text>
+          </g>
+          <!-- 불량 용접부 (비균일) -->
+          <g transform="translate(380,140)">
+            <rect x="-40" y="-10" width="80" height="20" rx="4" fill="#1E3A8A"/>
+            <rect x="-40" y="-10" width="30" height="6" rx="3" fill="#DC2626"/>
+            <rect x="10" y="-10" width="30" height="6" rx="3" fill="#FCD34D"/>
+            <text x="0" y="35" fill="#F87171" font-size="10" text-anchor="middle" font-family="monospace">비균일 ✗</text>
+          </g>
+          <!-- 카메라 -->
+          <g transform="translate(270,55)">
+            <rect x="-25" y="-15" width="50" height="30" rx="5" fill="#1E293B" stroke="#22D3EE" stroke-width="2"/>
+            <circle cx="0" cy="0" r="8" fill="#22D3EE"/>
+            <text x="0" y="-22" fill="#22D3EE" font-size="10" text-anchor="middle" font-family="monospace">FLIR A70</text>
+          </g>
+          <path d="M270 70 L160 130 M270 70 L380 130" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+        </svg>
+        <div class="illust-cap">🖼️ 고정 열화상 카메라가 컨베이어 위 용접부의 온도 균일도를 판정</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델 / 방식</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">Radiometric Thermal Streaming</span>
+            <span class="ai-model-tag">Threshold + Pattern ML</span>
+            <span class="ai-model-tag">GigE Vision / RTSP</span>
+          </div>
+          <div class="ai-desc">FLIR A50/A70이 ±2℃ 정밀도로 라디오메트릭 데이터를 GigE Vision/RTSP로 스트리밍. 온도 패턴·그래디언트 정상 범위를 학습한 모델이 비균일·불완전 형상을 분류합니다.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">FLIR fixed thermal camera process control welding</span></li>
+            <li><span class="mr-label">검색어2:</span><span class="mr-search">FLIR A70 quality assurance manufacturing</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.flir.com/discover/instruments/manufacturing/application-spotlight-metal-welding/">flir.com — welding inspection spotlight</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">🎓</div>
+          <div class="callout-content"><strong>교육 포인트:</strong> 빅맨님 <strong>Flask MJPEG 스트리밍</strong>과 같은 발상 — 고정 카메라에서 실시간 온도 스트림을 받아 판정. 프로토콜(GigE/RTSP)만 다릅니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 4 -->
+<section id="c4" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-maint">
+        <div class="case-num">04</div>
+        <div class="case-titlewrap"><h3>시멘트 킬른 내화물 AI 열 비전</h3><div class="case-org">HGH KILNSCAN · iFactory · FLIR KilnMonitor (2025~2026)</div></div>
+        <div class="case-badge">중공업</div>
+      </div>
+      <div class="case-body">
+        <p>1,450℃로 도는 회전 킬른의 내화벽돌이 얇아지면 외피에 핫스팟이 생기고, 방치하면 <strong>외피 관통 → 7~14일 비상정지(하루 $10만 손실)</strong>. AI 열 비전이 외피 360°를 상시 스캔해 픽셀 단위 온도를 CNN에 넣고 구역별 잔여 수명을 예측합니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">회전 킬른 외피 360° 열화상 — 핫스팟 조기 탐지</text>
+          <!-- 킬른 원통 (기울어진) -->
+          <g transform="translate(300,120) rotate(-12)">
+            <rect x="-220" y="-30" width="440" height="60" rx="30" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+            <!-- 정상 구역 (녹/주황) -->
+            <rect x="-210" y="-28" width="120" height="56" rx="25" fill="#15803D" opacity="0.6"/>
+            <!-- 핫스팟 (빨강) -->
+            <ellipse cx="40" cy="0" rx="35" ry="26" fill="#DC2626" opacity="0.85"/>
+            <ellipse cx="40" cy="0" rx="18" ry="13" fill="#FBBF24"/>
+            <text x="40" y="3" fill="#0F172A" font-size="10" text-anchor="middle" font-family="monospace" font-weight="bold">450°C</text>
+            <rect x="120" y="-28" width="90" height="56" rx="25" fill="#15803D" opacity="0.6"/>
+            <!-- 타이어링 -->
+            <rect x="-110" y="-34" width="14" height="68" fill="#64748B"/>
+            <rect x="100" y="-34" width="14" height="68" fill="#64748B"/>
+          </g>
+          <!-- 스캐너 -->
+          <g transform="translate(340,185)">
+            <rect x="-22" y="-12" width="44" height="24" rx="4" fill="#1E293B" stroke="#22D3EE" stroke-width="2"/>
+            <circle cx="0" cy="0" r="6" fill="#22D3EE"/>
+            <text x="0" y="-18" fill="#22D3EE" font-size="9" text-anchor="middle" font-family="monospace">KILNSCAN</text>
+          </g>
+          <text x="120" y="80" fill="#86EFAC" font-size="10" text-anchor="middle" font-family="monospace">정상 200~350°C</text>
+          <text x="470" y="170" fill="#F87171" font-size="10" text-anchor="middle" font-family="monospace">핫스팟=벽돌 손실</text>
+        </svg>
+        <div class="illust-cap">🖼️ 킬른 외피의 빨간 핫스팟은 내화벽돌이 얇아진 위험 구역</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">CNN (픽셀 단위 분류)</span>
+            <span class="ai-model-tag">Time-series Anomaly</span>
+            <span class="ai-model-tag">Thermal Warp Monitoring</span>
+            <span class="ai-model-tag">LLM 인터페이스 (2026 신규)</span>
+          </div>
+          <div class="ai-desc">CNN이 정상/코팅손실/내화물박리/핫스팟을 학습. 절대온도뿐 아니라 <strong>온도 변화율·공간 그래디언트·시간 진화</strong>를 봐서 양성 코팅 변동과 진짜 결함을 구별 → 열전대보다 5~7일 먼저 탐지.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">cement kiln shell scanner thermal monitoring KILNSCAN</span></li>
+            <li><span class="mr-label">검색어2:</span><span class="mr-search">AI kiln refractory hot spot detection infrared</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://hgh-infrared.com/thermal-warp-monitoring-industrial-thermography/">hgh-infrared.com — KILNSCAN</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">🔗</div>
+          <div class="callout-content">"변화율·공간패턴·시간진화"를 본다는 게 핵심 — 빅맨님 <strong>FLIR 공간순회 리포트의 6개 분석항목</strong>(온도분포·시간변화·정상대비편차·좌우비대칭·위치이상·존재누락)과 정확히 같은 사고방식.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 5 -->
+<section id="c5" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-detect">
+        <div class="case-num">05</div>
+        <div class="case-titlewrap"><h3>로봇 용접 멜트풀 CNN-LSTM 감시</h3><div class="case-org">Therness HeatCore AI (2026) · 로봇 용접 셀 인라인</div></div>
+        <div class="case-badge">공정 품질</div>
+      </div>
+      <div class="case-body">
+        <p>용접 품질을 "사후 부검"이 아닌 <strong>실시간 제어 루프</strong>로 전환. 고속 마이크로볼로미터 열화상 + 엣지 딥러닝이 기공·융합부족·과열을 <strong>100ms 이내</strong>에 잡습니다. 멜트풀(용융풀) 열 영상의 시계열 패턴으로 결함 형성 과정을 포착합니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">멜트풀 열 영상 → CNN(공간)+LSTM(시간) → 결함 판정</text>
+          <!-- 용접 토치 -->
+          <g transform="translate(150,70)">
+            <rect x="-8" y="-30" width="16" height="40" rx="3" fill="#94A3B8"/>
+            <path d="M-8 10 L8 10 L0 28 Z" fill="#FBBF24"/>
+          </g>
+          <!-- 멜트풀 (열 그라디언트) -->
+          <ellipse cx="150" cy="120" rx="48" ry="20" fill="#DC2626" opacity="0.85"/>
+          <ellipse cx="150" cy="120" rx="28" ry="12" fill="#FBBF24"/>
+          <ellipse cx="150" cy="120" rx="12" ry="6" fill="#FEF9C3"/>
+          <text x="150" y="160" fill="#F87171" font-size="10" text-anchor="middle" font-family="monospace">용융풀 &gt;1500°C</text>
+          <!-- 화살표 -->
+          <path d="M210 120 L260 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar5)"/>
+          <defs><marker id="ar5" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#22D3EE"/></marker></defs>
+          <!-- CNN-LSTM 박스 -->
+          <rect x="270" y="95" width="90" height="50" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="315" y="116" fill="#EDE9FE" font-size="11" text-anchor="middle" font-family="monospace" font-weight="bold">CNN-LSTM</text>
+          <text x="315" y="132" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">공간+시간</text>
+          <path d="M370 120 L420 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar5)"/>
+          <!-- 판정 -->
+          <rect x="430" y="95" width="130" height="50" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="2"/>
+          <text x="495" y="114" fill="#D1FAE5" font-size="10" text-anchor="middle" font-family="monospace">99.2% 정확도</text>
+          <text x="495" y="130" fill="#6EE7B7" font-size="10" text-anchor="middle" font-family="monospace">&lt;100ms 판정</text>
+        </svg>
+        <div class="illust-cap">🖼️ 멜트풀 열 영상이 CNN-LSTM을 거쳐 100ms 안에 결함 판정</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">CNN-LSTM</span>
+            <span class="ai-model-tag">YOLO (30~120 FPS)</span>
+            <span class="ai-model-tag">Edge Deep Learning</span>
+          </div>
+          <div class="ai-desc">CNN(공간 특징)+LSTM(시간 변화)으로 멜트풀 열 영상의 시계열 패턴 학습. 용융 금속 방사율 &gt;0.7로 신호 지배적, 아크 간섭은 협대역 필터로 제거.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">AI weld monitoring thermal weld pool computer vision</span></li>
+            <li><span class="mr-label">검색어2:</span><span class="mr-search">infrared thermography weld defect detection real-time</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.therness.com/blog/ai-weld-monitoring-computer-vision/">therness.com — AI weld monitoring</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">🎓</div>
+          <div class="callout-content"><strong>교육 포인트:</strong> CNN-LSTM은 빅맨님 <strong>BoT-SORT 추적 교육</strong>과 연결. 정적 탐지(CNN)에 시간 차원(LSTM)을 더하면 "결함 형성 과정"을 봅니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 6 -->
+<section id="c6" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-maint">
+        <div class="case-num">06</div>
+        <div class="case-titlewrap"><h3>전기설비 24/7 자율 예지보전</h3><div class="case-org">Boston Dynamics Spot CAM+IR · iFactory (2026)</div></div>
+        <div class="case-badge">예지보전</div>
+      </div>
+      <div class="case-body">
+        <p>분기 1회 수동 점검(커버리지 0.09%)을 <strong>상시 열화상 감시</strong>로 대체. 고정형/로봇 탑재 열화상이 모터·베어링·패널을 24시간 보며, 고장 <strong>30~90일 전</strong> 예측하고 작업지시를 자동 생성합니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">정상 패턴 학습 → 편차(과열) 자동 탐지 → 작업지시</text>
+          <!-- 전기 패널 -->
+          <rect x="60" y="60" width="120" height="120" rx="6" fill="#1E293B" stroke="#475569" stroke-width="2"/>
+          <rect x="75" y="75" width="40" height="30" fill="#15803D" opacity="0.6"/>
+          <rect x="120" y="75" width="40" height="30" fill="#15803D" opacity="0.6"/>
+          <rect x="75" y="115" width="40" height="30" fill="#DC2626"/>
+          <rect x="120" y="115" width="40" height="30" fill="#15803D" opacity="0.6"/>
+          <circle cx="95" cy="130" r="18" fill="none" stroke="#FBBF24" stroke-width="2"/>
+          <text x="120" y="170" fill="#F87171" font-size="9" text-anchor="middle" font-family="monospace">느슨한 접점 핫스팟</text>
+          <!-- AE 박스 -->
+          <rect x="240" y="95" width="110" height="50" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="295" y="115" fill="#EDE9FE" font-size="10" text-anchor="middle" font-family="monospace" font-weight="bold">Autoencoder</text>
+          <text x="295" y="131" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">복원오차=이상</text>
+          <path d="M185 120 L235 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar6)"/>
+          <defs><marker id="ar6" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#22D3EE"/></marker></defs>
+          <path d="M355 120 L405 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar6)"/>
+          <!-- 작업지시 -->
+          <rect x="415" y="90" width="150" height="60" rx="8" fill="#064E3B" stroke="#34D399" stroke-width="2"/>
+          <text x="490" y="110" fill="#D1FAE5" font-size="10" text-anchor="middle" font-family="monospace">🚨 작업지시 발행</text>
+          <text x="490" y="128" fill="#6EE7B7" font-size="9" text-anchor="middle" font-family="monospace">30~90일 전 예측</text>
+          <text x="490" y="142" fill="#6EE7B7" font-size="9" text-anchor="middle" font-family="monospace">CMMS 자동 티켓</text>
+        </svg>
+        <div class="illust-cap">🖼️ 정상 열 패턴만 학습한 AI가 빨간 핫스팟(편차)을 이상으로 판정</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">Anomaly Detection</span>
+            <span class="ai-model-tag">Thermal Baseline Learning</span>
+            <span class="ai-model-tag">Auto Work-order (CMMS)</span>
+          </div>
+          <div class="ai-desc">"정상 열 패턴"을 1~2주 학습 후 편차를 이상으로 판정 — 빅맨님 <strong>Autoencoder/PatchCore</strong>와 동일 원리. 임계 초과 시 CMMS에 작업지시 자동 발행. 사전탐지 70%↑.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">영상:</span><a href="https://www.youtube.com/watch?v=-XUVulOQX9c">https://www.youtube.com/watch?v=-XUVulOQX9c</a></li>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">Automated Thermal Inspections with Spot Boston Dynamics</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://bostondynamics.com/solutions/inspection/thermal/">bostondynamics.com — thermal inspection</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">📈</div>
+          <div class="callout-content"><strong>조기 경보 물리학:</strong> 베어링은 윤활 불량 시 월 2~5℃ 상승하다 고착, 전기 접점은 아크플래시 수주 전 10~50℃ 상승. 열은 항상 기계적 증상보다 먼저 나타납니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 7 -->
+<section id="c7" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-safety">
+        <div class="case-num">07</div>
+        <div class="case-titlewrap"><h3>FLIR 가스누출 OGI 머신러닝 탐지</h3><div class="case-org">Teledyne FLIR G-Series / Si-Series · 화학·철강·정유</div></div>
+        <div class="case-badge">안전·환경</div>
+      </div>
+      <div class="case-body">
+        <p>광학 가스 이미징(OGI) 카메라는 특수 필터로 <strong>눈에 안 보이는 가스(메탄·암모니아·CO₂)를 연기 구름처럼 시각화</strong>합니다. 음향 카메라(Si-Series)는 <strong>머신러닝</strong>으로 누출·부분방전의 소리 패턴을 배경음과 구별해 전통 방식보다 10배 빠르게 누출을 찾습니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">OGI 카메라가 보이지 않는 가스 누출을 시각화</text>
+          <!-- 파이프/밸브 -->
+          <rect x="80" y="120" width="160" height="20" rx="4" fill="#475569"/>
+          <rect x="150" y="100" width="24" height="24" rx="3" fill="#64748B"/>
+          <circle cx="162" cy="112" r="6" fill="#94A3B8"/>
+          <!-- 가스 구름 -->
+          <ellipse cx="180" cy="80" rx="30" ry="20" fill="#A78BFA" opacity="0.3"/>
+          <ellipse cx="200" cy="60" rx="22" ry="15" fill="#A78BFA" opacity="0.35"/>
+          <ellipse cx="215" cy="45" rx="15" ry="10" fill="#A78BFA" opacity="0.4"/>
+          <text x="240" y="55" fill="#C4B5FD" font-size="10" font-family="monospace">CH₄ 누출</text>
+          <!-- OGI 카메라 -->
+          <g transform="translate(400,110)">
+            <rect x="-30" y="-18" width="60" height="36" rx="5" fill="#1E293B" stroke="#22D3EE" stroke-width="2"/>
+            <circle cx="-10" cy="0" r="10" fill="#22D3EE"/>
+            <rect x="20" y="-8" width="20" height="16" rx="2" fill="#334155"/>
+            <text x="0" y="-26" fill="#22D3EE" font-size="10" text-anchor="middle" font-family="monospace">FLIR G-Series</text>
+          </g>
+          <path d="M370 105 L230 75 M370 115 L240 120" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+          <!-- ML 판정 -->
+          <rect x="450" y="155" width="120" height="40" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="510" y="172" fill="#EDE9FE" font-size="9" text-anchor="middle" font-family="monospace">ML 음향 분류</text>
+          <text x="510" y="186" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">누출 vs 배경음</text>
+        </svg>
+        <div class="illust-cap">🖼️ OGI 카메라가 밸브에서 새는 가스를 보라색 구름으로 시각화</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">ML Sound Pattern Classification</span>
+            <span class="ai-model-tag">PD 분류 (arcing/corona/surface)</span>
+            <span class="ai-model-tag">Leak Quantification</span>
+          </div>
+          <div class="ai-desc">음향 카메라가 머신러닝으로 누출음을 배경음과 분리하고, 부분방전을 아크·코로나·표면방전으로 분류. 누출량 정량화 + 에너지 손실·비용까지 현장 자동 계산. 0.3~200m 거리 탐지.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 동영상 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">FLIR optical gas imaging methane leak detection</span></li>
+            <li><span class="mr-label">검색어2:</span><span class="mr-search">FLIR Si124 acoustic imaging leak detection</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.flir.com/instruments/optical-gas-imaging/">flir.com — optical gas imaging</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content"><strong>안전 직결:</strong> POSCO 용광로(사례01)도 가스 누출 감지가 핵심. 가스 누출은 폭발·중독 위험이라 비접촉 원거리 탐지가 필수. 멀티모달(열+음향+OGI)이 안전의 정답.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 8 -->
+<section id="c8" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-detect">
+        <div class="case-num">08</div>
+        <div class="case-titlewrap"><h3>적층제조(3D프린팅) 결함 CNN 분류</h3><div class="case-org">학계 벤치마크 (ScienceDirect, 2026) · 21,127장 열화상</div></div>
+        <div class="case-badge">결함 검사</div>
+      </div>
+      <div class="case-body">
+        <p>3D 프린팅은 한 층씩 쌓는데, 적층 중 결함(과/부족 압출, 층 밀림, 휨)이 내부에 숨습니다. 열화상이 <strong>매 층의 온도 분포</strong>를 실시간으로 보여줘 식기 전에 이상을 잡습니다. 7개 CNN을 동일 조건에서 벤치마크한 최신 연구입니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">층별 열화상 → CNN 분류 → 5개 결함 판정</text>
+          <!-- 프린터 노즐 -->
+          <g transform="translate(150,55)">
+            <rect x="-10" y="0" width="20" height="25" fill="#94A3B8"/>
+            <path d="M-6 25 L6 25 L0 35 Z" fill="#DC2626"/>
+          </g>
+          <!-- 출력물 층 (열 그라디언트) -->
+          <g transform="translate(120,95)">
+            <rect x="0" y="0" width="60" height="8" fill="#DC2626"/>
+            <rect x="0" y="9" width="60" height="8" fill="#F97316"/>
+            <rect x="0" y="18" width="60" height="8" fill="#FBBF24"/>
+            <rect x="0" y="27" width="60" height="8" fill="#84CC16"/>
+            <rect x="0" y="36" width="60" height="8" fill="#15803D"/>
+          </g>
+          <text x="150" y="160" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">층별 온도 분포</text>
+          <path d="M195 115 L245 115" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar8)"/>
+          <defs><marker id="ar8" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#22D3EE"/></marker></defs>
+          <!-- CNN -->
+          <rect x="255" y="90" width="90" height="50" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="300" y="110" fill="#EDE9FE" font-size="10" text-anchor="middle" font-family="monospace" font-weight="bold">Custom CNN</text>
+          <text x="300" y="126" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">97.26%</text>
+          <path d="M355 115 L405 115" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar8)"/>
+          <!-- 5개 클래스 -->
+          <g transform="translate(415,75)" font-family="monospace" font-size="9">
+            <rect x="0" y="0" width="150" height="18" rx="3" fill="#1E293B"/><text x="8" y="13" fill="#86EFAC">✓ 정상(normal)</text>
+            <rect x="0" y="22" width="150" height="18" rx="3" fill="#1E293B"/><text x="8" y="35" fill="#F87171">✗ 과압출/부족압출</text>
+            <rect x="0" y="44" width="150" height="18" rx="3" fill="#1E293B"/><text x="8" y="57" fill="#FCD34D">✗ 층 밀림(shifting)</text>
+            <rect x="0" y="66" width="150" height="18" rx="3" fill="#1E293B"/><text x="8" y="79" fill="#FB923C">✗ 휨(warping)</text>
+          </g>
+        </svg>
+        <div class="illust-cap">🖼️ 층별 열화상이 CNN을 거쳐 5가지 결함으로 분류 (정확도 97.26%)</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델 (7종 벤치마크)</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">Custom CNN (97.26%·최고)</span>
+            <span class="ai-model-tag">ResNet-18 (97.19%)</span>
+            <span class="ai-model-tag">MobileNetV2 (97.07%)</span>
+            <span class="ai-model-tag">EfficientNet-B0</span>
+            <span class="ai-model-tag">VGG-16 / AlexNet</span>
+          </div>
+          <div class="ai-desc">5개 결함(과/부족압출·층밀림·휨·정상)을 분류. Custom CNN이 정확도 1위 + 메모리 효율(1.91GB)로 엣지 배포 적합. MobileNetV2는 경량이라 CPU 실시간에 유리.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 논문 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">deep learning defect detection additive manufacturing thermal imaging</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.sciencedirect.com/science/article/pii/S2590123026007206">sciencedirect.com — 3D프린팅 열화상 결함 벤치마크</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-tip">
+          <div class="callout-icon">🎓</div>
+          <div class="callout-content"><strong>"No Free Lunch"의 살아있는 예:</strong> 정확도 1위 Custom CNN과 경량 MobileNetV2 중 <strong>현장 하드웨어에 따라 선택</strong>이 갈립니다. NUC(CPU)라면 MobileNetV2 + OpenVINO가 정답.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 9 -->
+<section id="c9" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-maint">
+        <div class="case-num">09</div>
+        <div class="case-titlewrap"><h3>모터·베어링 전이학습 고장진단</h3><div class="case-org">Deep Transfer Learning (ScienceDirect, 2023) · 3상 유도전동기</div></div>
+        <div class="case-badge">예지보전</div>
+      </div>
+      <div class="case-body">
+        <p>베어링 고장·모터 권선 열화는 비계획 정지의 큰 비중. 열화상은 진동 분석이 이상을 확인하기 <strong>전에</strong> 마찰열·과열을 먼저 감지합니다. 비접촉·비침습·저비용이라 회전 기계에 이상적입니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">사전학습 CNN을 열화상으로 전이학습 → 12종 상태 분류</text>
+          <!-- 모터 -->
+          <g transform="translate(140,120)">
+            <rect x="-50" y="-30" width="100" height="60" rx="10" fill="#334155" stroke="#475569" stroke-width="2"/>
+            <!-- 베어링 핫스팟 -->
+            <circle cx="40" cy="0" r="18" fill="#DC2626" opacity="0.8"/>
+            <circle cx="40" cy="0" r="9" fill="#FBBF24"/>
+            <rect x="-60" y="-8" width="14" height="16" fill="#64748B"/>
+            <circle cx="-30" cy="0" r="6" fill="#1E293B"/>
+          </g>
+          <text x="180" y="165" fill="#F87171" font-size="9" text-anchor="middle" font-family="monospace">베어링 마찰열</text>
+          <path d="M210 120 L255 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar9)"/>
+          <defs><marker id="ar9" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#22D3EE"/></marker></defs>
+          <!-- 전이학습 박스 -->
+          <rect x="265" y="90" width="100" height="60" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="315" y="108" fill="#EDE9FE" font-size="9" text-anchor="middle" font-family="monospace">Pretrained CNN</text>
+          <text x="315" y="124" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">+ Transfer</text>
+          <text x="315" y="140" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">+ FFT</text>
+          <path d="M375 120 L420 120" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar9)"/>
+          <!-- 12 상태 -->
+          <g transform="translate(430,80)" font-family="monospace" font-size="9">
+            <text x="0" y="0" fill="#86EFAC">✓ 정상</text>
+            <text x="0" y="18" fill="#F87171">✗ 베어링 결함</text>
+            <text x="0" y="36" fill="#FCD34D">✗ 회전자봉 파손</text>
+            <text x="0" y="54" fill="#FB923C">✗ 정렬 불량</text>
+            <text x="0" y="72" fill="#FBBF24">✗ 기어 마모 …(12종)</text>
+          </g>
+        </svg>
+        <div class="illust-cap">🖼️ 전동기 베어링 핫스팟을 전이학습 CNN이 12가지 상태로 진단</div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">Deep Transfer Learning</span>
+            <span class="ai-model-tag">ADCNN (Attentive Dense CNN)</span>
+            <span class="ai-model-tag">ANN + FFT</span>
+          </div>
+          <div class="ai-desc">사전학습 CNN(ImageNet)을 열화상으로 전이학습. 그레이스케일 강도 프로파일 + FFT + 신경망으로 <strong>12가지 상태</strong>(정상·베어링결함·회전자봉파손·정렬불량·기어마모)를 분류. 희소 데이터 극복.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 논문 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">thermographic image diagnosis electrical motor deep transfer learning</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.sciencedirect.com/science/article/abs/pii/S0952197623012903">sciencedirect.com — 모터 열화상 전이학습 진단</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content"><strong>왜 전이학습?</strong> 열화상 결함 데이터는 희소합니다. ImageNet 사전학습 가중치를 재활용하면 적은 데이터로도 높은 정확도를 달성 — 빅맨님 SAM3 라벨링→YOLO 증류와 같은 "데이터 절약" 발상.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 사례 10 -->
+<section id="c10" style="padding-top:0;">
+  <div class="container">
+    <div class="case-card">
+      <div class="case-head c-safety">
+        <div class="case-num">10</div>
+        <div class="case-titlewrap"><h3>한국 전기설비·반도체 화재 예방 🇰🇷</h3><div class="case-org">한국전력 · 삼성전자 · 해신솔루션 (2024~2025)</div></div>
+        <div class="case-badge">산업 안전</div>
+      </div>
+      <div class="case-body">
+        <p>전기차·ESS 화재가 잇따르며 국내 산업계가 열화상 + AI 안전 시스템을 빠르게 도입 중입니다. 최근 3년간 산업 현장 화재가 약 <strong>9,100건 이상</strong>, 중대재해처벌법(2024년 5인 이상 전 사업장 확대)으로 선제적 안전 투자가 필수가 됐습니다.</p>
+        <svg class="illust" viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+          <rect width="600" height="220" fill="#0F172A"/>
+          <text x="300" y="28" fill="#E2E8F0" font-size="13" text-anchor="middle" font-weight="bold">열화상+AI가 과열 감지 → 관제센터·소방서 자동 경보</text>
+          <!-- 변전 설비 -->
+          <g transform="translate(110,100)">
+            <rect x="-30" y="0" width="60" height="70" rx="4" fill="#334155" stroke="#475569" stroke-width="2"/>
+            <line x1="-15" y1="-20" x2="-15" y2="0" stroke="#94A3B8" stroke-width="2"/>
+            <line x1="15" y1="-20" x2="15" y2="0" stroke="#94A3B8" stroke-width="2"/>
+            <circle cx="0" cy="25" r="14" fill="#DC2626" opacity="0.8"/>
+            <circle cx="0" cy="25" r="7" fill="#FBBF24"/>
+          </g>
+          <text x="110" y="190" fill="#F87171" font-size="9" text-anchor="middle" font-family="monospace">변압기 과열</text>
+          <!-- 열화상 카메라 -->
+          <g transform="translate(250,75)">
+            <rect x="-22" y="-14" width="44" height="28" rx="4" fill="#1E293B" stroke="#22D3EE" stroke-width="2"/>
+            <circle cx="0" cy="0" r="7" fill="#22D3EE"/>
+          </g>
+          <path d="M232 85 L130 115" stroke="#22D3EE" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>
+          <!-- AI 분석 -->
+          <rect x="300" y="85" width="100" height="50" rx="8" fill="#4C1D95" stroke="#A78BFA" stroke-width="2"/>
+          <text x="350" y="105" fill="#EDE9FE" font-size="9" text-anchor="middle" font-family="monospace">AI 이상분석</text>
+          <text x="350" y="121" fill="#C4B5FD" font-size="9" text-anchor="middle" font-family="monospace">+ 지능형 CCTV</text>
+          <path d="M410 110 L455 110" stroke="#22D3EE" stroke-width="2" marker-end="url(#ar10)"/>
+          <defs><marker id="ar10" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#22D3EE"/></marker></defs>
+          <!-- 경보 -->
+          <rect x="465" y="80" width="105" height="60" rx="8" fill="#7F1D1D" stroke="#F87171" stroke-width="2"/>
+          <text x="517" y="100" fill="#FEE2E2" font-size="11" text-anchor="middle">🚨 자동 경보</text>
+          <text x="517" y="118" fill="#FCA5A5" font-size="9" text-anchor="middle" font-family="monospace">관제센터</text>
+          <text x="517" y="132" fill="#FCA5A5" font-size="9" text-anchor="middle" font-family="monospace">소방서 출동</text>
+        </svg>
+        <div class="illust-cap">🖼️ 변압기 과열을 열화상+AI가 감지해 관제센터·소방서로 자동 경보</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>도입 주체</th><th>적용 현장</th><th>AI 방식</th></tr></thead>
+            <tbody>
+              <tr><td><strong>한국전력</strong></td><td>변전소·송전 설비</td><td>열화상 + AI 분석 (과열·절연체 이상 감지)</td></tr>
+              <tr><td><strong>삼성전자</strong></td><td>평택·화성 반도체</td><td>클린룸 맞춤 알고리즘 AI 화재 감지</td></tr>
+              <tr><td><strong>해신솔루션</strong></td><td>전기차 충전소</td><td>M3 열영상 통합 (지능형 CCTV 객체탐지)</td></tr>
+              <tr><td><strong>이오씨(EOC)</strong></td><td>ESS·재래시장·방산</td><td>열화상 기반 재난 조기 감지·예측</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ai-model-box">
+          <div class="ai-h">🧠 사용 AI 모델 / 방식</div>
+          <div class="ai-models">
+            <span class="ai-model-tag">AI 이상 패턴 분석</span>
+            <span class="ai-model-tag">지능형 CCTV (객체탐지)</span>
+            <span class="ai-model-tag">열화상 + RGB 융합</span>
+          </div>
+          <div class="ai-desc">과열 지점을 AI가 자동 식별 → 임계 초과 시 관제센터·소방서 자동 경보. 안전모 미착용·위험구역 침입 등 행동 감지와 결합한 통합 안전 플랫폼으로 진화 중.</div>
+        </div>
+        <div class="media-ref">
+          <div class="mr-h">🔗 기사 링크 & 검색어</div>
+          <ul>
+            <li><span class="mr-label">검색어:</span><span class="mr-search">열화상 AI 화재 감지 한국전력 변전소</span></li>
+            <li><span class="mr-label">검색어2:</span><span class="mr-search">해신솔루션 M3 열영상 전기차 화재 예방</span></li>
+            <li><span class="mr-label">출처:</span><a href="https://www.alchera.ai/resource/blog/real-time-fire-detection-ai-solution">alchera.ai — 실시간 화재 감지 AI</a></li>
+          </ul>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content"><strong>전문가 주의:</strong> 전기차 배터리 화재는 열폭주 "이전"에 오프가스(연기)가 먼저 발생하므로, 열화상 단독보다 <strong>연기·가스 센서 융합</strong>이 골든타임 확보에 유리합니다(사례07 OGI와 연계).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI 모델 종합 -->
+<section style="padding-top:0;">
+  <div class="container">
+    <span class="kicker">AI Model Summary</span>
+    <h2 class="section-title">10대 사례 AI 모델 총정리</h2>
+    <p class="section-lead">"같은 열화상, 다른 AI" — 문제 성격에 따라 선택되는 모델이 다릅니다</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>사례</th><th>핵심 AI 모델</th><th>모델 유형</th><th>왜 이 모델?</th></tr></thead>
+        <tbody>
+          <tr><td>01</td><td>POSCO Spot</td><td><code>SLAM</code> + <code>Orbit AI</code></td><td>자율주행+이상분석</td><td>이동하며 다지점 점검</td></tr>
+          <tr><td>02</td><td>태양광 드론</td><td><code>YOLO</code>/<code>Swin</code>/<code>UNet</code>/<code>AE</code></td><td>탐지+세그+이상</td><td>대규모·다양한 결함</td></tr>
+          <tr><td>03</td><td>FLIR IR용접</td><td><code>Threshold + Pattern ML</code></td><td>패턴 분류</td><td>온도 상하한 판정</td></tr>
+          <tr><td>04</td><td>시멘트 킬른</td><td><code>CNN</code> + 시계열 + <code>LLM</code></td><td>분류+이상+대화형</td><td>공간·시간 패턴</td></tr>
+          <tr><td>05</td><td>로봇 용접</td><td><code>CNN-LSTM</code></td><td>시공간 융합</td><td>결함 형성 과정</td></tr>
+          <tr><td>06</td><td>전기설비</td><td><code>Anomaly Detection</code></td><td>비지도 이상감지</td><td>정상만 학습</td></tr>
+          <tr><td>07</td><td>OGI 가스</td><td><code>Sound Pattern ML</code></td><td>음향 분류</td><td>누출음 vs 배경음</td></tr>
+          <tr><td>08</td><td>3D프린팅</td><td><code>Custom CNN</code>/<code>MobileNet</code></td><td>분류 CNN</td><td>정확도 vs 경량</td></tr>
+          <tr><td>09</td><td>모터·베어링</td><td><code>Transfer Learning</code>/<code>ADCNN</code></td><td>전이학습 CNN</td><td>희소 데이터 극복</td></tr>
+          <tr><td>10</td><td>한국 화재</td><td><code>이상분석</code> + <code>지능형 CCTV</code></td><td>이상+객체탐지</td><td>과열+행동 동시</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout callout-info">
+      <div class="callout-icon">🧭</div>
+      <div class="callout-content"><strong>모델 선택 지도:</strong> 명확한 분류→<code>CNN</code> / 실시간 다객체→<code>YOLO</code> / 라벨 없는 이상→<code>Autoencoder</code> / 시간 변화→<code>LSTM</code> / 데이터 부족→<code>Transfer Learning</code> / 픽셀 영역→<code>UNet</code> / 미세·전역→<code>Transformer</code>.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 마무리 -->
+<section style="padding-top:0;">
+  <div class="container">
+    <div class="wrap-box">
+      <h3>🎯 핵심 정리 — AI 모델 관점</h3>
+      <ul>
+        <li><strong>같은 열화상, 다른 AI</strong> — 분류·탐지·이상·시계열에 따라 CNN·YOLO·AE·LSTM·전이학습이 갈린다.</li>
+        <li><strong>로봇 + 열화상이 대세</strong> — POSCO Spot처럼 이동 플랫폼에 IR을 실어 사람이 못 가는 곳을 점검한다.</li>
+        <li><strong>이상감지(Autoencoder)가 예지보전의 핵심</strong> — 정상만 학습하고 편차로 고장을 30~90일 전 예측.</li>
+        <li><strong>시간 차원이 결함 형성을 본다</strong> — CNN-LSTM, 시계열 이상감지로 "변화 과정"을 포착.</li>
+        <li><strong>멀티모달이 안전을 완성</strong> — 열화상 + OGI(가스) + 음향 + RGB 융합이 골든타임을 지킨다.</li>
+        <li><strong>빅맨님 파이프라인이 곧 정답</strong> — YOLO→SAM3→AE→VLM이 이 사례들의 AI 모델 조합과 일치한다.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  🌡️ 열화상 카메라 × AI · 산업 10대 사례 (SVG·AI모델·링크/검색어) · Physical AI 교육자료<br>
+  제타위성로보틱스(Zeta Satellite Robotics) · 산업용 AI 비전 교육 커리큘럼<br>
+  <span style="font-size:0.78rem; opacity:0.7;">
+  모든 일러스트는 인라인 SVG(외부 의존 없음). 동영상/논문 링크는 각 사례 주황색 박스 참조.<br>
+  출처: Boston Dynamics, Teledyne FLIR, ScienceDirect, MDPI, HGH, iFactory, 국내 언론 종합 (2023~2026)
+  </span>
+</footer>
+
+</body>
+</html>

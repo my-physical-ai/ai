@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLM 산업 적용 실제 사례 10선 (차량 제외판) — Physical AI Education</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --color-primary: #7C3AED; --color-primary-light: #EDE9FE;
+  --color-secondary: #2563EB; --color-secondary-light: #DBEAFE;
+  --color-success: #059669; --color-success-light: #D1FAE5;
+  --color-warning: #D97706; --color-warning-light: #FEF3C7;
+  --color-teal: #0891B2;
+  --color-surface: #F8FAFC; --color-card: #FFFFFF;
+  --color-text: #1E293B; --color-muted: #64748B; --color-border: #E2E8F0;
+}
+body { font-family: 'Noto Sans KR', sans-serif; color: var(--color-text); background: var(--color-surface); line-height: 1.72; }
+.container { max-width: 940px; margin: 0 auto; padding: 0 1.5rem; }
+section { padding: 2.8rem 0; }
+code { font-family: 'JetBrains Mono', monospace; background: var(--color-primary-light); padding: 0.1em 0.4em; border-radius: 5px; font-size: 0.86em; color: #5B21B6; }
+strong { font-weight: 700; }
+a { color: var(--color-secondary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.hero { background: linear-gradient(135deg, #4C1D95, #8B5CF6); color: white; padding: 4rem 0 3.3rem; position: relative; overflow: hidden; }
+.hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle at 18% 28%, rgba(255,255,255,0.12) 0, transparent 42%), radial-gradient(circle at 82% 72%, rgba(255,255,255,0.10) 0, transparent 38%); }
+.hero .container { position: relative; z-index: 1; }
+.hero-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+.hero-tag { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); padding: 0.3rem 0.85rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; }
+.hero h1 { font-size: 2.55rem; font-weight: 900; line-height: 1.22; margin-bottom: 0.9rem; }
+.hero h1 .accent { background: linear-gradient(90deg, #FDE68A, #FCA5A5); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero p { font-size: 1.08rem; opacity: 0.93; max-width: 720px; }
+.scope-box { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); border-radius: 12px; padding: 0.9rem 1.1rem; margin-top: 1.3rem; font-size: 0.85rem; display: flex; gap: 1.1rem; flex-wrap: wrap; }
+.scope-box .si { display: flex; align-items: center; gap: 0.4rem; }
+
+.section-title { font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; }
+.section-lead { color: var(--color-muted); margin-bottom: 1.8rem; }
+.divider { height: 1px; background: var(--color-border); }
+
+.analogy-box { display: flex; gap: 1.2rem; padding: 1.4rem; background: var(--color-primary-light); border-radius: 12px; border-left: 4px solid var(--color-primary); margin: 1.4rem 0; }
+.analogy-icon { font-size: 2.4rem; flex-shrink: 0; }
+.analogy-title { font-weight: 700; font-size: 0.8rem; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.45rem; }
+.analogy-real { margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px dashed var(--color-primary); font-size: 0.9rem; color: var(--color-muted); }
+
+.domain-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.3rem 0; }
+.domain-chip { font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.8rem; border-radius: 999px; border: 1.5px solid var(--dc); color: var(--dc); background: white; }
+
+.case-card { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 16px; margin: 1.8rem 0; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
+.case-head { display: flex; align-items: center; gap: 1rem; padding: 1.2rem 1.5rem; background: linear-gradient(135deg, var(--c, #7C3AED), color-mix(in srgb, var(--c, #7C3AED) 68%, black)); color: white; }
+.case-num { font-size: 1.5rem; font-weight: 900; background: rgba(255,255,255,0.2); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.case-head-text h3 { font-size: 1.15rem; font-weight: 700; line-height: 1.3; }
+.case-head-text .sub { font-size: 0.8rem; opacity: 0.92; margin-top: 0.15rem; }
+.case-domain-badge { margin-left: auto; background: rgba(255,255,255,0.22); font-size: 0.72rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px; flex-shrink: 0; }
+.case-body { padding: 1.4rem 1.5rem; }
+.case-body > p { margin-bottom: 0.9rem; font-size: 0.95rem; }
+
+.model-line { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 1rem; padding: 0.75rem 0.95rem; background: var(--color-surface); border-radius: 10px; }
+.model-line .ml-label { font-size: 0.7rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.model-pill { background: var(--p, #7C3AED); color: white; font-size: 0.75rem; font-weight: 600; padding: 0.28rem 0.68rem; border-radius: 999px; font-family: 'JetBrains Mono', monospace; }
+
+.result-screen { border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; margin: 0.9rem 0 1.1rem; background: #0F0E17; }
+.result-screen .rs-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.9rem; background: #1E1B2E; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.result-screen .rs-dots { display: flex; gap: 0.35rem; }
+.result-screen .rs-dot { width: 11px; height: 11px; border-radius: 50%; }
+.result-screen .rs-title { font-size: 0.73rem; color: #B8B4CC; font-family: 'JetBrains Mono', monospace; margin-left: 0.4rem; }
+.result-screen .img-fallback { padding: 2.5rem 1rem; text-align: center; color: #8B85A8; font-size: 0.85rem; line-height: 1.6; }
+.result-screen .rs-caption { padding: 0.65rem 0.95rem; font-size: 0.79rem; color: #B8B4CC; background: #1E1B2E; line-height: 1.5; }
+.result-screen .rs-caption a { color: #82AAFF; }
+
+.screen-desc { background: var(--color-secondary-light); border-left: 3px solid var(--color-secondary); border-radius: 8px; padding: 0.78rem 1.05rem; font-size: 0.89rem; margin: 0.4rem 0 0.9rem; }
+.screen-desc strong { color: #1D4ED8; }
+
+.stat-inline { display: flex; gap: 1rem; flex-wrap: wrap; margin: 0.9rem 0; }
+.stat-chip { background: var(--color-success-light); border-radius: 10px; padding: 0.6rem 0.95rem; flex: 1; min-width: 120px; }
+.stat-chip .num { font-size: 1.3rem; font-weight: 900; color: var(--color-success); line-height: 1; }
+.stat-chip .lbl { font-size: 0.75rem; color: var(--color-muted); margin-top: 0.25rem; }
+
+.callout { display: flex; gap: 0.7rem; padding: 0.95rem 1.2rem; border-radius: 10px; align-items: flex-start; margin: 1rem 0; }
+.callout .ico { font-size: 1.2rem; flex-shrink: 0; }
+.callout .content { font-size: 0.89rem; line-height: 1.55; }
+.callout-tip { background: var(--color-success-light); border-left: 3px solid var(--color-success); }
+.callout-warning { background: var(--color-warning-light); border-left: 3px solid var(--color-warning); }
+.callout-info { background: var(--color-secondary-light); border-left: 3px solid var(--color-secondary); }
+
+.video-link { display: inline-flex; align-items: center; gap: 0.5rem; background: #DC2626; color: white; font-size: 0.82rem; font-weight: 600; padding: 0.5rem 0.95rem; border-radius: 8px; margin-top: 0.2rem; }
+.video-link:hover { text-decoration: none; background: #B91C1C; }
+.doc-link { display: inline-flex; align-items: center; gap: 0.5rem; background: #2563EB; color: white; font-size: 0.82rem; font-weight: 600; padding: 0.5rem 0.95rem; border-radius: 8px; margin-top: 0.2rem; margin-left: 0.4rem; }
+.doc-link:hover { text-decoration: none; background: #1D4ED8; }
+.link-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+
+.guide-table { width: 100%; border-collapse: collapse; margin: 1.4rem 0; font-size: 0.85rem; background: var(--color-card); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.guide-table th { background: var(--color-primary); color: white; padding: 0.78rem; text-align: left; font-size: 0.79rem; }
+.guide-table td { padding: 0.7rem 0.82rem; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+.guide-table tr:last-child td { border-bottom: none; }
+.guide-table tr:nth-child(even) td { background: var(--color-surface); }
+.guide-table .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; color: var(--color-secondary); }
+
+.closing { background: linear-gradient(135deg, #4C1D95, #6D28D9); color: white; border-radius: 18px; padding: 2.4rem; text-align: center; margin: 1.5rem 0; }
+.closing h3 { font-size: 1.45rem; font-weight: 900; margin-bottom: 0.7rem; }
+.closing p { opacity: 0.93; max-width: 680px; margin: 0 auto; }
+footer { text-align: center; padding: 2rem 0; color: var(--color-muted); font-size: 0.8rem; }
+
+@media (max-width: 768px) {
+  .hero h1 { font-size: 1.9rem; }
+  .case-head { flex-direction: column; text-align: center; }
+  .case-domain-badge { margin-left: 0; }
+}
+@media print {
+  .hero, .case-head, .closing { background: white !important; color: black !important; }
+  .hero h1 .accent { -webkit-text-fill-color: black; }
+  .result-screen { background: #f5f5f5; }
+  .video-link { background: #ddd !important; color: #000 !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-tags">
+      <span class="hero-tag">VLM 중심</span>
+      <span class="hero-tag">실제 산업 적용</span>
+      <span class="hero-tag">동영상·이미지 확인</span>
+      <span class="hero-tag">차량 제외</span>
+    </div>
+    <h1>VLM이 바꾼 산업 현장<br><span class="accent">실제 적용 사례 10선</span></h1>
+    <p>
+      비전-언어 모델(VLM)이 실제 산업에 배포되어 전환점이 된 사례 10가지입니다.
+      자율주행을 제외하고, <strong>의료·제조·소매·물류·농업·스마트시티·콘텐츠·안전</strong> 등
+      더 다양한 현장에서 VLM이 주역이 된 사례로 구성했습니다. 모두 공개 동영상·이미지로 확인 가능합니다.
+    </p>
+    <div class="scope-box">
+      <div class="si">✅ <span>VLM이 핵심인 사례</span></div>
+      <div class="si">🚫 <span>YOLO 단순 탐지 제외</span></div>
+      <div class="si">🚫 <span>VLA(로봇 행동) 제외</span></div>
+      <div class="si">🚫 <span>자율주행 차량 제외</span></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🧩 왜 VLM이 "전환점"인가?</h2>
+    <p class="section-lead">기존 비전 모델은 "무엇이 어디에"만 답했습니다. VLM은 "왜, 무슨 의미인지"를 말로 설명합니다.</p>
+    <div class="analogy-box">
+      <div class="analogy-icon">👨‍🏫</div>
+      <div>
+        <div class="analogy-title">이해하기 쉽게!</div>
+        <p>기존 비전 모델이 <strong>"빨간 점이 여기 있어요"</strong>라고 손가락질만 하는 신입이라면, VLM은 <strong>"이건 도장 결함이고, 습도 때문일 가능성이 높아요"</strong>라고 설명하는 베테랑 검사관입니다.</p>
+        <p class="analogy-real">💡 <strong>핵심 전환</strong> — VLM은 ① 재학습 없이 텍스트 프롬프트로 새 작업 대응(제로샷), ② 결과를 사람이 읽는 리포트로 생성, ③ 판단 근거를 자연어로 설명. 이 3가지가 산업 도입의 결정적 계기가 되었습니다.</p>
+      </div>
+    </div>
+    <div class="domain-row">
+      <span class="domain-chip" style="--dc:#BE185D">🏥 의료 2선</span>
+      <span class="domain-chip" style="--dc:#D97706">🏭 제조·검사 2선</span>
+      <span class="domain-chip" style="--dc:#059669">🛒 소매·물류 2선</span>
+      <span class="domain-chip" style="--dc:#16A34A">🌾 농업 1선</span>
+      <span class="domain-chip" style="--dc:#0891B2">🏙️ 스마트시티 1선</span>
+      <span class="domain-chip" style="--dc:#7C3AED">📱 콘텐츠 1선</span>
+      <span class="domain-chip" style="--dc:#DC2626">🏗️ 안전 1선</span>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">🌍 VLM 산업 적용 10선</h2>
+    <p class="section-lead">각 카드에 결과 화면·데모 링크와 실제 도입 성과를 담았습니다.</p>
+
+    <!-- 1 CheXagent -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#BE185D">
+        <div class="case-num">1</div>
+        <div class="case-head-text"><h3>CheXagent — 흉부 X-ray 판독 리포트</h3><div class="sub">스탠퍼드 의료 특화 VLM, 임상 정확도 SOTA</div></div>
+        <div class="case-domain-badge">🏥 의료</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#BE185D">CheXagent (의료 특화 VLM)</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 흉부 X-ray를 넣으면 "양쪽 폐야 깨끗, 심비대 없음" 같은 영상의학과 리포트의 Impression 섹션을 자동 작성합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">chexagent_report.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- X-ray 이미지 -->
+            <rect x="20" y="20" width="150" height="180" rx="6" fill="#1A2332" stroke="#2D3B52" stroke-width="1.5"/>
+            <text x="95" y="38" text-anchor="middle" font-size="9" fill="#5B7A9E">CHEST X-RAY</text>
+            <!-- 흉곽 -->
+            <ellipse cx="95" cy="120" rx="55" ry="70" fill="none" stroke="#3D5578" stroke-width="1.5"/>
+            <path d="M70,80 Q95,70 120,80" fill="none" stroke="#4A6488" stroke-width="1"/>
+            <line x1="95" y1="75" x2="95" y2="185" stroke="#4A6488" stroke-width="1.5"/>
+            <path d="M70,95 Q60,120 70,150 M120,95 Q130,120 120,150" fill="none" stroke="#5B7A9E" stroke-width="1" opacity="0.6"/>
+            <!-- 화살표 -->
+            <path d="M180,110 L215,110" stroke="#82AAFF" stroke-width="2.5" marker-end="url(#chx)"/>
+            <text x="197" y="102" text-anchor="middle" font-size="8" fill="#82AAFF">VLM</text>
+            <!-- 리포트 -->
+            <rect x="230" y="30" width="350" height="160" rx="8" fill="#161420" stroke="#2D2A45" stroke-width="1.5"/>
+            <text x="248" y="52" font-size="11" fill="#C792EA" font-weight="700">📋 IMPRESSION (자동 생성)</text>
+            <line x1="248" y1="62" x2="562" y2="62" stroke="#2D2A45" stroke-width="1"/>
+            <text x="248" y="82" font-size="9.5" fill="#B8B4CC">1. 양쪽 폐야 깨끗함 (No consolidation)</text>
+            <text x="248" y="102" font-size="9.5" fill="#B8B4CC">2. 심비대 없음 (Normal heart size)</text>
+            <text x="248" y="122" font-size="9.5" fill="#B8B4CC">3. 늑골횡격막각 예리함</text>
+            <text x="248" y="142" font-size="9.5" fill="#C3E88D">→ 정상 소견 (No acute findings)</text>
+            <rect x="248" y="155" width="150" height="22" rx="4" fill="#1E3A2E"/>
+            <text x="323" y="170" text-anchor="middle" font-size="9" fill="#7EE0A8">✓ 영상의학과 리포트 완성</text>
+            <defs><marker id="chx" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#82AAFF"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 Stanford — 대량 흉부 X-ray와 리포트로 학습한 의료 특화 VLM. 임상 정확도에서 일관된 우위. <a href="https://stanford-aimi.github.io/chexagent.html" target="_blank">CheXagent 결과</a></div>
+        </div>
+        <p>CheXagent는 영상의학 도메인 특화 학습으로 일반 VLM(DeepSeek-VL2 등)보다 임상 오류가 적습니다. 영상의학과 의사의 리포트 작성 부담을 줄이는 실제 임상 워크플로우 보조 도구로 평가받습니다.</p>
+        <a class="video-link" href="https://stanford-aimi.github.io/chexagent.html" target="_blank">▶ CheXagent 데모 보기</a>
+        <div class="callout callout-warning" style="margin-top:1rem;"><span class="ico">⚠️</span><div class="content"><strong>주의:</strong> 의료 VLM은 환각·누락 위험이 있어 반드시 의사 검증을 거치는 보조 도구로만 쓰입니다.</div></div>
+      </div>
+    </div>
+
+    <!-- 2 RadVLM / Med-Gemini -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#9D174D">
+        <div class="case-num">2</div>
+        <div class="case-head-text"><h3>RadVLM / Med-Gemini — 대화형 진단 보조</h3><div class="sub">영상에 질문하면 답하는 멀티태스크 의료 VLM</div></div>
+        <div class="case-domain-badge">🏥 의료</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#9D174D">RadVLM</span><span class="model-pill" style="--p:#BE185D">Med-Gemini</span><span class="model-pill" style="--p:#D97706">VILA-M3</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> "이 부위 이상 있나요?", "어느 쪽 폐인가요?" 대화형 질의응답 + 시각적 위치 표시(grounding). VILA-M3는 추론 중 전문가 모델을 호출합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">radvlm_conversation.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 영상 -->
+            <rect x="20" y="30" width="140" height="160" rx="6" fill="#1A2332" stroke="#2D3B52" stroke-width="1.5"/>
+            <ellipse cx="90" cy="110" rx="48" ry="62" fill="none" stroke="#3D5578" stroke-width="1.5"/>
+            <!-- grounding 하이라이트 -->
+            <circle cx="72" cy="95" r="16" fill="#DC2626" opacity="0.35"/>
+            <circle cx="72" cy="95" r="16" fill="none" stroke="#EF4444" stroke-width="2"/>
+            <text x="90" y="185" text-anchor="middle" font-size="8" fill="#5B7A9E">grounding 표시</text>
+            <!-- 대화 말풍선 -->
+            <rect x="180" y="35" width="400" height="40" rx="10" fill="#1E293B"/>
+            <text x="195" y="52" font-size="9.5" fill="#93C5FD">👨‍⚕️ 의사: "왼쪽 상단에 이상이 있나요?"</text>
+            <text x="195" y="67" font-size="8" fill="#64748B">질문 (자연어)</text>
+            <rect x="180" y="85" width="400" height="55" rx="10" fill="#2E1F42"/>
+            <text x="195" y="103" font-size="9.5" fill="#C792EA">🤖 RadVLM: "네, 좌상엽에 결절 의심</text>
+            <text x="195" y="118" font-size="9.5" fill="#C792EA">소견이 있습니다 (빨간 원 위치)."</text>
+            <text x="195" y="133" font-size="8" fill="#64748B">답변 + 위치 표시</text>
+            <rect x="180" y="150" width="400" height="42" rx="10" fill="#1E293B"/>
+            <text x="195" y="167" font-size="9.5" fill="#93C5FD">👨‍⚕️ "추가 검사가 필요한가요?"</text>
+            <text x="195" y="182" font-size="8.5" fill="#7EE0A8">→ 멀티턴 대화 지속 (VQA)</text>
+          </svg>
+          <div class="rs-caption">📎 RadVLM — 멀티태스크 대화형 의료 VLM. 리포트 + VQA + 시각 grounding 동시 지원. <a href="https://arxiv.org/abs/2502.03333" target="_blank">논문·결과</a></div>
+        </div>
+        <p>단순 리포트를 넘어, 의사가 영상에 자연어로 질문하고 답을 받는 대화형 워크플로우입니다. Med-Gemini·VILA-M3는 멀티모달 추론으로 진단 정확도를 끌어올렸습니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://arxiv.org/abs/2502.03333" target="_blank">📄 RadVLM 논문</a>
+          <a class="doc-link" href="https://deepmind.google/models/gemini/" target="_blank">📄 Med-Gemini 소개</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 산업 검사 VLM -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#D97706">
+        <div class="case-num">3</div>
+        <div class="case-head-text"><h3>VLM 자가문서화 품질 검사</h3><div class="sub">제조사 54%가 품질관리에 AI 에이전트 도입</div></div>
+        <div class="case-domain-badge">🏭 제조</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#D97706">Qwen2.5-VL</span><span class="model-pill" style="--p:#7C3AED">GPT-4o</span><span class="model-pill" style="--p:#2563EB">도메인 특화 VLM</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 검사 이미지를 넣으면 "표면 긁힘, 좌측 상단, 경미" 같은 사람이 읽는 검사 리포트와 유지보수 로그를 실시간 자동 생성합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">vlm_inspection_report.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 제품 이미지 + 결함 -->
+            <rect x="20" y="35" width="150" height="150" rx="6" fill="#252533" stroke="#3D3D52" stroke-width="1.5"/>
+            <text x="95" y="30" text-anchor="middle" font-size="8" fill="#8B85A8">검사 이미지</text>
+            <rect x="45" y="60" width="100" height="100" rx="4" fill="#3A3A48"/>
+            <!-- 긁힘 표시 -->
+            <line x1="60" y1="80" x2="120" y2="95" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="90" cy="87" r="22" fill="none" stroke="#DC2626" stroke-width="2" stroke-dasharray="3 2"/>
+            <!-- 화살표 -->
+            <path d="M180,110 L215,110" stroke="#F59E0B" stroke-width="2.5" marker-end="url(#qc)"/>
+            <text x="197" y="102" text-anchor="middle" font-size="8" fill="#F59E0B">VLM</text>
+            <!-- 리포트 -->
+            <rect x="230" y="30" width="350" height="160" rx="8" fill="#1A1710" stroke="#3D3520" stroke-width="1.5"/>
+            <text x="248" y="52" font-size="11" fill="#FBBF24" font-weight="700">🏭 검사 리포트 (자동 생성)</text>
+            <line x1="248" y1="60" x2="562" y2="60" stroke="#3D3520" stroke-width="1"/>
+            <text x="248" y="80" font-size="9.5" fill="#D4D0C4">결함 유형: 표면 스크래치</text>
+            <text x="248" y="100" font-size="9.5" fill="#D4D0C4">위치: 좌측 상단</text>
+            <text x="248" y="120" font-size="9.5" fill="#D4D0C4">심각도: 경미 (Minor)</text>
+            <text x="248" y="140" font-size="9.5" fill="#FCA5A5">조치: 재검사 권장, 도장 공정 점검</text>
+            <rect x="248" y="152" width="180" height="24" rx="4" fill="#3D1F1F"/>
+            <text x="338" y="168" text-anchor="middle" font-size="9" fill="#FCA5A5">⚠ BLOCK — 유지보수 로그 기록됨</text>
+            <defs><marker id="qc" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#F59E0B"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 제조 품질검사에서 VLM은 제로샷으로 균열·결함을 식별하고 리포트를 생성. <a href="https://friendli.ai/blog/industrial-inspection-with-vision-language-models" target="_blank">사례 보기</a></div>
+        </div>
+        <div class="stat-inline">
+          <div class="stat-chip"><div class="num">54%</div><div class="lbl">AI 에이전트 쓰는 조직의 품질관리 도입률</div></div>
+          <div class="stat-chip"><div class="num">제로샷</div><div class="lbl">대량 라벨 없이 결함 식별</div></div>
+        </div>
+        <p>전통적 CNN 검사는 제품마다 수만 장 라벨링과 전용 모델이 필요했습니다. VLM은 소량 데이터·제로샷으로 유연하게 대응하고, "모든 검사 단계가 자동 기록·요약되는" 자기문서화 시스템을 가능케 합니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://friendli.ai/blog/industrial-inspection-with-vision-language-models" target="_blank">📄 산업 검사 VLM 사례</a>
+          <a class="doc-link" href="https://github.com/QwenLM/Qwen2.5-VL" target="_blank">📄 Qwen2.5-VL</a>
+        </div>
+        <div class="callout callout-tip"><span class="ico">🏭</span><div class="content"><strong>빅맨님 직결:</strong> 공장 검사 스택의 마지막 단계(VLM 리포트)가 정확히 이 사례입니다. 하이브리드(머신비전=탐지, VLM=맥락 추론)가 차세대 표준입니다.</div></div>
+      </div>
+    </div>
+
+    <!-- 4 디지털 트윈 검사 -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#B45309">
+        <div class="case-num">4</div>
+        <div class="case-head-text"><h3>VLM + 디지털 트윈 정밀검사</h3><div class="sub">항공·방산·의료기기 추적가능 품질 기록</div></div>
+        <div class="case-domain-badge">🏭 제조</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#B45309">산업 VLM + Digital Twin</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> VLM의 모든 검사 판단이 디지털 트윈에 기록되고, 설계 사양·과거 동일 부품 이력과 교차 대조됩니다. 기준에서 벗어나면 모델 재학습이 트리거됩니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">vlm_digital_twin.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 실물 검사 -->
+            <rect x="25" y="45" width="120" height="130" rx="6" fill="#252533" stroke="#B45309" stroke-width="1.5"/>
+            <text x="85" y="38" text-anchor="middle" font-size="8.5" fill="#F59E0B">실물 부품</text>
+            <path d="M50,90 L120,90 L120,140 L50,140 Z" fill="#3A3A48"/>
+            <circle cx="85" cy="115" r="8" fill="#DC2626" opacity="0.6"/>
+            <!-- 양방향 화살표 -->
+            <path d="M155,110 L200,110" stroke="#F59E0B" stroke-width="2" marker-end="url(#dt1)"/>
+            <path d="M200,130 L155,130" stroke="#82AAFF" stroke-width="2" marker-end="url(#dt2)"/>
+            <text x="177" y="105" text-anchor="middle" font-size="7.5" fill="#F59E0B">VLM 판단</text>
+            <text x="177" y="148" text-anchor="middle" font-size="7.5" fill="#82AAFF">이력 대조</text>
+            <!-- 디지털 트윈 -->
+            <rect x="210" y="30" width="180" height="160" rx="8" fill="#0D1826" stroke="#1D4ED8" stroke-width="1.5"/>
+            <text x="300" y="50" text-anchor="middle" font-size="10" fill="#60A5FA" font-weight="700">🔷 디지털 트윈</text>
+            <!-- 와이어프레임 -->
+            <path d="M245,80 L340,80 L355,95 L260,95 Z" fill="#152238" stroke="#3B82F6" stroke-width="1"/>
+            <path d="M245,80 L245,130 L260,145 L260,95 Z" fill="#0F1B2E" stroke="#3B82F6" stroke-width="1"/>
+            <path d="M260,95 L355,95 L355,145 L260,145 Z" fill="#1A2942" stroke="#3B82F6" stroke-width="1"/>
+            <circle cx="300" cy="120" r="6" fill="#DC2626"/>
+            <text x="300" y="170" text-anchor="middle" font-size="8" fill="#93C5FD">설계 사양 + 과거 이력</text>
+            <!-- 기록 -->
+            <rect x="405" y="45" width="175" height="130" rx="8" fill="#161420" stroke="#2D2A45" stroke-width="1.5"/>
+            <text x="420" y="65" font-size="9" fill="#C792EA" font-weight="700">📊 추적가능 품질기록</text>
+            <text x="420" y="86" font-size="8" fill="#B8B4CC">부품 ID: AB-2024-1187</text>
+            <text x="420" y="104" font-size="8" fill="#B8B4CC">검사 시각: 14:32:07</text>
+            <text x="420" y="122" font-size="8" fill="#B8B4CC">이상: 미세 기공 (0.3mm)</text>
+            <text x="420" y="140" font-size="8" fill="#C3E88D">항공·방산 규제 충족 ✓</text>
+            <text x="420" y="160" font-size="8" fill="#FCA5A5">기준 이탈 → 재학습 트리거</text>
+            <defs>
+              <marker id="dt1" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7" fill="#F59E0B"/></marker>
+              <marker id="dt2" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7" fill="#82AAFF"/></marker>
+            </defs>
+          </svg>
+          <div class="rs-caption">📎 고복잡도 생산의 품질보증에서 VLM이 추적가능한 품질 기록을 생성. 규제 산업(항공·방산·의료기기)에선 필수 요건. <a href="https://www.roboticstomorrow.com/story/2026/03/when-machines-learn-to-see-like-experts-the-rise-of-vision-language-models-in-manufacturing/26335/" target="_blank">분석 보기</a></div>
+        </div>
+        <p>VLM이 베테랑 검사관의 암묵지를 디지털로 인코딩합니다. 검사 결정이 시간이 갈수록 풍부해져 디지털 트윈이 "자기개선형 품질 지능 시스템"으로 진화합니다. 추적성이 진입 요건인 규제 산업에서 특히 가치가 큽니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://www.roboticstomorrow.com/story/2026/03/when-machines-learn-to-see-like-experts-the-rise-of-vision-language-models-in-manufacturing/26335/" target="_blank">📄 제조 VLM 심층분석</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 Amazon Rufus -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#059669">
+        <div class="case-num">5</div>
+        <div class="case-head-text"><h3>Amazon Rufus + Lens Live — VLM 쇼핑</h3><div class="sub">3억 명 사용, 연 120억 달러 추가 매출</div></div>
+        <div class="case-domain-badge">🛒 소매</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#059669">Rufus (VLM + RAG)</span><span class="model-pill" style="--p:#0891B2">Lens Live</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 카메라로 상품을 비추면 실시간으로 매칭 상품이 하단 캐러셀에 뜨고, Rufus가 상품 요약·질문 답변을 제공합니다. 상품 사진 속 텍스트도 "읽습니다".</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">amazon_lens_live_rufus.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 스마트폰 -->
+            <rect x="30" y="20" width="130" height="180" rx="14" fill="#1A1A24" stroke="#3D3D52" stroke-width="2"/>
+            <rect x="42" y="40" width="106" height="90" rx="4" fill="#252533"/>
+            <!-- 카메라로 상품 비춤 -->
+            <rect x="60" y="55" width="70" height="60" rx="4" fill="#3A3A48"/>
+            <circle cx="95" cy="85" r="20" fill="#059669" opacity="0.4"/>
+            <text x="95" y="90" text-anchor="middle" font-size="16">👟</text>
+            <text x="95" y="128" text-anchor="middle" font-size="7" fill="#10B981">📷 Lens Live 스캔</text>
+            <!-- 하단 캐러셀 -->
+            <rect x="46" y="140" width="24" height="24" rx="3" fill="#334155"/>
+            <rect x="74" y="140" width="24" height="24" rx="3" fill="#334155"/>
+            <rect x="102" y="140" width="24" height="24" rx="3" fill="#334155"/>
+            <text x="95" y="180" text-anchor="middle" font-size="7" fill="#64748B">매칭 상품 실시간</text>
+            <!-- 화살표 -->
+            <path d="M170,110 L205,110" stroke="#10B981" stroke-width="2.5" marker-end="url(#rf)"/>
+            <!-- Rufus 대화 -->
+            <rect x="220" y="30" width="360" height="160" rx="10" fill="#0D1F1A" stroke="#059669" stroke-width="1.5"/>
+            <text x="238" y="52" font-size="10" fill="#34D399" font-weight="700">🛒 Rufus AI 쇼핑 어시스턴트</text>
+            <line x1="238" y1="60" x2="562" y2="60" stroke="#1E3A2E" stroke-width="1"/>
+            <rect x="238" y="70" width="330" height="28" rx="6" fill="#1E293B"/>
+            <text x="250" y="88" font-size="9" fill="#93C5FD">"이 운동화 러닝용으로 괜찮아?"</text>
+            <rect x="238" y="104" width="330" height="46" rx="6" fill="#14322A"/>
+            <text x="250" y="122" font-size="9" fill="#A7F3D0">"쿠션이 좋은 러닝화입니다. 발볼이</text>
+            <text x="250" y="137" font-size="9" fill="#A7F3D0">넓다면 한 사이즈 업을 추천해요."</text>
+            <text x="238" y="172" font-size="9" fill="#FBBF24">📈 3억 명 사용 · 구매율 +60% · 연 $120억</text>
+            <defs><marker id="rf" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#10B981"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 Amazon — Lens Live가 화면 속 상품을 스캔, Rufus VLM이 실시간 매칭·요약·답변. <a href="https://www.aboutamazon.com/news/retail/amazon-rufus" target="_blank">Rufus 소개</a></div>
+        </div>
+        <div class="stat-inline">
+          <div class="stat-chip"><div class="num">3억 명</div><div class="lbl">2025년 Rufus 사용자</div></div>
+          <div class="stat-chip"><div class="num">$120억</div><div class="lbl">추가 연환산 매출</div></div>
+          <div class="stat-chip"><div class="num">+60%</div><div class="lbl">구매 완료율 상승</div></div>
+        </div>
+        <p>Rufus는 VLM·LLM·RAG·시각 분석을 결합해 "작은 주방용 블렌더 추천"처럼 자연어 질문에 답합니다. 상품 사진을 시각 라벨 태깅으로 읽어 검색에 반영하는 것이 VLM의 핵심 역할입니다.</p>
+        <div class="link-row">
+          <a class="video-link" href="https://www.youtube.com/results?search_query=amazon+lens+live+rufus+demo" target="_blank">▶ Lens Live 데모 영상</a>
+          <a class="doc-link" href="https://www.aboutamazon.com/news/retail/amazon-rufus" target="_blank">📄 Amazon Rufus 공식</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 물류 자가문서화 -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#047857">
+        <div class="case-num">6</div>
+        <div class="case-head-text"><h3>VLM 물류 자동 검수·문서화</h3><div class="sub">바코드·송장·파손을 읽고 로그 자동 생성</div></div>
+        <div class="case-domain-badge">📦 물류</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#047857">Qwen2.5-VL</span><span class="model-pill" style="--p:#7C3AED">LLaMA 3.2 Vision</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 패키지·송장·라벨 이미지를 넣으면 바코드 위치추정, 표·양식의 구조화 데이터 추출, 파손 여부 판정과 처리 로그를 자동 생성합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">vlm_logistics_doc.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 송장/패키지 -->
+            <rect x="25" y="35" width="140" height="150" rx="6" fill="#F5F5F0" stroke="#3D3D52" stroke-width="1.5"/>
+            <text x="95" y="30" text-anchor="middle" font-size="8" fill="#8B85A8">송장 이미지</text>
+            <!-- 바코드 -->
+            <g fill="#1A1A1A">
+              <rect x="45" y="50" width="2" height="30"/><rect x="49" y="50" width="4" height="30"/><rect x="55" y="50" width="2" height="30"/><rect x="59" y="50" width="5" height="30"/><rect x="66" y="50" width="2" height="30"/><rect x="70" y="50" width="3" height="30"/><rect x="75" y="50" width="5" height="30"/><rect x="82" y="50" width="2" height="30"/><rect x="86" y="50" width="4" height="30"/><rect x="92" y="50" width="2" height="30"/><rect x="96" y="50" width="3" height="30"/><rect x="101" y="50" width="5" height="30"/><rect x="108" y="50" width="2" height="30"/><rect x="112" y="50" width="4" height="30"/><rect x="118" y="50" width="2" height="30"/><rect x="122" y="50" width="5" height="30"/><rect x="129" y="50" width="3" height="30"/>
+            </g>
+            <line x1="45" y1="95" x2="145" y2="95" stroke="#CBD5E1" stroke-width="1"/>
+            <line x1="45" y1="108" x2="145" y2="108" stroke="#CBD5E1" stroke-width="1"/>
+            <line x1="45" y1="121" x2="120" y2="121" stroke="#CBD5E1" stroke-width="1"/>
+            <line x1="45" y1="134" x2="145" y2="134" stroke="#CBD5E1" stroke-width="1"/>
+            <line x1="45" y1="147" x2="110" y2="147" stroke="#CBD5E1" stroke-width="1"/>
+            <!-- 화살표 -->
+            <path d="M175,110 L210,110" stroke="#10B981" stroke-width="2.5" marker-end="url(#lg)"/>
+            <text x="192" y="102" text-anchor="middle" font-size="8" fill="#10B981">VLM</text>
+            <!-- 구조화 추출 결과 -->
+            <rect x="225" y="30" width="355" height="160" rx="8" fill="#0D1F1A" stroke="#047857" stroke-width="1.5"/>
+            <text x="243" y="52" font-size="10" fill="#34D399" font-weight="700">📦 구조화 데이터 자동 추출</text>
+            <line x1="243" y1="60" x2="562" y2="60" stroke="#1E3A2E" stroke-width="1"/>
+            <text x="243" y="80" font-size="9" fill="#B8B4CC">운송장번호: 1Z-999-AA-1234</text>
+            <text x="243" y="100" font-size="9" fill="#B8B4CC">수취인: 홍길동 / 수원시</text>
+            <text x="243" y="120" font-size="9" fill="#B8B4CC">품목: 전자부품 × 3</text>
+            <text x="243" y="140" font-size="9" fill="#FCA5A5">파손 여부: 우측 모서리 눌림 감지</text>
+            <rect x="243" y="152" width="200" height="24" rx="4" fill="#14322A"/>
+            <text x="343" y="168" text-anchor="middle" font-size="8.5" fill="#7EE0A8">✓ JSON 저장 + 처리 로그 생성</text>
+            <defs><marker id="lg" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#10B981"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 Qwen2.5-VL — 바운딩박스·포인트로 객체 정밀 위치추정 + 송장·표 구조화 추출. <a href="https://github.com/QwenLM/Qwen2.5-VL" target="_blank">결과 보기</a></div>
+        </div>
+        <p>Qwen2.5-VL은 송장·양식·표에서 구조화 데이터를 뽑아내는 데 특히 강합니다. 물류 검수·반품 처리·재고 문서화를 자동화해 사람 손이 닿던 단계를 대폭 줄입니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://github.com/QwenLM/Qwen2.5-VL" target="_blank">📄 Qwen2.5-VL GitHub</a>
+          <a class="doc-link" href="https://chat.qwen.ai/" target="_blank">🌐 Qwen 직접 체험</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 농업 드론 잡초 (신규) -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#16A34A">
+        <div class="case-num">7</div>
+        <div class="case-head-text"><h3>VLM 드론 정밀농업 — 제로샷 잡초 탐지</h3><div class="sub">대두밭 드론 영상에서 학습 없이 잡초·생육단계 추론</div></div>
+        <div class="case-domain-badge">🌾 농업</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#16A34A">Gemini Flash 2.5</span><span class="model-pill" style="--p:#7C3AED">GPT-4o/4.1</span><span class="model-pill" style="--p:#2563EB">LLaMA-4 Scout</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 드론으로 찍은 대두밭 이미지에 ① 잡초 유무 ② 위치 ③ 추론 근거 ④ 작물 생육단계 ⑤ 작물 종류를 한 번에 텍스트로 출력합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">vlm_drone_weed_detection.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 드론 항공 이미지 -->
+            <rect x="25" y="30" width="160" height="160" rx="6" fill="#1A2E1A" stroke="#3D5230" stroke-width="1.5"/>
+            <text x="105" y="24" text-anchor="middle" font-size="8" fill="#84CC16">🚁 드론 대두밭 이미지</text>
+            <!-- 밭 이랑 -->
+            <g stroke="#3D5A2E" stroke-width="1">
+              <line x1="40" y1="50" x2="170" y2="50"/><line x1="40" y1="70" x2="170" y2="70"/><line x1="40" y1="90" x2="170" y2="90"/><line x1="40" y1="110" x2="170" y2="110"/><line x1="40" y1="130" x2="170" y2="130"/><line x1="40" y1="150" x2="170" y2="150"/><line x1="40" y1="170" x2="170" y2="170"/>
+            </g>
+            <!-- 작물 (초록 점) -->
+            <g fill="#4ADE80"><circle cx="55" cy="60" r="3"/><circle cx="80" cy="80" r="3"/><circle cx="110" cy="60" r="3"/><circle cx="140" cy="100" r="3"/><circle cx="70" cy="140" r="3"/><circle cx="130" cy="160" r="3"/></g>
+            <!-- 잡초 (빨간 원 표시) -->
+            <circle cx="95" cy="115" r="12" fill="#DC2626" opacity="0.35" stroke="#EF4444" stroke-width="1.5"/>
+            <circle cx="150" cy="130" r="10" fill="#DC2626" opacity="0.35" stroke="#EF4444" stroke-width="1.5"/>
+            <!-- 화살표 -->
+            <path d="M195,110 L225,110" stroke="#84CC16" stroke-width="2.5" marker-end="url(#dr)"/>
+            <text x="210" y="102" text-anchor="middle" font-size="8" fill="#84CC16">VLM</text>
+            <!-- 추론 결과 -->
+            <rect x="240" y="30" width="340" height="160" rx="8" fill="#14210D" stroke="#4D7C0F" stroke-width="1.5"/>
+            <text x="258" y="52" font-size="10" fill="#A3E635" font-weight="700">🌾 제로샷 잡초 탐지 + 추론</text>
+            <line x1="258" y1="60" x2="562" y2="60" stroke="#2D3D1A" stroke-width="1"/>
+            <text x="258" y="80" font-size="9" fill="#D4E8B4">① 잡초 발견: 2개소 (빨간 원)</text>
+            <text x="258" y="100" font-size="9" fill="#D4E8B4">② 근거: 잎 모양·간격이 대두와 다름</text>
+            <text x="258" y="120" font-size="9" fill="#D4E8B4">③ 작물 생육단계: V3 (3엽기)</text>
+            <text x="258" y="140" font-size="9" fill="#D4E8B4">④ 작물 종류: 대두 (Soybean)</text>
+            <rect x="258" y="152" width="230" height="24" rx="4" fill="#1E3A14"/>
+            <text x="373" y="168" text-anchor="middle" font-size="8.5" fill="#BEF264">✓ 학습 없이 판단 + 근거 설명 (해석가능)</text>
+            <defs><marker id="dr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#84CC16"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 6개 상용 VLM을 실제 대두밭 드론 이미지로 평가 — 제로샷 잡초 탐지 + 시각 추론. <a href="https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2025.1735096/full" target="_blank">논문·결과</a></div>
+        </div>
+        <p>기존 딥러닝은 밭마다 대량 라벨링이 필요하고 다른 밭에 잘 안 맞았습니다. VLM은 제로샷으로 잡초를 식별하고 <strong>판단 근거를 자연어로 설명</strong>해, 농가가 결과를 신뢰하고 정밀 방제에 쓸 수 있게 합니다.</p>
+        <div class="callout callout-info"><span class="ico">🌱</span><div class="content"><strong>핵심:</strong> "왜 잡초라고 판단했는지"를 설명하는 해석가능성(interpretability)이 블랙박스 모델 대비 농업 현장 도입의 결정적 차이입니다.</div></div>
+        <div class="link-row">
+          <a class="doc-link" href="https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2025.1735096/full" target="_blank">📄 Frontiers 논문 (드론+VLM)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 스마트시티 InfraGPT (신규) -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#0891B2">
+        <div class="case-num">8</div>
+        <div class="case-head-text"><h3>InfraGPT — 도시 인프라 결함 점검</h3><div class="sub">CCTV 영상에서 포트홀·균열·누수 자동 탐지·알림</div></div>
+        <div class="case-domain-badge">🏙️ 스마트시티</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#0891B2">InfraGPT (VLM 프레임워크)</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 도시 CCTV 영상에서 도로 균열·포트홀·누수를 탐지하고, 긴급도를 판단해 "심각한 누수 → 즉시 유지보수부 알림"처럼 자동 분류·전달합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">infragpt_city_defect.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- CCTV 도로 화면 -->
+            <rect x="25" y="35" width="165" height="150" rx="6" fill="#1E2530" stroke="#2D3B52" stroke-width="1.5"/>
+            <text x="107" y="30" text-anchor="middle" font-size="8" fill="#0891B2">📹 도시 CCTV</text>
+            <!-- 도로 원근 -->
+            <path d="M60,175 L100,60 L120,60 L150,175 Z" fill="#3A424E"/>
+            <line x1="105" y1="70" x2="110" y2="90" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4 4"/>
+            <line x1="108" y1="100" x2="115" y2="130" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4 4"/>
+            <!-- 포트홀 -->
+            <ellipse cx="118" cy="145" rx="14" ry="8" fill="#0F0E17" stroke="#EF4444" stroke-width="2"/>
+            <text x="107" y="168" text-anchor="middle" font-size="7" fill="#EF4444">포트홀 감지</text>
+            <!-- 화살표 -->
+            <path d="M200,110 L230,110" stroke="#22D3EE" stroke-width="2.5" marker-end="url(#ig)"/>
+            <text x="215" y="102" text-anchor="middle" font-size="8" fill="#22D3EE">VLM</text>
+            <!-- 판정 결과 -->
+            <rect x="245" y="30" width="335" height="160" rx="8" fill="#0A1E24" stroke="#0891B2" stroke-width="1.5"/>
+            <text x="263" y="52" font-size="10" fill="#22D3EE" font-weight="700">🏙️ InfraGPT 결함 점검·알림</text>
+            <line x1="263" y1="60" x2="562" y2="60" stroke="#164450" stroke-width="1"/>
+            <text x="263" y="80" font-size="9" fill="#B8D4DC">결함 유형: 포트홀 (도로 파임)</text>
+            <text x="263" y="100" font-size="9" fill="#B8D4DC">크기: 약 40cm · 깊이 중간</text>
+            <text x="263" y="120" font-size="9" fill="#FCA5A5">긴급도: 높음 (차량 손상 위험)</text>
+            <rect x="263" y="132" width="240" height="26" rx="4" fill="#3D1F1F"/>
+            <text x="383" y="149" text-anchor="middle" font-size="8.5" fill="#FCA5A5">🚨 유지보수부 즉시 자동 알림 전송</text>
+            <text x="263" y="176" font-size="8" fill="#7EE0A8">✓ 추가 센서 없이 기존 CCTV 활용</text>
+            <defs><marker id="ig" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#22D3EE"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 InfraGPT — 기존 CCTV 인프라를 그대로 활용, 추가 센서 없이 VLM으로 결함 탐지·맥락 추론. <a href="https://arxiv.org/abs/2510.16017" target="_blank">논문·결과</a></div>
+        </div>
+        <p>도시는 이미 교통·보안용 CCTV를 대량 운영 중입니다. InfraGPT는 이 영상을 VLM으로 분석해 <strong>추가 하드웨어 없이</strong> 결함을 탐지하고, 온라인(긴급 알림)·오프라인(장기 계획용 요약)을 동시에 지원합니다. 반응형 점검에서 능동형 유지보수로의 전환입니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://arxiv.org/abs/2510.16017" target="_blank">📄 InfraGPT 논문</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 콘텐츠 모더레이션 KuaiMod (신규) -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#7C3AED">
+        <div class="case-num">9</div>
+        <div class="case-head-text"><h3>KuaiMod — 숏폼 영상 콘텐츠 검열</h3><div class="sub">콰이쇼우, VLM + CoT로 영상 유해성 판단</div></div>
+        <div class="case-domain-badge">📱 콘텐츠</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#7C3AED">KuaiMod (대형 VLM + Chain-of-Thought)</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> 숏폼 영상을 VLM이 보고 "왜 유해한지" 단계적으로 추론(CoT)한 뒤 판정. 사용자 신고가 적어도 영상 독성을 모델링하고, 검열 정책을 빠르게 업데이트합니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">kuaimod_moderation.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 숏폼 영상 화면 -->
+            <rect x="35" y="25" width="115" height="170" rx="12" fill="#1A1A24" stroke="#3D3D52" stroke-width="2"/>
+            <rect x="45" y="40" width="95" height="120" rx="4" fill="#2A2440"/>
+            <polygon points="82,85 82,115 108,100" fill="#C792EA"/>
+            <text x="92" y="145" text-anchor="middle" font-size="16">📱</text>
+            <text x="92" y="180" text-anchor="middle" font-size="7.5" fill="#8B85A8">숏폼 영상</text>
+            <!-- 화살표 -->
+            <path d="M160,110 L195,110" stroke="#A78BFA" stroke-width="2.5" marker-end="url(#km)"/>
+            <text x="177" y="102" text-anchor="middle" font-size="8" fill="#A78BFA">VLM</text>
+            <!-- CoT 추론 -->
+            <rect x="210" y="25" width="370" height="170" rx="8" fill="#1A1428" stroke="#7C3AED" stroke-width="1.5"/>
+            <text x="228" y="47" font-size="10" fill="#C792EA" font-weight="700">🧠 KuaiMod 단계적 추론 (CoT)</text>
+            <line x1="228" y1="55" x2="562" y2="55" stroke="#2D2A45" stroke-width="1"/>
+            <text x="228" y="74" font-size="9" fill="#C4B5E0">1단계: 영상 내용 파악 (장면·행동)</text>
+            <text x="228" y="93" font-size="9" fill="#C4B5E0">2단계: 정책 위반 요소 검토</text>
+            <text x="228" y="112" font-size="9" fill="#C4B5E0">3단계: 맥락 고려 (풍자? 실제 위험?)</text>
+            <text x="228" y="131" font-size="9" fill="#C3E88D">4단계: 판정 → 안전 (통과)</text>
+            <rect x="228" y="144" width="320" height="24" rx="4" fill="#2A1F42"/>
+            <text x="388" y="160" text-anchor="middle" font-size="8.5" fill="#DDD0F5">신고 적어도 독성 예측 · 정책 빠른 업데이트</text>
+            <text x="228" y="185" font-size="8" fill="#93C5FD">✓ 콰이쇼우 실제 배포 (KDD 2025)</text>
+            <defs><marker id="km" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L7,4 L0,8" fill="#A78BFA"/></marker></defs>
+          </svg>
+          <div class="rs-caption">📎 KuaiMod — 숏폼 플랫폼 최초의 콘텐츠 검열 벤치마크 + VLM 기반 동적 정책 운영. <a href="https://dl.acm.org/doi/10.1145/3711896.3737273" target="_blank">논문·결과</a></div>
+        </div>
+        <p>기존 자동 검열은 미묘한 맥락을 이해 못해 정확도가 낮고, 산업 규정은 트렌드 변화를 못 따라갔습니다. KuaiMod는 VLM의 추론으로 영상 독성을 판단하고, <strong>빠른 업데이트 속도와 높은 정확도</strong>의 동적 검열 정책을 실제 플랫폼에 적용했습니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://dl.acm.org/doi/10.1145/3711896.3737273" target="_blank">📄 KuaiMod 논문 (KDD 2025)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 건설 안전 -->
+    <div class="case-card">
+      <div class="case-head" style="--c:#DC2626">
+        <div class="case-num">10</div>
+        <div class="case-head-text"><h3>건설현장 위험 자동 감지 (LLM+VLM)</h3><div class="sub">OSHA 사고 보고서 2.8만 건 + 현장 이미지 융합</div></div>
+        <div class="case-domain-badge">🏗️ 안전</div>
+      </div>
+      <div class="case-body">
+        <div class="model-line"><span class="ml-label">모델</span><span class="model-pill" style="--p:#DC2626">GPT-4o / 4o-mini</span><span class="model-pill" style="--p:#7C3AED">Molmo 7B</span><span class="model-pill" style="--p:#2563EB">Qwen2-VL 2B</span></div>
+        <div class="screen-desc">🖥️ <strong>결과 화면:</strong> LLM이 사고 보고서에서 위험 패턴을 추출 → VLM이 현장 이미지에서 "PPE 미착용", "위험 장비"를 탐지·위치표시. 텍스트+이미지 결합 안전 평가입니다.</div>
+        <div class="result-screen">
+          <div class="rs-bar"><div class="rs-dots"><span class="rs-dot" style="background:#FF5F56"></span><span class="rs-dot" style="background:#FFBD2E"></span><span class="rs-dot" style="background:#27C93F"></span></div><span class="rs-title">construction_hazard_vlm.png</span></div>
+          <svg viewBox="0 0 600 220" width="100%" style="display:block;">
+            <rect width="600" height="220" fill="#0F0E17"/>
+            <!-- 사고 보고서 (LLM) -->
+            <rect x="25" y="30" width="130" height="75" rx="6" fill="#161420" stroke="#7C3AED" stroke-width="1.5"/>
+            <text x="90" y="48" text-anchor="middle" font-size="8.5" fill="#C792EA">📄 OSHA 보고서</text>
+            <line x1="38" y1="58" x2="142" y2="58" stroke="#2D2A45" stroke-width="1"/>
+            <line x1="38" y1="68" x2="142" y2="68" stroke="#3D3A55" stroke-width="1"/>
+            <line x1="38" y1="78" x2="130" y2="78" stroke="#3D3A55" stroke-width="1"/>
+            <line x1="38" y1="88" x2="142" y2="88" stroke="#3D3A55" stroke-width="1"/>
+            <text x="90" y="100" text-anchor="middle" font-size="6.5" fill="#8B85A8">2.8만 건 → LLM 요약</text>
+            <!-- 현장 이미지 (VLM) -->
+            <rect x="25" y="115" width="130" height="75" rx="6" fill="#252533" stroke="#2563EB" stroke-width="1.5"/>
+            <text x="90" y="133" text-anchor="middle" font-size="8.5" fill="#60A5FA">📷 현장 이미지</text>
+            <rect x="45" y="140" width="20" height="35" fill="#3A3A48"/>
+            <circle cx="90" cy="155" r="8" fill="#F59E0B"/>
+            <rect x="82" y="163" width="16" height="18" fill="#3A3A48"/>
+            <circle cx="90" cy="150" r="14" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="2 2"/>
+            <!-- 융합 화살표 -->
+            <path d="M162,68 L195,95" stroke="#A78BFA" stroke-width="2" marker-end="url(#cs)"/>
+            <path d="M162,152 L195,120" stroke="#60A5FA" stroke-width="2" marker-end="url(#cs2)"/>
+            <!-- 안전 평가 -->
+            <rect x="210" y="35" width="370" height="150" rx="8" fill="#1A1710" stroke="#DC2626" stroke-width="1.5"/>
+            <text x="228" y="56" font-size="10" fill="#FCA5A5" font-weight="700">🏗️ 텍스트+이미지 융합 안전 평가</text>
+            <line x1="228" y1="64" x2="562" y2="64" stroke="#3D2020" stroke-width="1"/>
+            <text x="228" y="84" font-size="9" fill="#D4D0C4">위험 감지: 작업자 안전모 미착용</text>
+            <text x="228" y="104" font-size="9" fill="#D4D0C4">위치: 중앙 작업자 (빨간 원)</text>
+            <text x="228" y="124" font-size="9" fill="#D4D0C4">유사 사고: 추락 사망 12건 (LLM 근거)</text>
+            <rect x="228" y="136" width="250" height="26" rx="4" fill="#3D1F1F"/>
+            <text x="353" y="153" text-anchor="middle" font-size="8.5" fill="#FCA5A5">🚨 즉시 시정 요청 · 경량 VLM 엣지 배포</text>
+            <defs>
+              <marker id="cs" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7" fill="#A78BFA"/></marker>
+              <marker id="cs2" markerWidth="8" markerHeight="8" refX="6" refY="3.5" orient="auto"><path d="M0,0 L6,3.5 L0,7" fill="#60A5FA"/></marker>
+            </defs>
+          </svg>
+          <div class="rs-caption">📎 OSHA 사고 보고서 2.8만 건(2000~2025) + 현장 이미지를 LLM·VLM으로 융합 분석. <a href="https://arxiv.org/abs/2511.15720" target="_blank">논문·결과</a></div>
+        </div>
+        <p>LLM이 사고 원인·부상 유형을 요약해 맥락을 만들고, VLM이 그 맥락으로 현장 이미지의 위험을 탐지합니다. 경량 오픈소스 VLM(Molmo 7B, Qwen2-VL 2B)으로도 구현돼 엣지 배포가 가능합니다.</p>
+        <div class="link-row">
+          <a class="doc-link" href="https://arxiv.org/abs/2511.15720" target="_blank">📄 건설 안전 LLM+VLM 논문</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section>
+  <div class="container">
+    <h2 class="section-title">📋 10선 한눈에 보기</h2>
+    <table class="guide-table">
+      <thead><tr><th>#</th><th>사례</th><th>분야</th><th>핵심 VLM</th><th>VLM의 역할</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>CheXagent</td><td>의료</td><td class="mono">CheXagent</td><td>X-ray 리포트 생성</td></tr>
+        <tr><td>2</td><td>RadVLM / Med-Gemini</td><td>의료</td><td class="mono">RadVLM</td><td>대화형 진단 보조</td></tr>
+        <tr><td>3</td><td>VLM 품질검사</td><td>제조</td><td class="mono">Qwen2.5-VL</td><td>검사 리포트 자동화</td></tr>
+        <tr><td>4</td><td>VLM + 디지털트윈</td><td>제조</td><td class="mono">산업 VLM</td><td>추적가능 품질 기록</td></tr>
+        <tr><td>5</td><td>Amazon Rufus</td><td>소매</td><td class="mono">Rufus</td><td>시각 쇼핑 어시스턴트</td></tr>
+        <tr><td>6</td><td>VLM 물류 문서화</td><td>물류</td><td class="mono">Qwen2.5-VL</td><td>송장·바코드 추출</td></tr>
+        <tr><td>7</td><td>VLM 드론 정밀농업</td><td>농업</td><td class="mono">Gemini Flash</td><td>제로샷 잡초 탐지·추론</td></tr>
+        <tr><td>8</td><td>InfraGPT</td><td>스마트시티</td><td class="mono">InfraGPT</td><td>CCTV 결함 점검·알림</td></tr>
+        <tr><td>9</td><td>KuaiMod</td><td>콘텐츠</td><td class="mono">VLM + CoT</td><td>숏폼 영상 검열</td></tr>
+        <tr><td>10</td><td>건설 위험 감지</td><td>안전</td><td class="mono">GPT-4o/Molmo</td><td>텍스트+이미지 안전평가</td></tr>
+      </tbody>
+    </table>
+    <div class="callout callout-warning"><span class="ico">⚠️</span><div class="content"><strong>저작권:</strong> 결과 이미지·영상은 각 기업·논문 저자 자산입니다. 교육 배포 시 출처를 표기하고, 가능하면 빅맨님 환경(InternVL3-8B 등)에서 직접 캡처한 결과로 대체하길 권장합니다.</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="closing">
+      <h3>🎯 핵심 한 줄 정리</h3>
+      <p>VLM은 "보고 + 설명하고 + 보고서 쓰는" 능력으로 산업의 전환점이 되었습니다. 의료는 리포트를 쓰고, 제조는 검사를 자기문서화하고, 농업은 잡초 판단 근거를 설명하고, 도시는 CCTV로 결함을 점검하고, 플랫폼은 영상을 검열합니다. 공통점은 <strong>"비전 결과를 사람이 읽는 언어로 바꾼 것"</strong> — 빅맨님 공장 검사 리포트(InternVL3-8B)가 바로 이 흐름 위에 있습니다.</p>
+    </div>
+  </div>
+</section>
+
+<footer><div class="container">제타위성로보틱스 Physical AI 교육자료 · VLM 산업 적용 실제 사례 10선 (차량 제외판) · 2026</div></footer>
+
+</body>
+</html>
