@@ -25,6 +25,17 @@ from ultralytics import YOLO
 # ============================================================
 # ★ 사용자 환경에 맞게 수정할 설정값들
 # ============================================================
+# ============================================================
+# ★ 카메라 소스 설정 — 환경에 맞게 택1
+# ============================================================
+# "usb"  : NUC에 직접 연결된 USB 카메라 (cv2.VideoCapture)
+# "zmq"  : Pi5에서 ZeroMQ로 수신
+CAMERA_SOURCE = "usb"                                   # ← "usb" 또는 "zmq"
+
+# USB 카메라 설정 (CAMERA_SOURCE = "usb" 일 때)
+USB_CAMERA_INDEX = 6                                    # ← 카메라 번호 (보통 0)
+
+# Pi ZeroMQ 설정 (CAMERA_SOURCE = "zmq" 일 때)
 PI_IP = "192.168.50.111"                               # ← Pi5 실제 IP
 PI_PORT = 5556                                          # ← Pi5 ZeroMQ 포트
 FLASK_HOST = "0.0.0.0"
@@ -117,31 +128,59 @@ yolo_model = None
 
 
 # ============================================================
-# 1. ZeroMQ 프레임 수신 스레드
+# 1. 카메라 프레임 수신 스레드 (USB 또는 ZeroMQ)
 # ============================================================
-def zmq_receiver_thread():
-    """Pi 카메라 프레임을 백그라운드에서 계속 수신한다."""
-    global latest_frame
-    ctx = zmq.Context()
-    sock = ctx.socket(zmq.SUB)
-    sock.setsockopt(zmq.CONFLATE, 1)
-    sock.setsockopt_string(zmq.SUBSCRIBE, "")
-    sock.setsockopt(zmq.RCVTIMEO, 3000)
-    sock.connect(f"tcp://{PI_IP}:{PI_PORT}")
-    print(f"📡 ZeroMQ 수신 시작: tcp://{PI_IP}:{PI_PORT}")
+def camera_receiver_thread():
+    """카메라 프레임을 백그라운드에서 계속 수신한다.
 
-    while True:
-        try:
-            buf = sock.recv()
-            frame = cv2.imdecode(np.frombuffer(buf, np.uint8), 1)
-            if frame is not None:
+    [2026-06-21 수정] CAMERA_SOURCE 설정에 따라 USB 직결 또는 Pi ZeroMQ 방식 선택.
+    """
+    global latest_frame
+
+    if CAMERA_SOURCE == "usb":
+        # ── USB 카메라: NUC에 직접 연결된 카메라 ──
+        print(f"📷 USB 카메라 시작: index={USB_CAMERA_INDEX}")
+        cap = cv2.VideoCapture(USB_CAMERA_INDEX)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+        if not cap.isOpened():
+            print(f"❌ USB 카메라 열기 실패! index={USB_CAMERA_INDEX}")
+            print(f"   확인: ls /dev/video*")
+            return
+
+        print(f"✅ USB 카메라 연결 성공 ({int(cap.get(3))}x{int(cap.get(4))})")
+
+        while True:
+            ret, frame = cap.read()
+            if ret and frame is not None:
                 with latest_frame_lock:
                     latest_frame = frame
-        except zmq.Again:
-            pass
-        except Exception as e:
-            print(f"❌ ZeroMQ 오류: {e}")
-            time.sleep(1)
+            else:
+                time.sleep(0.01)
+
+    else:
+        # ── ZeroMQ: Pi5에서 원격 수신 ──
+        print(f"📡 ZeroMQ 수신 시작: tcp://{PI_IP}:{PI_PORT}")
+        ctx = zmq.Context()
+        sock = ctx.socket(zmq.SUB)
+        sock.setsockopt(zmq.CONFLATE, 1)
+        sock.setsockopt_string(zmq.SUBSCRIBE, "")
+        sock.setsockopt(zmq.RCVTIMEO, 3000)
+        sock.connect(f"tcp://{PI_IP}:{PI_PORT}")
+
+        while True:
+            try:
+                buf = sock.recv()
+                frame = cv2.imdecode(np.frombuffer(buf, np.uint8), 1)
+                if frame is not None:
+                    with latest_frame_lock:
+                        latest_frame = frame
+            except zmq.Again:
+                pass
+            except Exception as e:
+                print(f"❌ ZeroMQ 오류: {e}")
+                time.sleep(1)
 
 
 # ============================================================
@@ -717,10 +756,12 @@ if __name__ == '__main__':
     yolo_model = YOLO(YOLO_MODEL_PATH)
     print("✅ YOLO 준비 완료")
 
-    receiver = threading.Thread(target=zmq_receiver_thread, daemon=True)
+    receiver = threading.Thread(target=camera_receiver_thread, daemon=True)
     receiver.start()
 
+    cam_info = f"USB 카메라 index={USB_CAMERA_INDEX}" if CAMERA_SOURCE == "usb" else f"Pi ZeroMQ {PI_IP}:{PI_PORT}"
     print(f"\n🌐 웹 서버: http://{FLASK_HOST}:{FLASK_PORT}")
+    print(f"   카메라: {cam_info}")
     print(f"   VLM 서버 (품질 판단): {VLM_SERVER_URL}")
     print(f"   SAM3 서버 (정밀 마스크): {SAM3_SERVER_URL}")
     print(f"\n📋 파이프라인: YOLO(NUC) → SAM3(4090) → VLM(4070)")
